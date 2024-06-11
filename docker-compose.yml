@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: flask
+    command: gunicorn --bind 0.0.0.0:8000 app:app
+    volumes:
+      - .:/app
+    networks:
+      - my_custom_network
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ADMIN_USER: ${MYSQL_ADMIN_USER}
+      MYSQL_ADMIN_PASSWORD: ${MYSQL_ADMIN_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_USER_PASSWORD: ${MYSQL_USER_PASSWORD}
+      MYSQL_READONLY_USER: ${MYSQL_READONLY_USER}
+      MYSQL_READONLY_PASSWORD: ${MYSQL_READONLY_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST}
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - my_custom_network
+    depends_on:
+      - web
+    environment:
+      SERVER_DOMAIN_OR_IP: ${SERVER_DOMAIN_OR_IP}
+    volumes:
+      - ./static:/app/static
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /path/to/ssl/certs:/etc/ssl/certs
+      - /path/to/ssl/private:/etc/ssl/private
+
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    networks:
+      - my_custom_network
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+    networks:
+      - my_custom_network
+    environment:
+      JENKINS_OPTS: --httpPort=8080
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  my_custom_network:
+    driver: bridge
+
+volumes:
+  jenkins_home:
