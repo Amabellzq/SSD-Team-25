@@ -15,7 +15,7 @@ pipeline {
                     sh 'git config --global credential.helper cache'
                     sh 'git config --global credential.helper "cache --timeout=3600"'
                     // Write the GitHub PAT to the Git credentials file
-                    sh 'echo "https://${env.GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
+                    sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
                 }
                 // Checkout the code from the private repository using the PAT and specified branch
                 git url: 'https://github.com/Amabellzq/SSD-Team-25.git', branch: "${env.GIT_BRANCH}", credentialsId: 'GITHUB_PAT'
