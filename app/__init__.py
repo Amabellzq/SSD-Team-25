@@ -11,6 +11,10 @@ def create_app():
     app.config.from_object(Config)
 
     # Initialize extensions
+    db_admin.init_app(app)
+    db_merchant.init_app(app)
+    db_user.init_app(app)
+    db_readonly.init_app(app)
     login_manager.init_app(app)
     principals.init_app(app)
     session.init_app(app)

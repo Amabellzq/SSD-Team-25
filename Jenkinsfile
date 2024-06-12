@@ -2,18 +2,6 @@ pipeline {
     agent any
 
     environment {
-        SECRET_KEY = credentials('SECRET_KEY')
-        MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
-        MYSQL_DATABASE = credentials('MYSQL_DATABASE')
-        MYSQL_ADMIN_USER = credentials('MYSQL_ADMIN_USER')
-        MYSQL_ADMIN_PASSWORD = credentials('MYSQL_ADMIN_PASSWORD')
-        MYSQL_MERCHANT_USER = credentials('MYSQL_MERCHANT_USER')
-        MYSQL_MERCHANT_PASSWORD = credentials('MYSQL_MERCHANT_PASSWORD')
-        MYSQL_USER = credentials('MYSQL_USER')
-        MYSQL_USER_PASSWORD = credentials('MYSQL_USER_PASSWORD')
-        MYSQL_READONLY_USER = credentials('MYSQL_READONLY_USER')
-        MYSQL_READONLY_PASSWORD = credentials('MYSQL_READONLY_PASSWORD')
-        MYSQL_HOST = credentials('MYSQL_HOST')
         GITHUB_PAT = credentials('GITHUB_PAT')
         EC2_DIRECTORY_PATH = credentials('EC2_DIRECTORY_PATH')
         GIT_BRANCH = 'development-junwei' // Set your desired branch here or make it a parameter
@@ -53,29 +41,46 @@ pipeline {
             }
         }
 
-        stage('Create Docker Secrets') {
+        stage('Load Credentials') {
             steps {
-                script {
-                    // Create Docker secrets from Jenkins credentials
-                    sh 'echo "${SECRET_KEY}" | docker secret create secret_key -'
-                    sh 'echo "${MYSQL_ROOT_PASSWORD}" | docker secret create mysql_root_password -'
-                    sh 'echo "${MYSQL_DATABASE}" | docker secret create mysql_database -'
-                    sh 'echo "${MYSQL_ADMIN_USER}" | docker secret create mysql_admin_user -'
-                    sh 'echo "${MYSQL_ADMIN_PASSWORD}" | docker secret create mysql_admin_password -'
-                    sh 'echo "${MYSQL_MERCHANT_USER}" | docker secret create mysql_merchant_user -'
-                    sh 'echo "${MYSQL_MERCHANT_PASSWORD}" | docker secret create mysql_merchant_password -'
-                    sh 'echo "${MYSQL_USER}" | docker secret create mysql_user -'
-                    sh 'echo "${MYSQL_USER_PASSWORD}" | docker secret create mysql_user_password -'
-                    sh 'echo "${MYSQL_READONLY_USER}" | docker secret create mysql_readonly_user -'
-                    sh 'echo "${MYSQL_READONLY_PASSWORD}" | docker secret create mysql_readonly_password -'
-                    sh 'echo "${MYSQL_HOST}" | docker secret create mysql_host -'
+                withCredentials([
+                    string(credentialsId: 'SECRET_KEY', variable: 'SECRET_KEY'),
+                    string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
+                    string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
+                    string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
+                    string(credentialsId: 'MYSQL_ADMIN_PASSWORD', variable: 'MYSQL_ADMIN_PASSWORD'),
+                    string(credentialsId: 'MYSQL_MERCHANT_USER', variable: 'MYSQL_MERCHANT_USER'),
+                    string(credentialsId: 'MYSQL_MERCHANT_PASSWORD', variable: 'MYSQL_MERCHANT_PASSWORD'),
+                    string(credentialsId: 'MYSQL_USER', variable: 'MYSQL_USER'),
+                    string(credentialsId: 'MYSQL_USER_PASSWORD', variable: 'MYSQL_USER_PASSWORD'),
+                    string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
+                    string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
+                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST')
+                ]) {
+                    script {
+                        // Create the .env file with the required environment variables
+                        writeFile file: '.env', text: """
+                            SECRET_KEY=${SECRET_KEY}
+                            MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+                            MYSQL_DATABASE=${MYSQL_DATABASE}
+                            MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
+                            MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}
+                            MYSQL_MERCHANT_USER=${MYSQL_MERCHANT_USER}
+                            MYSQL_MERCHANT_PASSWORD=${MYSQL_MERCHANT_PASSWORD}
+                            MYSQL_USER=${MYSQL_USER}
+                            MYSQL_USER_PASSWORD=${MYSQL_USER_PASSWORD}
+                            MYSQL_READONLY_USER=${MYSQL_READONLY_USER}
+                            MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}
+                            MYSQL_HOST=${MYSQL_HOST}
+                        """
+                    }
                 }
             }
         }
 
         stage('Build and Deploy') {
             steps {
-                // Use Docker Compose to build and start the services, using Docker secrets for configuration
+                // Use Docker Compose to build and start the services, using the .env file for configuration
                 sh 'docker-compose up --build -d'
             }
         }
@@ -83,8 +88,9 @@ pipeline {
 
     post {
         always {
-            // Clean up Docker secrets after usage
-            sh 'docker secret rm secret_key mysql_root_password mysql_database mysql_admin_user mysql_admin_password mysql_merchant_user mysql_merchant_password mysql_user mysql_user_password mysql_readonly_user mysql_readonly_password mysql_host'
+            script {
+                sh 'rm -f .env'
+            }
         }
     }
 }
