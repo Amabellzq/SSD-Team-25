@@ -34,7 +34,6 @@ pipeline {
         stage('Load Credentials') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'SECRET_KEY', variable: 'SECRET_KEY'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
                     string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
@@ -50,7 +49,6 @@ pipeline {
                     script {
                         // Create the .env file with the required environment variables
                         writeFile file: '.env', text: """
-                            SECRET_KEY=${SECRET_KEY}
                             MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
                             MYSQL_DATABASE=${MYSQL_DATABASE}
                             MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
