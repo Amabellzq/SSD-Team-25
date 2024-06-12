@@ -7,40 +7,63 @@ pipeline {
         MYSQL_DATABASE = credentials('MYSQL_DATABASE')
         MYSQL_ADMIN_USER = credentials('MYSQL_ADMIN_USER')
         MYSQL_ADMIN_PASSWORD = credentials('MYSQL_ADMIN_PASSWORD')
+        MYSQL_MERCHANT_USER = credentials('MYSQL_MERCHANT_USER')
+        MYSQL_MERCHANT_PASSWORD = credentials('MYSQL_MERCHANT_PASSWORD')
         MYSQL_USER = credentials('MYSQL_USER')
         MYSQL_USER_PASSWORD = credentials('MYSQL_USER_PASSWORD')
         MYSQL_READONLY_USER = credentials('MYSQL_READONLY_USER')
         MYSQL_READONLY_PASSWORD = credentials('MYSQL_READONLY_PASSWORD')
         MYSQL_HOST = credentials('MYSQL_HOST')
-        SERVER_DOMAIN_OR_IP = credentials('SERVER_DOMAIN_OR_IP')
+        GITHUB_PAT = credentials('GITHUB_PAT')
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
                 script {
-                    docker.compose(
-                        file: 'docker-compose.prod.yml',
-                        command: 'build'
-                    )
+                    // Configure Git to use the cached credentials helper
+                    sh 'git config --global credential.helper cache'
+                    sh 'git config --global credential.helper "cache --timeout=3600"'
+                    // Write the GitHub PAT to the Git credentials file
+                    sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
+                }
+                // Checkout the code from the private repository using the PAT
+                git url: 'https://github.com/your-repo/your-project.git', credentialsId: 'GITHUB_PAT'
+            }
+        }
+
+        stage('Create Docker Secrets') {
+            steps {
+                script {
+                    // Create Docker secrets from Jenkins credentials
+                    sh 'echo "${SECRET_KEY}" | docker secret create secret_key -'
+                    sh 'echo "${MYSQL_ROOT_PASSWORD}" | docker secret create mysql_root_password -'
+                    sh 'echo "${MYSQL_DATABASE}" | docker secret create mysql_database -'
+                    sh 'echo "${MYSQL_ADMIN_USER}" | docker secret create mysql_admin_user -'
+                    sh 'echo "${MYSQL_ADMIN_PASSWORD}" | docker secret create mysql_admin_password -'
+                    sh 'echo "${MYSQL_MERCHANT_USER}" | docker secret create mysql_merchant_user -'
+                    sh 'echo "${MYSQL_MERCHANT_PASSWORD}" | docker secret create mysql_merchant_password -'
+                    sh 'echo "${MYSQL_USER}" | docker secret create mysql_user -'
+                    sh 'echo "${MYSQL_USER_PASSWORD}" | docker secret create mysql_user_password -'
+                    sh 'echo "${MYSQL_READONLY_USER}" | docker secret create mysql_readonly_user -'
+                    sh 'echo "${MYSQL_READONLY_PASSWORD}" | docker secret create mysql_readonly_password -'
+                    sh 'echo "${MYSQL_HOST}" | docker secret create mysql_host -'
                 }
             }
         }
-        stage('Deploy') {
-            steps {
-                script {
-                    // Replace the placeholder in nginx.conf with the actual server IP
-                    sh '''
-                    sed -i 's/${SERVER_DOMAIN_OR_IP}/'${SERVER_DOMAIN_OR_IP}'/g' nginx.conf
-                    '''
 
-                    // Deploy the application
-                    docker.compose(
-                        file: 'docker-compose.prod.yml',
-                        command: 'up -d'
-                    )
-                }
+        stage('Build and Deploy') {
+            steps {
+                // Use Docker Compose to build and start the services, using Docker secrets for configuration
+                sh 'docker-compose up --build -d'
             }
+        }
+    }
+
+    post {
+        always {
+            // Clean up Docker secrets after usage
+            sh 'docker secret rm secret_key mysql_root_password mysql_database mysql_admin_user mysql_admin_password mysql_merchant_user mysql_merchant_password mysql_user mysql_user_password mysql_readonly_user mysql_readonly_password mysql_host'
         }
     }
 }

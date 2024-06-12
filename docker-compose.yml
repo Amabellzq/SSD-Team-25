@@ -4,22 +4,24 @@ services:
   web:
     build: .
     container_name: flask
-    command: gunicorn --bind 0.0.0.0:8000 app:app
+    command: gunicorn --bind 0.0.0.0:8000 run:app
     volumes:
       - .:/app
     networks:
       - my_custom_network
-    environment:
-      SECRET_KEY: ${SECRET_KEY}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ADMIN_USER: ${MYSQL_ADMIN_USER}
-      MYSQL_ADMIN_PASSWORD: ${MYSQL_ADMIN_PASSWORD}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_USER_PASSWORD: ${MYSQL_USER_PASSWORD}
-      MYSQL_READONLY_USER: ${MYSQL_READONLY_USER}
-      MYSQL_READONLY_PASSWORD: ${MYSQL_READONLY_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST}
+    secrets:
+      - secret_key
+      - mysql_root_password
+      - mysql_database
+      - mysql_admin_user
+      - mysql_admin_password
+      - mysql_merchant_user
+      - mysql_merchant_password
+      - mysql_user
+      - mysql_user_password
+      - mysql_readonly_user
+      - mysql_readonly_password
+      - mysql_host
 
   nginx:
     image: nginx:latest
@@ -27,12 +29,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    networks:
-      - my_custom_network
     depends_on:
       - web
-    environment:
-      SERVER_DOMAIN_OR_IP: ${SERVER_DOMAIN_OR_IP}
+    networks:
+      - my_custom_network
     volumes:
       - ./static:/app/static
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -42,15 +42,24 @@ services:
   db:
     image: mysql:5.7
     container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    secrets:
+      - mysql_root_password
+      - mysql_database
+      - mysql_admin_user
+      - mysql_admin_password
+      - mysql_merchant_user
+      - mysql_merchant_password
+      - mysql_user
+      - mysql_user_password
+      - mysql_readonly_user
+      - mysql_readonly_password
+      - mysql_host
     ports:
       - "3306:3306"
     networks:
       - my_custom_network
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
@@ -73,3 +82,29 @@ networks:
 
 volumes:
   jenkins_home:
+
+secrets:
+  secret_key:
+    external: true
+  mysql_root_password:
+    external: true
+  mysql_database:
+    external: true
+  mysql_admin_user:
+    external: true
+  mysql_admin_password:
+    external: true
+  mysql_merchant_user:
+    external: true
+  mysql_merchant_password:
+    external: true
+  mysql_user:
+    external: true
+  mysql_user_password:
+    external: true
+  mysql_readonly_user:
+    external: true
+  mysql_readonly_password:
+    external: true
+  mysql_host:
+    external: true
