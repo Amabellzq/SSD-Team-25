@@ -47,18 +47,19 @@ pipeline {
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
-                        writeFile file: '.env', text: """
-                            MYSQL_DATABASE=${MYSQL_DATABASE}
-                            MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
-                            MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}
-                            MYSQL_MERCHANT_USER=${MYSQL_MERCHANT_USER}
-                            MYSQL_MERCHANT_PASSWORD=${MYSQL_MERCHANT_PASSWORD}
-                            MYSQL_USER=${MYSQL_USER}
-                            MYSQL_USER_PASSWORD=${MYSQL_USER_PASSWORD}
-                            MYSQL_READONLY_USER=${MYSQL_READONLY_USER}
-                            MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}
-                            MYSQL_HOST=${MYSQL_HOST}
-                        """
+                        def envContent = 'MYSQL_ROOT_PASSWORD=' + env.MYSQL_ROOT_PASSWORD + '\n' +
+                                         'MYSQL_DATABASE=' + env.MYSQL_DATABASE + '\n' +
+                                         'MYSQL_ADMIN_USER=' + env.MYSQL_ADMIN_USER + '\n' +
+                                         'MYSQL_ADMIN_PASSWORD=' + env.MYSQL_ADMIN_PASSWORD + '\n' +
+                                         'MYSQL_MERCHANT_USER=' + env.MYSQL_MERCHANT_USER + '\n' +
+                                         'MYSQL_MERCHANT_PASSWORD=' + env.MYSQL_MERCHANT_PASSWORD + '\n' +
+                                         'MYSQL_USER=' + env.MYSQL_USER + '\n' +
+                                         'MYSQL_USER_PASSWORD=' + env.MYSQL_USER_PASSWORD + '\n' +
+                                         'MYSQL_READONLY_USER=' + env.MYSQL_READONLY_USER + '\n' +
+                                         'MYSQL_READONLY_PASSWORD=' + env.MYSQL_READONLY_PASSWORD + '\n' +
+                                         'MYSQL_HOST=' + env.MYSQL_HOST + '\n'
+
+                        writeFile file: '.env', text: envContent
                     }
                 }
             }
