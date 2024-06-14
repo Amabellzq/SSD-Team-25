@@ -3,30 +3,18 @@ pipeline {
 
     environment {
         GITHUB_PAT = credentials('GITHUB_PAT')
-        EC2_DIRECTORY_PATH = credentials('EC2_DIRECTORY_PATH')
         GIT_BRANCH = 'development-junwei' // Set your desired branch here or make it a parameter
+        GIT_REPO = credentials('GIT_REPO')
     }
 
     stages {
-
-        stage('Update Directory on EC2') {
+        stage('Clone Repository') {
             steps {
-                script {
-                    // Configure Git to use the cached credentials helper
-                    sh 'git config --global credential.helper cache'
-                    sh 'git config --global credential.helper "cache --timeout=3600"'
-                    // Write the GitHub PAT to the Git credentials file
+                withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
+                    // Use the GITHUB_PAT to clone the repository
+                    sh 'git config --global credential.helper store'
                     sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
-                    // Change to the directory where the repository is located and pull the latest changes
-                   env.DIR = EC2_DIRECTORY_PATH
-
-                    // Change to the directory using a safe method
-                    dir(env.DIR) {
-                        sh 'git init'  // Ensure git is initialized in the directory
-                        sh 'git remote add origin https://${GITHUB_PAT}@github.com/Amabellzq/SSD-Team-25.git || true'  // Add remote repository if not already added
-                        sh 'git fetch origin'  // Fetch the latest changes
-                        sh "git reset --hard origin/${env.GIT_BRANCH}"  // Reset the working directory to match the latest changes from the specified branch
-                    }
+                    sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO}"
                 }
             }
         }
@@ -47,7 +35,7 @@ pipeline {
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
-                         def envContent = ""
+                        def envContent = ""
 
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
                         envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
