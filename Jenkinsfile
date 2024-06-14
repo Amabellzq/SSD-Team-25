@@ -7,14 +7,25 @@ pipeline {
         GIT_REPO = credentials('GIT_REPO')
     }
 
-    stages {
-        stage('Clone Repository') {
+      stages {
+        stage('Clone or Update Repository') {
             steps {
                 withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
-                    // Use the GITHUB_PAT to clone the repository
+                    // Use the GITHUB_PAT to configure credentials
                     sh 'git config --global credential.helper store'
                     sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
-                    sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO}"
+                    // Check if the directory exists
+                    script {
+                        if (fileExists(REPO_DIR)) {
+                            // If it exists, pull the latest changes
+                            dir(REPO_DIR) {
+                                sh 'git pull origin ${GIT_BRANCH}'
+                            }
+                        } else {
+                            // If it doesn't exist, clone the repository
+                            sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO} ${REPO_DIR}"
+                        }
+                    }
                 }
             }
         }
