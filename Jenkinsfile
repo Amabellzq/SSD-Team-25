@@ -5,6 +5,7 @@ pipeline {
         GITHUB_PAT = credentials('GITHUB_PAT')
         GIT_BRANCH = 'development-junwei' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
+        REPO_DIR = "${WORKSPACE}/SSD_Pipeline"
     }
 
       stages {
