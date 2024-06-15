@@ -13,9 +13,9 @@ services:
       - .env
     working_dir: /app
 
-  nginx:
+  nginx-image:
     image: nginx:latest
-    container_name: nginx
+    container_name: nginx-image
     ports:
       - "80:80"
       - "443:443"
