@@ -5,7 +5,7 @@ pipeline {
         GITHUB_PAT = credentials('GITHUB_PAT')
         GIT_BRANCH = 'development-junwei' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
-        REPO_DIR = "${WORKSPACE}/SSD_Pipeline"
+        REPO_DIR = "${WORKSPACE}/"
     }
 
       stages {
@@ -23,8 +23,8 @@ pipeline {
                                 sh 'git pull origin ${GIT_BRANCH}'
                             }
                         } else {
-                            sh "mkdir -p ${REPO_DIR}"
-                            sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO} ${WORKSPACE}/"
+                            // If it doesn't exist, clone the repository
+                            sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO} ${REPO_DIR}"
                         }
                     }
                 }
@@ -68,6 +68,7 @@ pipeline {
 
         stage('Build and Deploy') {
             steps {
+                // Ensure a clean deployment by bringing down any existing containers
                 sh 'docker-compose down --remove-orphans'
                 // Use Docker Compose to build and start the services, using the .env file for configuration
                 sh 'docker-compose up --build -d'
