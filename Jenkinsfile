@@ -34,6 +34,7 @@ pipeline {
         stage('Load Credentials') {
             steps {
                 withCredentials([
+                    string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
                     string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
                     string(credentialsId: 'MYSQL_ADMIN_PASSWORD', variable: 'MYSQL_ADMIN_PASSWORD'),
@@ -48,7 +49,7 @@ pipeline {
                     script {
                         // Create the .env file with the required environment variables
                         def envContent = ""
-
+                        envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
                         envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
                         envContent += "MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}\n"
