@@ -49,6 +49,8 @@ def readonly():
     result = g.db.session.execute('SELECT * FROM product')
     return str(result.fetchall())
 
-@main_blueprint.route('/')
+@main_blueprint.route('/homepage')
 def index():
-    return render_template('index.html')
+    return render_template('homepage.html')
+
+
