@@ -26,8 +26,6 @@ services:
     volumes:
       - ./flask/static:/app/static
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf.d
-      - /path/to/ssl/certs:/etc/ssl/cert
-      - /path/to/ssl/private:/etc/ssl/private
 
   db:
     image: mysql:5.7
