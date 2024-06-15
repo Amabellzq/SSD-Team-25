@@ -68,8 +68,12 @@ pipeline {
 
         stage('Build and Deploy') {
             steps {
-                // Use Docker Compose to build and start the services, using the .env file for configuration
-                sh 'docker-compose up --build -d'
+                  dir(REPO_DIR) {
+                    // Ensure a clean deployment by bringing down any existing containers
+                    sh 'docker-compose down --remove-orphans'
+                    // Build and start the services with the updated configuration
+                    sh 'docker-compose up --build -d'
+                }
             }
         }
     }
@@ -77,7 +81,8 @@ pipeline {
     post {
         always {
             script {
-                sh 'rm -f .env'
+         // Clean up the environment file to secure sensitive data
+                sh 'rm -f ${REPO_DIR}/.env'
             }
         }
     }
