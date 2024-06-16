@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
-COPY .. .
+COPY . .
 
 # Set environment variables for Flask
 ENV FLASK_APP=app.py
@@ -21,4 +21,4 @@ ENV FLASK_ENV=production
 EXPOSE 8000
 
 # Run the application using Gunicorn
-CMD ["gunicorn", "--workers=3", "--bind=13.58.245.161:8000", "app:app"]
+CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "app:app"]
