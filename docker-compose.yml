@@ -22,7 +22,7 @@ services:
     networks:
       - ecommerce_network
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ${WORKSPACE}/flask/static:/usr/share/nginx/html/static:ro
 
   db:
