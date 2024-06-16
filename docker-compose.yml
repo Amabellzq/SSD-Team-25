@@ -6,7 +6,7 @@ services:
       - ecommerce_network
     depends_on:
       - db
-    working_dir: /app
+    working_dir: /webapp
 
   nginx:
     image: nginx:latest
