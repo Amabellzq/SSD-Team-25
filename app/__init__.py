@@ -17,4 +17,3 @@ def create_app():
         raise e
 
     return app
-s
