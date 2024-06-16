@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # Set the working directory
-WORKDIR ./app
+WORKDIR ./webapp
 
 # Copy the requirements file into the container
 COPY requirements.txt .
