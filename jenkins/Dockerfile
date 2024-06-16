@@ -5,8 +5,10 @@ USER root
 # Set the Jenkins options to use the specified port and prefix
 ENV JENKINS_OPTS="--httpPort=8080 --prefix=/jenkins"
 
-# Install Docker CLI and other necessary tools
-RUN apt-get update && apt-get install -y docker.io sudo
+RUN apt-get update && \
+    apt-get install -y docker.io sudo && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Ensure Jenkins user has access to Docker
 RUN usermod -aG docker jenkins
