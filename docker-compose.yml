@@ -3,7 +3,7 @@ services:
     build: .
     container_name: flask
     image: python:3.9
-    command: bash -c "pip install gunicorn && while [ ! -f /app/.env ]; do sleep 1; done && gunicorn --workers 3 --bind 0.0.0.0:8000 app:app"
+    command: gunicorn --workers=3 --bind=0.0.0.0:8000 app:app
     networks:
       - ecommerce_network
     env_file:
