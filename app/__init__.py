@@ -8,8 +8,13 @@ def create_app():
     logger = logging.getLogger(__name__)
 
     app = Flask(__name__)
-    app.register_blueprint(main)
 
-    logger.info("Flask application has been created successfully")
+    try:
+        app.register_blueprint(main)
+        logger.info("Flask application has been created successfully")
+    except Exception as e:
+        logger.error(f"Error creating Flask application: {e}")
+        raise e
 
     return app
+s
