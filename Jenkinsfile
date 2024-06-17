@@ -2,44 +2,85 @@ pipeline {
     agent any
 
     environment {
-        SECRET_KEY = credentials('SECRET_KEY')
-        MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
-        MYSQL_DATABASE = credentials('MYSQL_DATABASE')
-        MYSQL_ADMIN_USER = credentials('MYSQL_ADMIN_USER')
-        MYSQL_ADMIN_PASSWORD = credentials('MYSQL_ADMIN_PASSWORD')
-        MYSQL_USER = credentials('MYSQL_USER')
-        MYSQL_USER_PASSWORD = credentials('MYSQL_USER_PASSWORD')
-        MYSQL_READONLY_USER = credentials('MYSQL_READONLY_USER')
-        MYSQL_READONLY_PASSWORD = credentials('MYSQL_READONLY_PASSWORD')
-        MYSQL_HOST = credentials('MYSQL_HOST')
-        SERVER_DOMAIN_OR_IP = credentials('SERVER_DOMAIN_OR_IP')
+        GITHUB_PAT = credentials('GITHUB_PAT')
+        GIT_BRANCH = 'development-junwei' // Set your desired branch here or make it a parameter
+        GIT_REPO = credentials('GIT_REPO')
+        REPO_DIR = "${WORKSPACE}/"
     }
 
-    stages {
-        stage('Build') {
+      stages {
+        stage('Clone or Update Repository') {
             steps {
-                script {
-                    docker.compose(
-                        file: 'docker-compose.prod.yml',
-                        command: 'build'
-                    )
+                withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
+                    // Use the GITHUB_PAT to configure credentials
+                    sh 'git config --global credential.helper store'
+                    sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
+                    // Check if the directory exists
+                    script {
+                        if (fileExists(REPO_DIR)) {
+                            // If it exists, pull the latest changes
+                            dir(REPO_DIR) {
+                                sh 'git pull origin ${GIT_BRANCH}'
+                            }
+                        } else {
+                            // If it doesn't exist, clone the repository
+                            sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO} ${REPO_DIR}"
+                        }
+                    }
                 }
             }
         }
-        stage('Deploy') {
-            steps {
-                script {
-                    // Replace the placeholder in nginx.conf with the actual server IP
-                    sh '''
-                    sed -i 's/${SERVER_DOMAIN_OR_IP}/'${SERVER_DOMAIN_OR_IP}'/g' nginx.conf
-                    '''
 
-                    // Deploy the application
-                    docker.compose(
-                        file: 'docker-compose.prod.yml',
-                        command: 'up -d'
-                    )
+        stage('Load Credentials') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
+                    string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
+                    string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
+                    string(credentialsId: 'MYSQL_ADMIN_PASSWORD', variable: 'MYSQL_ADMIN_PASSWORD'),
+                    string(credentialsId: 'MYSQL_MERCHANT_USER', variable: 'MYSQL_MERCHANT_USER'),
+                    string(credentialsId: 'MYSQL_MERCHANT_PASSWORD', variable: 'MYSQL_MERCHANT_PASSWORD'),
+                    string(credentialsId: 'MYSQL_USER', variable: 'MYSQL_USER'),
+                    string(credentialsId: 'MYSQL_USER_PASSWORD', variable: 'MYSQL_USER_PASSWORD'),
+                    string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
+                    string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
+                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST')
+                ]) {
+                    script {
+                        // Create the .env file with the required environment variables
+                        def envContent = ""
+                        envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
+                        envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
+                        envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
+                        envContent += "MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}\n"
+                        envContent += "MYSQL_MERCHANT_USER=${MYSQL_MERCHANT_USER}\n"
+                        envContent += "MYSQL_MERCHANT_PASSWORD=${MYSQL_MERCHANT_PASSWORD}\n"
+                        envContent += "MYSQL_USER=${MYSQL_USER}\n"
+                        envContent += "MYSQL_USER_PASSWORD=${MYSQL_USER_PASSWORD}\n"
+                        envContent += "MYSQL_READONLY_USER=${MYSQL_READONLY_USER}\n"
+                        envContent += "MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}\n"
+                        envContent += "MYSQL_HOST=${MYSQL_HOST}\n"
+
+                        writeFile file: '.env', text: envContent
+                    }
                 }
+            }
+        }
+
+        stage('Build and Deploy') {
+            steps {
+                // Ensure a clean deployment by bringing down any existing containers
+                sh 'docker-compose down --remove-orphans'
+                // Use Docker Compose to build and start the services, using the .env file for configuration
+                sh 'docker-compose up --build -d'
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                sh 'rm -f .env'
             }
         }
     }
