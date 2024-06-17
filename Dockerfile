@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port the webapp runs on
-EXPOSE 8000
+EXPOSE 80
 
 # Run the application using Gunicorn with debug level logging
-CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "--log-level=debug", "webapp:app"]
+CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:80", "--log-level=debug", "webapp:app"]
