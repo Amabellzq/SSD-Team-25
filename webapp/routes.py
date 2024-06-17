@@ -12,6 +12,11 @@ import os
 
 main = Blueprint('main', __name__)
 
+
+@main.route('/')
+def home():
+    return render_template('homepage.html')
+
 @main.route('/db_check')
 def db_check():
     connection = None
