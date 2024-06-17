@@ -17,6 +17,7 @@ main = Blueprint('main', __name__)
 def home():
     return render_template('homepage.html')
 
+#Example of how to connect to DB in Production
 @main.route('/db_check')
 def db_check():
     connection = None
