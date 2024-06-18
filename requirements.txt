@@ -8,3 +8,4 @@ Flask-Login
 Flask-Principal
 Flask-Session
 bcrypt
+Flask-Bootstrap==3.3.7.1
