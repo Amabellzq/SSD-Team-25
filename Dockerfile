@@ -7,6 +7,9 @@ WORKDIR ./webapp
 # Copy the requirements file into the container
 COPY requirements.txt .
 
+# Update Pip
+RUN pip install --upgrade pip
+
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
