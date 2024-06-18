@@ -10,6 +10,15 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+#Command to install bootstrap for flask 
+RUN pip install Flask-Bootstrap
+
+#Command to install flask-login
+RUN pip install flask-login
+
+# Command to install WTF forms 
+RUN pip install Flask-WTF
+
 # Copy the rest of the application code into the container
 COPY . .
 
