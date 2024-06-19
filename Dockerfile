@@ -9,13 +9,23 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /webapp
 
 # Copy the requirements file into the image
 COPY requirements.txt requirements.txt
 
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+#Command to install bootstrap for flask
+RUN pip install Flask-Bootstrap
+
+#Command to install flask-login
+RUN pip install flask-login
+
+# Command to install WTF forms
+RUN pip install Flask-WTF
+
 
 # Copy the rest of the application code into the image
 COPY . .
@@ -24,4 +34,5 @@ COPY . .
 ENV GUNICORN_CMD_ARGS="--reload"
 
 # Command to run the application
-CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8000", "webapp:app"]
+

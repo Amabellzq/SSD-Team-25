@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- Created By CodingNepal -->
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Login Form Design | CodeLab</title>
+      <link rel="stylesheet" href="../static/css/auth_style.css">
+   </head>
+   <body>
+      <div class="wrapper">
+         <div class="title">
+           Registration Form
+         </div>
+         <form method="POST" action="{{ url_for('main.register') }}">
+            {{ register_form.hidden_tag() }}
+            <div class="field">
+                {{ register_form.username.label(class="form-label") }}
+                {{ register_form.username(class="form-control", required=True) }}
+            </div>
+            <div class="field">
+                {{ register_form.email.label(class="form-label") }}
+                {{ register_form.email(class="form-control", required=True) }}
+                {% if register_form.email.errors %}
+                    {% for error in register_form.email.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <label>{{ register_form.email.label.text }}</label>
+            </div>
+            <div class="field">
+                {{ register_form.password.label(class="form-label") }}
+                {{ register_form.password(class="form-control", required=True) }}
+                {% if register_form.password.errors %}
+                    {% for error in register_form.password.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <label>{{ register_form.password.label.text }}</label>
+            </div>
+            <div class="field">
+                {{ register_form.confirm_password.label(class="form-label") }}
+                {{ register_form.confirm_password(class="form-control", required=True) }}
+                {% if register_form.confirm_password.errors %}
+                    {% for error in register_form.confirm_password.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <label>{{ register_form.confirm_password.label.text }}</label>
+            </div>
+            <div class="field">
+                <!-- {{ register_form.role.label(class="form-label") }} -->
+                {{ register_form.role(class="form-control", required=True) }}
+            </div>
+            <div class="field">
+               <input type="submit" value="Register">
+            </div>
+            <div class="signup-link">
+               Already used me? <a href="/login">Login now</a>
+            </div>
+         </form>
+      </div>
+   </body>
+</html>
