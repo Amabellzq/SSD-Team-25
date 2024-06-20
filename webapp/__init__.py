@@ -1,10 +1,11 @@
 from flask import Flask
 from .routes import main
+from config import Config
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from .models import User, load_user  # Import your user model
 
 app = Flask(__name__)
-app.config.from_object('config')
+app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'ssdT25'
 
 login_manager = LoginManager()
