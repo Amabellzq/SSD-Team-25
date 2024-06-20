@@ -4,6 +4,7 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+
 class Config:
     MYSQL_HOST = os.getenv('MYSQL_HOST')
     MYSQL_PORT = os.getenv('MYSQL_PORT')

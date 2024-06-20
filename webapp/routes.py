@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, jsonify, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm
-from .models import User, load_user
-from .db import get_db_connection
+from webapp.models import User, load_user
+from webapp.db import get_db_connection
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -118,6 +118,8 @@ def adminDashboard():
     
     return render_template('adminDashboard.html', accountDetails = account_details_form)
 
+
+#Example on how the database connection is called
 @main.route('/db_check')
 def db_check():
     connection = None
