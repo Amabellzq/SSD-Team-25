@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, ManageAccountDetailsForm
 from webapp.models import User, load_user
 from webapp.db import get_db_connection
 
@@ -17,6 +17,10 @@ def load_user(user_id):
     # Your user loading logic here, for example:
     return User.query.get(int(user_id))  # Adjust this according to your actual database call
 
+####################################################################################################################
+###########################                              BASIC ROUTES                   ############################
+####################################################################################################################
+
 @main.route('/')
 def home():
     return render_template('index.html')
@@ -26,16 +30,23 @@ def shop():
 
     return render_template('shop.html')
 
+@main.route('/contact')
+def contact():
+
+    return render_template('contact.html')
+
 @main.route('/productDetails')
 def productDetails():
 
     return render_template('product-details.html')
 
+####################################################################################################################
+###########################                           END BASIC ROUTES                  ############################
+####################################################################################################################
 
-@main.route('/contact')
-def contact():
-
-    return render_template('contact.html')
+####################################################################################################################
+################                              START REQUIRED  AUTHENTICATION VIEW ROUTES                 ###########
+####################################################################################################################
 
 @main.route('/myprofile', methods =['GET', 'POST'])
 @login_required
@@ -49,6 +60,9 @@ def myaccount():
         return redirect(url_for('account_details'))
     return render_template('account.html', accountDetails = account_details_form)
 
+#######################################################################
+########                       BUYER ROUTES                   #########
+#######################################################################
 
 @main.route('/cart')
 @login_required
@@ -65,6 +79,15 @@ def checkout():
         # Example: save the order details, send a confirmation email, etc.
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form = form)
+
+####################################################################################################################
+################                              END REQUIRED  AUTHENTICATION VIEW ROUTES                   ###########
+####################################################################################################################
+
+
+####################################################################################################################
+################################                AUTHENTICATION ROUTES                    ###########################
+####################################################################################################################
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -104,6 +127,9 @@ def forgetPass():
         return redirect(url_for('main.login'))
     return render_template('forgetPW.html', resetpass_form=form)
 
+####################################################################################################################
+###########################               END AUTHENTICATION ROUTES                    #############################
+####################################################################################################################
 
 @main.route('/sellerDashboard')
 @login_required
@@ -118,11 +144,32 @@ def sellerDashboard():
     
     return render_template('sellerDashboard.html', accountDetails = account_details_form)
 
+####################################################################################################################
+################################                ADMIN ROUTES                    ####################################
+####################################################################################################################
+
 @main.route('/adminDashboard')
 @login_required
 def adminDashboard():
     
     return render_template('adminDashboard.html')
+
+@main.route('/ManageUser')
+@login_required
+def adminManageUser():
+
+    manage_Useraccount_details_form = ManageAccountDetailsForm()
+    if manage_Useraccount_details_form.validate_on_submit():
+
+        # Process form data here (e.g., update user details in the database)
+        flash('Account details updated successfully.', 'success')
+        return redirect(url_for('main.account_details'))
+    
+    return render_template('adminManageUser.html', manageAccountInfo = manage_Useraccount_details_form)
+
+####################################################################################################################
+################################               END ADMIN ROUTES                    #################################
+####################################################################################################################
 
 #Example on how the database connection is called
 @main.route('/db_check')

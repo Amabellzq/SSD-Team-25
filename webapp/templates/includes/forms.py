@@ -56,6 +56,19 @@ class AccountDetailsForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Update Details')
 
+class ManageAccountDetailsForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    contact = StringField('Contact Number', validators=[
+            DataRequired(),
+            Regexp(r'^\d{8}$', message="Contact number must be exactly 8 digits.")
+        ]) 
+    role = SelectField('I am a', choices=[
+            ('user', 'User'),
+            ('seller', 'Seller')
+        ], validators=[DataRequired()])
+    submit = SubmitField('Update Details')
+
 
 #############################
     # Merchant #

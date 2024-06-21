@@ -13,7 +13,7 @@
                     <h4>Admin Dashboard</h4>
                 </div>
             </div>
-            <div class="col-lg-9 col-md-8"> <!-- Larger column for products -->
+            <div class="col-lg-12 col-md-12"> <!-- Larger column for products -->
                 <div class="row property__gallery">
                     <!-- Users Section, hidden by default -->
 
@@ -27,6 +27,7 @@
                                     <th>Email</th>
                                     <th>User Role</th>
                                     <th>Actions</th>
+                                    <th>Delete User</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -35,7 +36,11 @@
                                     <td>2023-06-01</td>
                                     <td>Shipped</td>
                                     <td>User</td>
-                                    <td><button class="btn btn-primary">Manage User</button></td>
+                                    <td><button class="btn btn-primary" onclick="location.href='/ManageUser';">Edit</button></td>
+                                    <td><button class="btn" style="background-color: red; border-radius: 60%; 
+                                        color: white; padding: 5px 10px;" 
+                                        onclick="">X</button>
+                                    </td>
                                 </tr>
                                 <!-- Additional rows can be added here -->
                             </tbody>

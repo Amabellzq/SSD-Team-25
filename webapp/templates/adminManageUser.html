@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Manage User - ShopMe{% endblock %}
+  
+{% block content %} 
+
+<!-- Product Section Begin -->
+<section class="product spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-4">
+                <div class="section-title">
+                    <h4>Manage User</h4>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12"> <!-- Larger column for products -->
+                <div class="row property__gallery">
+                    <!-- Users Section, hidden by default -->
+
+                    <div class="col-lg-12 mix accountDetails"> <!-- Ensure this is initially hidden -->
+                        <h2>Account Details</h2>
+                        <form method="POST" action="{{ url_for('main.myaccount') }}">
+                            {{ manageAccountInfo.hidden_tag() }}
+                            <div class="form-group">
+                                {{ manageAccountInfo.username.label(class="form-label") }}
+                                {{ manageAccountInfo.username(class="form-control", readonly=true) }}
+                                {% if manageAccountInfo.username.errors %}
+                                    {% for error in manageAccountInfo.username.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ manageAccountInfo.email.label(class="form-label") }}
+                                {{ manageAccountInfo.email(class="form-control", readonly=true) }}
+                                {% if manageAccountInfo.email.errors %}
+                                    {% for error in manageAccountInfo.email.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ manageAccountInfo.contact.label(class="form-label") }}
+                                {{ manageAccountInfo.contact(class="form-control", readonly=true) }}
+                                {% if manageAccountInfo.contact.errors %}
+                                    {% for error in manageAccountInfo.contact.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ manageAccountInfo.role.label(class="form-label") }}
+                                {{ manageAccountInfo.role(class="form-control") }}  <!-- Leave as is for editing -->
+                                {% if manageAccountInfo.role.errors %}
+                                    {% for error in manageAccountInfo.role.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary">{{ manageAccountInfo.submit.label.text }}</button>
+                        </form>
+                    </div>
+                    
+                    <!-- INSERT MORE ITEMS FROM HERE ONWARDS -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Product Section End -->
+
+
+{% endblock %}
