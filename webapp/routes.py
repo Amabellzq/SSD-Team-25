@@ -105,9 +105,9 @@ def forgetPass():
     return render_template('forgetPW.html', resetpass_form=form)
 
 
-@main.route('/adminDashboard')
+@main.route('/sellerDashboard')
 @login_required
-def adminDashboard():
+def sellerDashboard():
 
     account_details_form = AccountDetailsForm()
     if account_details_form.validate_on_submit():
@@ -116,8 +116,13 @@ def adminDashboard():
         flash('Account details updated successfully.', 'success')
         return redirect(url_for('main.account_details'))
     
-    return render_template('adminDashboard.html', accountDetails = account_details_form)
+    return render_template('sellerDashboard.html', accountDetails = account_details_form)
 
+@main.route('/adminDashboard')
+@login_required
+def adminDashboard():
+    
+    return render_template('adminDashboard.html')
 
 #Example on how the database connection is called
 @main.route('/db_check')

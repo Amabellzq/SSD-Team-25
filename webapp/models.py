@@ -2,7 +2,8 @@ class User:
     # Define users as a class attribute
     users = {
         '1': {'id': '1', 'username': 'user1', 'email': 'user1@example.com', 'role': 'user', 'password': 'nugget'},
-        '2': {'id': '2', 'username': 'seller1', 'email': 'seller1@example.com', 'role': 'seller', 'password': 's3cr3t'}
+        '2': {'id': '2', 'username': 'seller1', 'email': 'seller1@example.com', 'role': 'seller', 'password': 's3cr3t'},
+        '3': {'id': '3', 'username': 'admin', 'email': 'admin@example.com', 'role': 'admin', 'password': 'iamAdmin'},
     }
 
     def __init__(self, id, username, email, role, password):

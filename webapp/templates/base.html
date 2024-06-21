@@ -73,11 +73,13 @@
                         <div class="header__right__auth">
                             {% if current_user.is_authenticated %}
                                 {% if current_user.role == 'seller' %}
-                                    <a href="/adminDashboard">Seller Dashboard</a>
+                                    <a href="/sellerDashboard">Seller Dashboard</a>
+                                {% elif current_user.role == 'admin' %}
+                                    <a href="/adminDashboard">Admin Dashboard</a>
                                 {% else %}
                                     <a href="/myprofile"><i class="fas fa-user" style="font-size: 20px;"></i></a>
                                 {% endif %}
-                                <a href="/logout">Logout</a>
+                                    <a href="/logout">Logout</a>
                             {% else %}
                                 <a href="/login">Login</a>
                                 <a href="/register">Register</a>
