@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Contact Page - ShopMe{% endblock %}
+{% block title %}Merchant Dashboard - ShopMe{% endblock %}
   
 {% block content %} 
 
@@ -9,16 +9,16 @@
     <div class="container">
         <div class="row">
             
-            <div class="col-lg-3 col-md-4"> <!-- Smaller column for filters -->
+            <div class="col-lg-3 col-md-2"> <!-- Smaller column for filters -->
                 <ul class="account_filter__controls">
                     <li class="active" data-filter=".accountDetails">Account Details</li>
                     <li data-filter=".Orders">Orders</li>
                     <li data-filter=".Products">Manage Products</li>
-                    <!-- li data-filter=".accessories">Accessories</li>
-                    <li data-filter=".cosmetic">Cosmetics</li> -->
+                    <li data-filter=".Category">Create Category</li>
+                    <!-- li data-filter=".cosmetic">Cosmetics</li> -->
                 </ul>
             </div>
-            <div class="col-lg-9 col-md-8"> <!-- Larger column for products -->
+            <div class="col-lg-9 col-md-10"> <!-- Larger column for products -->
                 <div class="row property__gallery">
                     <!-- Orders Section, hidden by default -->
 
@@ -63,7 +63,11 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
-                            <button type="submit" class="btn btn-primary">{{ accountDetails.submit.label.text }}</button>
+                            <div class="text-center">
+                                <button type="submit" style="background-color: #09054a; border-color: #09054a;"class="btn btn-primary">
+                                    {{ accountDetails.submit.label.text }}
+                                </button>
+                            </div>      
                         </form>
                     </div>
 
@@ -99,17 +103,25 @@
                                 <tr>
                                     <th>Product ID</th>
                                     <th>Description</th>
-                                    <th>Quantity</th>
+                                    <th>Category ID</th>
                                     <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Image</th>
+                                    <th>Date Created</th>
+                                    <th>Last Updated</th>
                                     <th>Manage</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>#001</td>
-                                    <td>2023-06-01</td>
-                                    <td>Shipped</td>
-                                    <td>$59.0</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
                                     <td><button class="btn btn-primary">Manage Products</button></td>
                                 </tr>
                                 <!-- Additional rows can be added here -->
@@ -117,6 +129,31 @@
                         </table>
                     </div>
                     
+                    <div class="col-lg-12 mix Category"  style="display: none;"> <!-- Ensure this is initially hidden -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
+                            <h3>View Category</h3>
+                            <button class="btn btn-primary" onclick="location.href='/createCategory';">Create Category</button>
+                        </div>
+                        
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Category ID</th>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category['category_id'] }}</td>
+                                    <td>{{ category['name'] }}</td>
+                                    <td>{{ category['description'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     <!-- INSERT MORE ITEMS FROM HERE ONWARDS -->
 
                 </div>

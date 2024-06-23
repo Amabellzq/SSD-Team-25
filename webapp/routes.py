@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, ManageAccountDetailsForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, ManageAccountDetailsForm, CreateCategory
 from webapp.models import User, load_user
 from webapp.db import get_db_connection
 
@@ -131,19 +131,6 @@ def forgetPass():
 ###########################               END AUTHENTICATION ROUTES                    #############################
 ####################################################################################################################
 
-@main.route('/sellerDashboard')
-@login_required
-def sellerDashboard():
-
-    account_details_form = AccountDetailsForm()
-    if account_details_form.validate_on_submit():
-
-        # Process form data here (e.g., update user details in the database)
-        flash('Account details updated successfully.', 'success')
-        return redirect(url_for('main.account_details'))
-    
-    return render_template('sellerDashboard.html', accountDetails = account_details_form)
-
 ####################################################################################################################
 ################################                ADMIN ROUTES                    ####################################
 ####################################################################################################################
@@ -169,6 +156,67 @@ def adminManageUser():
 
 ####################################################################################################################
 ################################               END ADMIN ROUTES                    #################################
+####################################################################################################################
+
+####################################################################################################################
+################################                MERCHANT ROUTES                    #################################
+####################################################################################################################
+
+@main.route('/sellerDashboard')
+@login_required
+def sellerDashboard():
+
+    account_details_form = AccountDetailsForm()
+    if account_details_form.validate_on_submit():
+
+        # Process form data here (e.g., update user details in the database)
+        flash('Account details updated successfully.', 'success')
+        return redirect(url_for('main.sellerDashboard'))
+    
+    # Query the database for category data
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM Category")
+            categories = cursor.fetchall()
+    except Exception as e:
+        flash(f"An error occurred while fetching categories: {str(e)}", 'danger')
+        categories = []
+
+    
+    return render_template('sellerDashboard.html', accountDetails = account_details_form, categories = categories)
+
+@main.route('/createCategory', methods=['GET', 'POST'])
+@login_required
+def merchantCreateCategory():
+
+    create_category = CreateCategory()
+    if create_category.validate_on_submit():
+        category_name = create_category.categoryName.data
+        category_description = create_category.categoryDescription.data
+        # Insert category into database
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                sql = "INSERT INTO Category (name, description) VALUES (%s, %s)"
+                cursor.execute(sql, (category_name, category_description))
+                conn.commit()
+                print("Database insert successful")  # Debug
+            # Process form data here (e.g., update user details in the database)
+            flash('Account details updated successfully.', 'success')
+            return redirect(url_for('main.sellerDashboard'))
+        except Exception as e:
+            print(f"Database error: {str(e)}")  # Debug
+            flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            print("Form validation failed")  # Debug
+            flash('Form validation failed. Please check your input.', 'danger')
+    return render_template('sellerCreateCategory.html', createNewCategory = create_category)
+
+
+####################################################################################################################
+################################               END MERCHANT ROUTES                    ##############################
 ####################################################################################################################
 
 #Example on how the database connection is called
