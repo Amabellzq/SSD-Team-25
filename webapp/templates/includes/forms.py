@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
+from flask_wtf.file import FileRequired, FileAllowed
 
 #############################
     #Authentication#
@@ -73,3 +74,11 @@ class ManageAccountDetailsForm(FlaskForm):
 #############################
     # Merchant #
 #############################
+
+
+class CreateCategory(FlaskForm):
+    categoryName = StringField('Category Name', validators=[DataRequired()])
+    categoryDescription = StringField('Category Description', validators=[DataRequired()])
+    saveCategory = SubmitField('Save Category')
+
+
