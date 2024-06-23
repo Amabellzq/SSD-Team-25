@@ -138,8 +138,22 @@ def forgetPass():
 @main.route('/adminDashboard')
 @login_required
 def adminDashboard():
+
+    #VIEW Users - DISPLAY USERS IN A TABLE
+
+
     
-    return render_template('adminDashboard.html')
+    #CREATE CATEGORIES - DISPLAY CATEGORY DATA TO A TABLE
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM Category")
+            categories = cursor.fetchall()
+    except Exception as e:
+        flash(f"An error occurred while fetching categories: {str(e)}", 'danger')
+        categories = []
+
+    return render_template('adminDashboard.html', categories = categories)
 
 @main.route('/ManageUser')
 @login_required
@@ -152,7 +166,120 @@ def adminManageUser():
         flash('Account details updated successfully.', 'success')
         return redirect(url_for('main.account_details'))
     
+
     return render_template('adminManageUser.html', manageAccountInfo = manage_Useraccount_details_form)
+
+@main.route('/createCategory', methods=['GET', 'POST'])
+@login_required
+def adminCreateCategory():
+
+    create_category = CreateCategory()
+    if create_category.validate_on_submit():
+        category_name = create_category.categoryName.data
+        category_description = create_category.categoryDescription.data
+        # Insert category into database
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                sql = "INSERT INTO Category (name, description) VALUES (%s, %s)"
+                cursor.execute(sql, (category_name, category_description))
+                conn.commit()
+                print("Database insert successful")  # Debug
+            # Process form data here (e.g., update user details in the database)
+            flash('Account details updated successfully.', 'success')
+            return redirect(url_for('main.adminDashboard'))
+        except Exception as e:
+            print(f"Database error: {str(e)}")  # Debug
+            flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            print("Form validation failed")  # Debug
+            flash('Form validation failed. Please check your input.', 'danger')
+    return render_template('adminCreateCategory.html', createNewCategory = create_category)
+
+# @main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
+# @login_required
+# def edit_category(category_id):
+#     form = CreateCategory()
+#     if request.method == 'POST' and form.validate_on_submit():
+#         category_name = form.categoryName.data
+#         category_description = form.categoryDescription.data
+#         try:
+#             conn = get_db_connection()
+#             with conn.cursor() as cursor:
+#                 sql = "UPDATE Category SET name = %s, description = %s WHERE id = %s"
+#                 cursor.execute(sql, (category_name, category_description, category_id))
+#                 conn.commit()
+#             flash('Category updated successfully.', 'success')
+#             return redirect(url_for('main.adminManageCategory'))
+#         except Exception as e:
+#             flash(f'An error occurred: {str(e)}', 'danger')
+#     else:
+#         try:
+#             conn = get_db_connection()
+#             with conn.cursor() as cursor:
+#                 cursor.execute("SELECT * FROM Category WHERE id = %s", (category_id,))
+#                 category = cursor.fetchone()
+#                 if category:
+#                     form.categoryName.data = category['name']
+#                     form.categoryDescription.data = category['description']
+#         except Exception as e:
+#             flash(f'An error occurred: {str(e)}', 'danger')
+#         finally:
+#             conn.close()
+
+#     return render_template('editCategory.html', form=form, category_id=category_id)
+
+
+@main.route('/deleteCategory/<int:category_id>', methods=['POST'])
+@login_required
+def delete_category(category_id):
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            sql = "DELETE FROM Category WHERE category_id = %s"
+            cursor.execute(sql, (category_id,))
+            conn.commit()
+        flash('Category deleted successfully.', 'success')
+    except Exception as e:
+        flash(f'An error occurred: {str(e)}', 'danger')
+    finally:
+        conn.close()
+    return redirect(url_for('main.adminDashboard'))
+
+@main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(category_id):
+
+    form = CreateCategory()
+    if request.method == 'POST' and form.validate_on_submit():
+        category_name = form.categoryName.data
+        category_description = form.categoryDescription.data
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                sql = "UPDATE Category SET name = %s, description = %s WHERE category_id = %s"
+                cursor.execute(sql, (category_name, category_description, category_id))
+                conn.commit()
+            flash('Category updated successfully.', 'success')
+            return redirect(url_for('main.adminDashboard'))
+        except Exception as e:
+            flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM Category WHERE category_id = %s", (category_id,))
+                category = cursor.fetchone()
+                if category:
+                    form.categoryName.data = category['name']
+                    form.categoryDescription.data = category['description']
+        except Exception as e:
+            flash(f'An error occurred: {str(e)}', 'danger')
+        finally:
+            conn.close()
+
+    return render_template('adminEditCategory.html', form=form, category_id=category_id)
 
 ####################################################################################################################
 ################################               END ADMIN ROUTES                    #################################
@@ -173,46 +300,9 @@ def sellerDashboard():
         flash('Account details updated successfully.', 'success')
         return redirect(url_for('main.sellerDashboard'))
     
-    # Query the database for category data
-    try:
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM Category")
-            categories = cursor.fetchall()
-    except Exception as e:
-        flash(f"An error occurred while fetching categories: {str(e)}", 'danger')
-        categories = []
+   
+    return render_template('sellerDashboard.html', accountDetails = account_details_form)
 
-    
-    return render_template('sellerDashboard.html', accountDetails = account_details_form, categories = categories)
-
-@main.route('/createCategory', methods=['GET', 'POST'])
-@login_required
-def merchantCreateCategory():
-
-    create_category = CreateCategory()
-    if create_category.validate_on_submit():
-        category_name = create_category.categoryName.data
-        category_description = create_category.categoryDescription.data
-        # Insert category into database
-        try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                sql = "INSERT INTO Category (name, description) VALUES (%s, %s)"
-                cursor.execute(sql, (category_name, category_description))
-                conn.commit()
-                print("Database insert successful")  # Debug
-            # Process form data here (e.g., update user details in the database)
-            flash('Account details updated successfully.', 'success')
-            return redirect(url_for('main.sellerDashboard'))
-        except Exception as e:
-            print(f"Database error: {str(e)}")  # Debug
-            flash(f'An error occurred: {str(e)}', 'danger')
-    else:
-        if request.method == 'POST':
-            print("Form validation failed")  # Debug
-            flash('Form validation failed. Please check your input.', 'danger')
-    return render_template('sellerCreateCategory.html', createNewCategory = create_category)
 
 
 ####################################################################################################################
