@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
-
+# is to to avoid circular imports
+from webapp import routes
 # Load environment variables from .env file
 load_dotenv()
 
