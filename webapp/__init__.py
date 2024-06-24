@@ -13,8 +13,11 @@ login_manager.init_app(app)
 login_manager.login_view = 'main.login'
 
 @login_manager.user_loader
-def load_user(user_id):
-    return User.get_by_id(user_id)
+# def load_user(user_id):
+#     return User.get_by_id(user_id)
+def user_loader(user_id):
+    return load_user(user_id)
 
 from .routes import main # Import routes after LoginManager setup to avoid circular imports
+
 app.register_blueprint(main)
