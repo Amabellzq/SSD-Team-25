@@ -12,7 +12,7 @@
             <div class="col-lg-3 col-md-2"> <!-- Smaller column for filters -->
                 <ul class="account_filter__controls">
                     <li class="active" data-filter=".accountDetails">Account Details</li>
-                    <li data-filter=".Orders">Orders</li>
+                    <li data-filter=".Orders">Manage Orders</li>
                     <li data-filter=".Products">Manage Products</li>
                     <li data-filter=".Category">Create Category</li>
                     <!-- li data-filter=".cosmetic">Cosmetics</li> -->
@@ -72,14 +72,14 @@
                     </div>
 
                     <div class="col-lg-12 mix Orders"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h3>My Purchases</h3>
+                        <h3>Orders</h3>
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Date</th>
+                                    <th>Created Date</th>
+                                    <th>Total Paid</th>
                                     <th>Status</th>
-                                    <th>Total</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -87,9 +87,9 @@
                                 <tr>
                                     <td>#001</td>
                                     <td>2023-06-01</td>
-                                    <td>Shipped</td>
                                     <td>$59.0</td>
-                                    <td><button class="btn btn-primary">Manage</button></td>
+                                    <td>Shipped</td>
+                                    <td><button class="btn btn-primary" onclick="location.href='/orderDetails';">Manage</button></td>
                                 </tr>
                                 <!-- Additional rows can be added here -->
                             </tbody>
@@ -97,7 +97,7 @@
                     </div>
 
                     <div class="col-lg-12 mix Products"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h3>My Products</h3>
+                        <h3>Manage Products</h3>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -109,7 +109,7 @@
                                     <th>Image</th>
                                     <th>Date Created</th>
                                     <th>Last Updated</th>
-                                    <th>Manage</th>
+                                    <th>View Details</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -186,6 +186,12 @@ def sellerDashboard():
     
     return render_template('sellerDashboard.html', accountDetails = account_details_form, categories = categories)
 
+@main.route('/orderDetails')
+@login_required
+def orderDetails():
+
+    return render_template('sellerOrderDetails.html', user=current_user)
+
 @main.route('/createCategory', methods=['GET', 'POST'])
 @login_required
 def merchantCreateCategory():
