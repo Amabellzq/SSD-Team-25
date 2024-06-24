@@ -15,16 +15,9 @@ class LoginForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    email = EmailField('Email', validators=[DataRequired(), Email()])
-    contact = StringField('Contact Number', validators=[
-            DataRequired(),
-            Regexp(r'^\d{8}$', message="Contact number must be exactly 8 digits.")
-        ])   
-    role = SelectField('I am a', choices=[
-        ('user', 'User'),
-        ('seller', 'Seller')
-    ], validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=40)])
+    role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Register')
 

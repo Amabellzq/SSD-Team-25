@@ -72,9 +72,9 @@
                     <div class="header__right">
                         <div class="header__right__auth">
                             {% if current_user.is_authenticated %}
-                                {% if current_user.role == 'seller' %}
+                                {% if current_user.role == 'Merchant' %}
                                     <a href="/sellerDashboard">Seller Dashboard</a>
-                                {% elif current_user.role == 'admin' %}
+                                {% elif current_user.role == 'Admin' %}
                                     <a href="/adminDashboard">Admin Dashboard</a>
                                 {% else %}
                                     <a href="/myprofile"><i class="fas fa-user" style="font-size: 20px;"></i></a>
