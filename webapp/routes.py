@@ -307,6 +307,18 @@ def orderDetails():
 
     return render_template('sellerOrderDetails.html', user=current_user)
 
+@main.route('/newProduct')
+@login_required
+def newProduct():
+
+    return render_template('sellerNewProduct.html', user=current_user)
+
+@main.route('/updateProduct')
+@login_required
+def updateProduct():
+
+    return render_template('sellerUpdateProduct.html', user=current_user)
+
 
 ####################################################################################################################
 ################################               END MERCHANT ROUTES                    ##############################

@@ -84,8 +84,15 @@
             <input type="text" class="form-control" id="status" value="Pending" readonly>
         </div>
         <button type="button" class="btn btn-success" onclick="markAsCompleted()">Mark as Completed</button>
-        <a style="background-color: #09054a; border-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>    
+        <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>    
     </form>
 </div>
+
+<script>
+    function markAsCompleted() {
+        document.getElementById('status').value = 'Completed';
+        document.getElementById('editOrderForm').submit();
+    }
+</script>
 
 {% endblock %}

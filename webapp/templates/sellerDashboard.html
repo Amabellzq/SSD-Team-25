@@ -96,32 +96,37 @@
                     </div>
 
                     <div class="col-lg-12 mix Products"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h3>Manage Products</h3>
+                        <h3>Products Listed</h3>
+                        <button class="btn btn-primary" onclick="location.href='/newProduct';">Add</button>
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Product ID</th>
+                                    <th>Product Name</th>
+                                    <th>Image</th>
                                     <th>Description</th>
                                     <th>Category ID</th>
                                     <th>Price</th>
                                     <th>Quantity</th>
-                                    <th>Image</th>
+                                    <th>Availability</th>
                                     <th>Date Created</th>
                                     <th>Last Updated</th>
-                                    <th>View Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td><button class="btn btn-primary">Manage Products</button></td>
+                                    <td>#001</td>
+                                    <td>Sponge</td>
+                                    <td><img src="https://m.media-amazon.com/images/I/81diqTAjKBL._AC_UF894,1000_QL80_.jpg"></td>
+                                    <td>Its a sponge.</td>
+                                    <td>#1</td>
+                                    <td>$4</td>
+                                    <td>20</td>
+                                    <td>In Stock</td>
+                                    <td>4/7/23</td>
+                                    <td>24/6/24</td>
+                                    <td><button class="btn btn-primary" onclick="location.href='/updateProduct';">Update</button></td>
+                                    <td><button class="btn btn-primary">Remove</button></td>
                                 </tr>
                                 <!-- Additional rows can be added here -->
                             </tbody>
