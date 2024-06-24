@@ -1,63 +1,81 @@
 <!DOCTYPE html>
-<!-- Created By CodingNepal -->
-<html lang="en" dir="ltr">
+<html lang="en">
    <head>
       <meta charset="utf-8">
-      <title>Login Form Design | CodeLab</title>
+      <title>Shop Me | I am New</title>
       <link rel="stylesheet" href="../static/css/auth_style.css">
+      <style>
+        .center-align {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .field {
+             margin-bottom: 5px;
+         }
+        .file-input-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        input[type="file"] {
+            text-align: center;
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            height: 60px; /* Adjust the height to match other fields */
+        }
+     </style>
    </head>
    <body>
       <div class="wrapper">
-         <div class="title">
-           Registration Form
-         </div>
-         <form method="POST" action="{{ url_for('main.register') }}">
+        <div class="title">Registration Form</div>
+        <form method="POST" action="{{ url_for('main.register') }}" enctype="multipart/form-data">
             {{ register_form.hidden_tag() }}
             <div class="field">
-                {{ register_form.username.label(class="form-label") }}
                 {{ register_form.username(class="form-control", required=True) }}
+                {{ register_form.username.label(class="form-label") }}
             </div>
             <div class="field">
-                {{ register_form.email.label(class="form-label") }}
-                {{ register_form.email(class="form-control", required=True) }}
-                {% if register_form.email.errors %}
-                    {% for error in register_form.email.errors %}
+                {{ register_form.role(class="form-control", required=True) }}
+            </div>
+            <div class="field file-input-wrapper">
+                <!-- {{ register_form.profile_picture.label(class="form-label") }} -->
+                {{ register_form.profile_picture(class="form-control", required=True) }}
+                {% if register_form.profile_picture.errors %}
+                    {% for error in register_form.profile_picture.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
                 {% endif %}
-                <label>{{ register_form.email.label.text }}</label>
             </div>
             <div class="field">
-                {{ register_form.password.label(class="form-label") }}
-                {{ register_form.password(class="form-control", required=True) }}
+                {{ register_form.password(class="form-control", placeholder="Password", required=True) }}
                 {% if register_form.password.errors %}
                     {% for error in register_form.password.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
                 {% endif %}
-                <label>{{ register_form.password.label.text }}</label>
+                <!-- {{ register_form.password.label(class="form-label") }} -->
             </div>
             <div class="field">
-                {{ register_form.confirm_password.label(class="form-label") }}
                 {{ register_form.confirm_password(class="form-control", required=True) }}
                 {% if register_form.confirm_password.errors %}
                     {% for error in register_form.confirm_password.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
                 {% endif %}
-                <label>{{ register_form.confirm_password.label.text }}</label>
+                {{ register_form.confirm_password.label(class="form-label") }}
             </div>
             <div class="field">
-                <!-- {{ register_form.role.label(class="form-label") }} -->
-                {{ register_form.role(class="form-control", required=True) }}
-            </div>
-            <div class="field">
-               <input type="submit" value="Register">
+                {{ register_form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
             </div>
             <div class="signup-link">
                Already used me? <a href="/login">Login now</a>
             </div>
-         </form>
+        </form>
       </div>
    </body>
 </html>
