@@ -14,7 +14,6 @@
                     <li class="active" data-filter=".accountDetails">Account Details</li>
                     <li data-filter=".Orders">Manage Orders</li>
                     <li data-filter=".Products">Manage Products</li>
-                    <li data-filter=".Category">Create Category</li>
                     <!-- li data-filter=".cosmetic">Cosmetics</li> -->
                 </ul>
             </div>
@@ -129,31 +128,7 @@
                         </table>
                     </div>
                     
-                    <div class="col-lg-12 mix Category"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
-                            <h3>View Category</h3>
-                            <button class="btn btn-primary" onclick="location.href='/createCategory';">Create Category</button>
-                        </div>
-                        
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Category ID</th>
-                                    <th>Category Name</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in categories %}
-                                <tr>
-                                    <td>{{ category['category_id'] }}</td>
-                                    <td>{{ category['name'] }}</td>
-                                    <td>{{ category['description'] }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    
                     <!-- INSERT MORE ITEMS FROM HERE ONWARDS -->
 
                 </div>

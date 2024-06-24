@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Create Category - ShopMe{% endblock %}
+{% block title %}Manage Categories - ShopMe{% endblock %}
   
 {% block content %} 
- <!-- Breadcrumb Begin -->
- <div class="breadcrumb-option">
+<!-- Breadcrumb Begin -->
+<div class="breadcrumb-option">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
                 <div class="breadcrumb__links">
-                    <a href="/sellerDashboard"><i class="fa fa-home"></i> Seller Dashboard </a>
-                    <span>Merchant Create Category</span>
+                    <a href="/adminDashboard"><i class="fa fa-home"></i> Admin Dashboard </a>
+                    <span>Manage Categories</span>
                 </div>
             </div>
         </div>
@@ -32,19 +32,19 @@
                     <!-- Users Section, hidden by default -->
 
                     <div class="col-lg-12 mix accountDetails"> <!-- Ensure this is initially hidden createNewCategory-->
-                        <form method="POST" action="{{ url_for('main.merchantCreateCategory') }}">
-                            {{ createNewCategory.hidden_tag() }}
+                        <form method="POST" action="{{ url_for('main.edit_category', category_id=category_id) }}">
+                            {{ form.hidden_tag() }}
                             <div class="form-group">
-                                {{ createNewCategory.categoryName.label(class="form-label") }}
-                                {{ createNewCategory.categoryName(class="form-control") }}
+                                {{ form.categoryName.label(class="form-label") }}
+                                {{ form.categoryName(class="form-control") }}
                             </div>
                             <div class="form-group">
-                                {{ createNewCategory.categoryDescription.label(class="form-label") }}
-                                {{ createNewCategory.categoryDescription(class="form-control") }}
+                                {{ form.categoryDescription.label(class="form-label") }}
+                                {{ form.categoryDescription(class="form-control") }}
                             </div>
                             <div class="text-center">
-                                <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">{{ createNewCategory.saveCategory.label.text }}</button>
-                            </div>                        
+                                {{ form.saveCategory(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
+                            </div>                                
                         </form>
                     </div>
                 </div>
