@@ -349,10 +349,25 @@ def sellerDashboard():
         # Process form data here (e.g., update user details in the database)
         flash('Account details updated successfully.', 'success')
         return redirect(url_for('main.sellerDashboard'))
-    
-   
     return render_template('sellerDashboard.html', accountDetails = account_details_form)
 
+@main.route('/orderDetails')
+@login_required
+def orderDetails():
+
+    return render_template('sellerOrderDetails.html', user=current_user)
+
+@main.route('/newProduct')
+@login_required
+def newProduct():
+
+    return render_template('sellerNewProduct.html', user=current_user)
+
+@main.route('/updateProduct')
+@login_required
+def updateProduct():
+
+    return render_template('sellerUpdateProduct.html', user=current_user)
 
 
 ####################################################################################################################

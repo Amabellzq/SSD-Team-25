@@ -8,7 +8,7 @@
    <body>
       <div class="wrapper">
          <div class="title">
-            Login me in
+            Log me in
          </div>
          <form method="POST" action="{{ url_for('main.login') }}">
             {{ login_form.hidden_tag() }}
@@ -37,7 +37,7 @@
                {{ login_form.submit(class="btn btn-primary") }}
             </div>
             <div class="signup-link">
-               Have not used you <a href="/register">Signup now</a>
+               Don't have an account? <a href="/register">Sign up</a>
             </div>
          </form>
       </div>

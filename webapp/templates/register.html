@@ -32,8 +32,15 @@
    </head>
    <body>
       <div class="wrapper">
+<<<<<<< HEAD
         <div class="title">Registration Form</div>
         <form method="POST" action="{{ url_for('main.register') }}" enctype="multipart/form-data">
+=======
+         <div class="title">
+           Register Here
+         </div>
+         <form method="POST" action="{{ url_for('main.register') }}">
+>>>>>>> 23ef45f8340b2cb91be8fb1194fe2e263e361882
             {{ register_form.hidden_tag() }}
             <div class="field">
                 {{ register_form.username(class="form-control", required=True) }}
@@ -73,7 +80,7 @@
                 {{ register_form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
             </div>
             <div class="signup-link">
-               Already used me? <a href="/login">Login now</a>
+               Already have an account? <a href="/login">Login now</a>
             </div>
         </form>
       </div>
