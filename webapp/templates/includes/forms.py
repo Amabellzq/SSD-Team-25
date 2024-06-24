@@ -19,6 +19,7 @@ class RegistrationForm(FlaskForm):
     profile_picture = FileField('Profile Picture', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
+    account_status = SelectField('account Status', choices=[ ('Active', 'Active'), ('InActive', 'InActive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
     submit = SubmitField('Register')
 
 class ResetPasswordForm(FlaskForm):
@@ -50,28 +51,20 @@ class AccountDetailsForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Update Details')
 
-class ManageAccountDetailsForm(FlaskForm):
+class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    contact = StringField('Contact Number', validators=[
-            DataRequired(),
-            Regexp(r'^\d{8}$', message="Contact number must be exactly 8 digits.")
-        ]) 
-    role = SelectField('I am a', choices=[
-            ('user', 'User'),
-            ('seller', 'Seller')
-        ], validators=[DataRequired()])
-    submit = SubmitField('Update Details')
-
+    role = SelectField('Role', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    account_status = SelectField('account Status', choices=[ ('Active', 'Active'), ('InActive', 'InActive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
+    submit = SubmitField('Save')
 
 #############################
     # Merchant #
 #############################
 
-
 class CreateCategory(FlaskForm):
     categoryName = StringField('Category Name', validators=[DataRequired()])
     categoryDescription = StringField('Category Description', validators=[DataRequired()])
     saveCategory = SubmitField('Save Category')
+
 
 

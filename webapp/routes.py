@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, ManageAccountDetailsForm, CreateCategory
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
 from webapp.models import User, load_user
 from webapp.db import get_db_connection
 from werkzeug.utils import secure_filename
@@ -239,19 +239,82 @@ def adminDashboard():
 
     return render_template('adminDashboard.html', users = users, categories = categories)
 
-@main.route('/ManageUser')
+@main.route('/editUser/<int:user_id>', methods=['GET', 'POST'])
 @login_required
-def adminManageUser():
+def edit_user(user_id):
+    form = EditUserForm()
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
+            user = cursor.fetchone()
+            if not user:
+                flash('User not found', 'danger')
+                return redirect(url_for('main.adminDashboard'))
 
-    manage_Useraccount_details_form = ManageAccountDetailsForm()
-    if manage_Useraccount_details_form.validate_on_submit():
+        if form.validate_on_submit():
+            account_status = form.account_status.data
+            print(f"Updating user: {user_id} with role: account_status: {account_status}")  # Debug
+            try:
+                with conn.cursor() as cursor:
+                    sql = """
+                    UPDATE User SET account_status = %s WHERE user_id = %s
+                    """
+                    cursor.execute(sql, (account_status, user_id))
+                    conn.commit()
+                    print("Database update successful")  # Debug
+                flash('User updated successfully!', 'success')
+                return redirect(url_for('main.adminDashboard'))
+            except Exception as e:
+                print(f"Database error: {str(e)}")  # Debug
+                flash(f'An error occurred: {str(e)}', 'danger')
+        else:
+            if request.method == 'POST':
+                print("Form validation failed")  # Debug
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                flash('Form validation failed. Please check your input.', 'danger')
+    finally:
+        conn.close()
 
-        # Process form data here (e.g., update user details in the database)
-        flash('Account details updated successfully.', 'success')
-        return redirect(url_for('main.account_details'))
-    
+    # Prepopulate the form with existing user data
+    form.username.data = user['username']
+    form.role.data = user['role']
+    form.account_status.data = user['account_status']
 
-    return render_template('adminManageUser.html', manageAccountInfo = manage_Useraccount_details_form)
+    # Pass the profile picture for display
+    profile_pic_url = None
+    if user['profile_pic_url']:
+        profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
+
+    return render_template('adminManageUser.html', form=form, profile_pic_url=profile_pic_url, user=user)
+
+@main.route('/deleteUser/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            # Check if user exists
+            cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
+            user = cursor.fetchone()
+            if not user:
+                flash('User not found', 'danger')
+                return redirect(url_for('main.adminDashboard'))
+
+            # Delete the user
+            cursor.execute("DELETE FROM User WHERE user_id = %s", (user_id,))
+            conn.commit()
+            flash('User deleted successfully!', 'success')
+    except Exception as e:
+        print(f"Database error: {str(e)}")  # Debug
+        flash(f'An error occurred: {str(e)}', 'danger')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('main.adminDashboard'))
+
 
 @main.route('/createCategory', methods=['GET', 'POST'])
 @login_required
