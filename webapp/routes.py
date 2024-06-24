@@ -299,10 +299,41 @@ def sellerDashboard():
         # Process form data here (e.g., update user details in the database)
         flash('Account details updated successfully.', 'success')
         return redirect(url_for('main.sellerDashboard'))
-    
-   
     return render_template('sellerDashboard.html', accountDetails = account_details_form)
 
+@main.route('/orderDetails')
+@login_required
+def orderDetails():
+
+    return render_template('sellerOrderDetails.html', user=current_user)
+
+@main.route('/createCategory', methods=['GET', 'POST'])
+@login_required
+def merchantCreateCategory():
+
+    create_category = CreateCategory()
+    if create_category.validate_on_submit():
+        category_name = create_category.categoryName.data
+        category_description = create_category.categoryDescription.data
+        # Insert category into database
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                sql = "INSERT INTO Category (name, description) VALUES (%s, %s)"
+                cursor.execute(sql, (category_name, category_description))
+                conn.commit()
+                print("Database insert successful")  # Debug
+            # Process form data here (e.g., update user details in the database)
+            flash('Account details updated successfully.', 'success')
+            return redirect(url_for('main.sellerDashboard'))
+        except Exception as e:
+            print(f"Database error: {str(e)}")  # Debug
+            flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            print("Form validation failed")  # Debug
+            flash('Form validation failed. Please check your input.', 'danger')
+    return render_template('sellerCreateCategory.html', createNewCategory = create_category)
 
 
 ####################################################################################################################
