@@ -402,37 +402,34 @@ def sellerDashboard():
     print("Request method:", request.method)
     user_id = current_user.id  # Assuming you have `current_user` from Flask-Login
 
+    ###############  ACCOUNT DETAILS ###############
     account_details_form = AccountDetailsForm()
     profile_pic_url = None
 
     try:
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            print("Fetching user from database...")
-            cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
-            user = cursor.fetchone()
-            if not user:
-                flash('User not found', 'danger')
-                return redirect(url_for('main.adminDashboard'))
+            if request.method == 'GET':
+                print("Fetching user from database...")
+                cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                if not user:
+                    flash('User not found', 'danger')
+                    return redirect(url_for('main.adminDashboard'))
 
-            # Prepopulate the form with existing user data
-            account_details_form.username.data = user['username']
-            account_details_form.role.data = user['role']
-            account_details_form.account_status.data = user['account_status']
-        
-            if user['profile_pic_url']:
-                profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
+                # Prepopulate the form with existing user data
+                account_details_form.username.data = user['username']
+                account_details_form.role.data = user['role']
+                account_details_form.account_status.data = user['account_status']
+            
+                if user['profile_pic_url']:
+                    profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
 
         if request.method == 'POST':
             print("POST request received.")
             try:
                 if account_details_form.validate_on_submit():
                     print("Form validated successfully.")
-                    print("Form data:")
-                    print("Username:", account_details_form.username.data)
-                    print("Password:", account_details_form.password.data)
-                    print("Profile Picture:", account_details_form.profile_picture.data)
-
                     username = account_details_form.username.data
                     password = account_details_form.password.data
                     profile_picture = account_details_form.profile_picture.data
@@ -490,6 +487,10 @@ def sellerDashboard():
         
     finally:
         conn.close()
+
+
+    ###############   END ACCOUNT DETAILS ###############
+
 
     return render_template('sellerDashboard.html',  accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
 
