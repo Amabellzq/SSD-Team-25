@@ -16,10 +16,9 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
-    profile_picture = FileField('Profile Picture', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
-    account_status = SelectField('account Status', choices=[ ('Active', 'Active'), ('InActive', 'InActive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
     submit = SubmitField('Register')
 
 class ResetPasswordForm(FlaskForm):
@@ -46,9 +45,10 @@ class CheckoutForm(FlaskForm):
 
 class AccountDetailsForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=40)])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
+    profile_picture = FileField('Profile Picture', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
+    role = SelectField('Role', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    account_status = SelectField('Account Status', choices=[('Active', 'Active'), ('Inactive', 'Inactive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
+    password = PasswordField('New Password', validators=[Length(min=0, max=40)])
     submit = SubmitField('Update Details')
 
 class EditUserForm(FlaskForm):
