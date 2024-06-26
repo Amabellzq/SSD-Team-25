@@ -83,10 +83,31 @@ pipeline {
         stage('Code Analysis with Flake8') {
             steps {
                 dir(REPO_DIR) {
-                 script {
-                    def flake8Status = sh(script: 'pipx run flake8 . > flake8_report.txt', returnStatus: true)
-                    if (flake8Status != 0) {
-                        echo "flake8 found issues. Check the report at flake8_report.txt"
+                   sh(script: 'pipx run flake8 . > flake8_report.txt', returnStatus: true)
+                }
+            }
+        }
+              stage('Code Analysis with pylint') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Run pylint and capture the exit status
+                        def pylintStatus = sh(script: 'pipx run pylint . > pylint_report.txt', returnStatus: true)
+                        if (pylintStatus != 0) {
+                            echo "pylint found issues. Check the report at pylint_report.txt"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Code Analysis with bandit') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Run bandit and capture the exit status
+                        def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
+                        if (banditStatus != 0) {
+                            echo "bandit found issues. Check the report at bandit_report.json"
                         }
                     }
                 }
@@ -107,23 +128,22 @@ pipeline {
 
 post {
     always {
-    script {
-                    // Ensure the flake8 report file exists
-                    def reportExists = fileExists("${REPO_DIR}flake8_report.txt")
-                    if (reportExists) {
-                        echo "flake8 report found at ${REPO_DIR}flake8_report.txt"
+        script {
 
-                        // Print the contents of the flake8 report for debugging
-                        sh "cat ${REPO_DIR}flake8_report.txt"
+                    // Record Flake8 issues
+                    recordIssues tools: [flake8(pattern: "flake8_report.txt")]
+                    recordIssues tools: [pylint(pattern: 'pylint_report.txt')]
+                     recordIssues tools: [bandit(pattern: 'bandit_report.json')]
+                    // Record Pylint issues
+                    //recordIssues tools: [pylint(pattern: "${REPO_DIR}/pylint_report.txt")]
 
-                        // Record Flake8 issues
-                        recordIssues tools: [flake8(pattern: 'flake8_report.txt')]
-                    } else {
-                        error "flake8 report not found at ${REPO_DIR}flake8_report.txt"
-                    }
-                }
+                    // Record Bandit issues
+                    //recordIssues tools: [bandit(pattern: "${REPO_DIR}/bandit_report.json")]
 
+              sh 'rm -f .env'
+        }
 
+        cleanWs()
     }
     }
 }
