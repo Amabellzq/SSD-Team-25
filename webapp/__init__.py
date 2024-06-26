@@ -1,7 +1,7 @@
 from flask import Flask
 from config import Config
 from .routes import main
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_login import LoginManager
 from .models import User, load_user  # Import your user model
 
 app = Flask(__name__)

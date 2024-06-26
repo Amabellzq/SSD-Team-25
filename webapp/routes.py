@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
-from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
 from webapp.models import User, load_user
