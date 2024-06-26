@@ -81,7 +81,7 @@ pipeline {
                 stage('Code Analysis with Pylint') {
             steps {
                 dir(REPO_DIR) {
-                    sh 'pipx run pylint . > pylint_report.txt || true'
+                    sh 'pipx run pylint . > pylint_report.txt'
                 }
             }
         }
@@ -89,7 +89,7 @@ pipeline {
         stage('Code Analysis with Flake8') {
             steps {
                 dir(REPO_DIR) {
-                    sh 'pipx run flake8 . > flake8_report.txt || true'
+                    sh 'pipx run flake8 . > flake8_report.txt'
                 }
             }
         }
@@ -97,7 +97,7 @@ pipeline {
         stage('Security Analysis with Bandit') {
             steps {
                 dir(REPO_DIR) {
-                    sh 'pipx run bandit -r . -f json -o bandit_report.json || true'
+                    sh 'pipx run bandit -r . -f json -o bandit_report.json'
                 }
             }
         }
