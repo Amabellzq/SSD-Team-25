@@ -114,9 +114,8 @@ pipeline {
                             echo "bandit completed successfully with no issues."
                         }
                         // Convert Bandit JSON output to a format that can be parsed
-                        sh '''
-                        jq -r '.results[] | "\(.filename):\(.line_number): \(.issue_severity)/\(.issue_confidence) \(.issue_text)"' bandit_report.json > bandit_report.log
-                        '''
+                        sh 'jq -r \'.results[] | "\(.filename):\(.line_number): \(.issue_severity)/\(.issue_confidence) \(.issue_text)"\' bandit_report.json > bandit_report.log'
+
                     }
                 }
             }
