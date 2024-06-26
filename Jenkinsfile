@@ -115,14 +115,18 @@ pipeline {
 post {
     always {
         script {
-                recordIssues tools: [
-                    [id: 'Pylint', name: 'Pylint', pattern: '${REPO_DIR}/pylint_report.txt'],
-                    [id:  'Flake8', name: 'Flake8', pattern: '${REPO_DIR}/flake8_report.txt'],
-                    [id :'Bandit', name: 'Bandit', pattern: '${REPO_DIR}/bandit_report.json']
-                ]
+     // Record Pylint issues
+                    recordIssues tools: [pylint(pattern: "${REPO_DIR}/pylint_report.txt")]
+
+                    // Record Flake8 issues
+                    recordIssues tools: [flake8(pattern: "${REPO_DIR}/flake8_report.txt")]
+
+                    // Record Bandit issues
+                    recordIssues tools: [bandit(pattern: "${REPO_DIR}/bandit_report.json")]
+                }
               sh 'rm -f .env'
         }
-        archiveArtifacts artifacts: '${REPO_DIR}/*.txt, ${REPO_DIR}/*.json', allowEmptyArchive: true
+
         cleanWs()
     }
     }
