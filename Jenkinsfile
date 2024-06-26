@@ -113,9 +113,6 @@ pipeline {
                         } else {
                             echo "bandit completed successfully with no issues."
                         }
-                        // Convert Bandit JSON output to a format that can be parsed
-                        sh 'jq -r \'.results[] | "\(.filename):\(.line_number): \(.issue_severity)/\(.issue_confidence) \(.issue_text)"\' bandit_report.json > bandit_report.log'
-
                     }
                 }
             }
@@ -142,12 +139,7 @@ post {
                     aggregatingResults: true,
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
-//                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
-//                     recordIssues (
-//                     enabledForFailure: true,
-//                     aggregatingResults: true,
-//                     tools: [issues(name: 'Bandit', pattern: 'bandit_report.log', parserId: 'BANDIT')]
-//                     )
+                     //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
 
 
               sh 'rm -f .env'
