@@ -142,12 +142,12 @@ post {
                     aggregatingResults: true,
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
-                     //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
-                    recordIssues (
-                    enabledForFailure: true,
-                    aggregatingResults: true,
-                    tools: [issues(name: 'Bandit', pattern: 'bandit_report.log', parserId: 'BANDIT')]
-                    )
+//                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
+//                     recordIssues (
+//                     enabledForFailure: true,
+//                     aggregatingResults: true,
+//                     tools: [issues(name: 'Bandit', pattern: 'bandit_report.log', parserId: 'BANDIT')]
+//                     )
 
 
               sh 'rm -f .env'
