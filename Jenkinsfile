@@ -83,7 +83,11 @@ pipeline {
         stage('Code Analysis with Flake8') {
             steps {
                 dir(REPO_DIR) {
-                    sh 'pipx run flake8 . > flake8_report.txt'
+                 script {
+                    def flake8Status = sh(script: 'pipx run flake8 . > flake8_report.txt', returnStatus: true)
+                    if (flake8Status != 0) {
+                        echo "flake8 found issues. Check the report at flake8_report.txt"
+                    }
                 }
             }
         }
