@@ -117,7 +117,7 @@ post {
         script {
 
                     // Record Flake8 issues
-                    recordIssues tools: [flake8(pattern: "${REPO_DIR}/flake8_report.txt")]
+                    recordIssues tools: [flake8(pattern: "${REPO_DIR}flake8_report.txt")]
                     // Record Pylint issues
                     //recordIssues tools: [pylint(pattern: "${REPO_DIR}/pylint_report.txt")]
 
