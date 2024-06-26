@@ -118,11 +118,6 @@ post {
 
                     // Record Flake8 issues
                     recordIssues tools: [flake8(pattern: "${REPO_DIR}flake8_report.txt")]
-                    // Record Pylint issues
-                    //recordIssues tools: [pylint(pattern: "${REPO_DIR}/pylint_report.txt")]
-
-                    // Record Bandit issues
-                    //recordIssues tools: [bandit(pattern: "${REPO_DIR}/bandit_report.json")]
 
               sh 'rm -f .env'
         }
