@@ -110,7 +110,7 @@ post {
         script {
 
                     // Record Flake8 issues
-                    recordIssues tools: [flake8(pattern: "${REPO_DIR}flake8_report.txt")]
+                    recordIssues tools: [flake8(pattern: "${REPO_DIR}/flake8_report.txt")]
 
               sh 'rm -f .env'
         }
