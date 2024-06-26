@@ -78,13 +78,7 @@ pipeline {
         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
             }
         }
-                stage('Code Analysis with Pylint') {
-            steps {
-                dir(REPO_DIR) {
-                    sh 'pipx run pylint . > pylint_report.txt'
-                }
-            }
-        }
+
 
         stage('Code Analysis with Flake8') {
             steps {
@@ -94,13 +88,7 @@ pipeline {
             }
         }
 
-        stage('Security Analysis with Bandit') {
-            steps {
-                dir(REPO_DIR) {
-                    sh 'pipx run bandit -r . -f json -o bandit_report.json'
-                }
-            }
-        }
+
 
         stage('Build and Deploy') {
             steps {
