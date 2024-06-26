@@ -136,7 +136,7 @@ post {
                     recordIssues (
                     enabledForFailure: true,
                     aggregatingResults: true,
-                    tools: [pyLint(name: 'Pylint', pattern: '**/pylint.log')]
+                    tools: [pyLint(name: 'Pylint', pattern: 'pylint.log')]
                     )
                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
 
