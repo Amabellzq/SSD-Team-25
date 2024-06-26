@@ -87,6 +87,7 @@ pipeline {
                     def flake8Status = sh(script: 'pipx run flake8 . > flake8_report.txt', returnStatus: true)
                     if (flake8Status != 0) {
                         echo "flake8 found issues. Check the report at flake8_report.txt"
+                        }
                     }
                 }
             }
