@@ -143,7 +143,7 @@ post {
                     recordIssues (
                     enabledForFailure: true,
                     aggregatingResults: true,
-                    tools: [bandit(name: 'Bandit', pattern: 'bandit_report.json')]
+                    tools: [issues(name: 'Bandit', pattern: 'bandit_report.json', parserId: 'BANDIT')]
                     )
 
 
