@@ -87,20 +87,32 @@ pipeline {
                 }
             }
         }
-
-        stage('Code Analysis with Bandit') {
+        stage('Code Analysis with pylint') {
             steps {
                 dir(REPO_DIR) {
                     script {
-                        // Run bandit and capture the exit status
-                        def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
-                        if (banditStatus != 0) {
-                            echo "bandit found issues. Check the report at bandit_report.json"
+                        // Run pylint using pipx and capture the exit status
+                        def pylintStatus = sh(script: 'pipx run pylint -f parseable --reports=no *.py > pylint_report.log', returnStatus: true)
+                        if (pylintStatus != 0) {
+                            echo "pylint found issues. Check the report at pylint_report.log"
                         }
                     }
                 }
             }
         }
+//         stage('Code Analysis with bandit') {
+//             steps {
+//                 dir(REPO_DIR) {
+//                     script {
+//                         // Run bandit and capture the exit status
+//                         def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
+//                         if (banditStatus != 0) {
+//                             echo "bandit found issues. Check the report at bandit_report.json"
+//                         }
+//                     }
+//                 }
+//             }
+//         }
 
 
 
@@ -120,8 +132,13 @@ post {
 
                     // Record Flake8 issues
                     recordIssues tools: [flake8(pattern: "flake8_report.txt")]
-                    //recordIssues tools: [pylint(pattern: 'pylint_report.txt')]
-                     recordIssues tools: [bandit(pattern: 'bandit_report.json')]
+                    sh 'cat pylint.log'
+                    recordIssues (
+                    enabledForFailure: true,
+                    aggregatingResults: true,
+                    tools: [pyLint(name: 'Pylint', pattern: '**/pylint.log')]
+                    )
+                     //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
 
 
               sh 'rm -f .env'
