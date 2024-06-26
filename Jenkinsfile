@@ -78,6 +78,29 @@ pipeline {
         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
             }
         }
+                stage('Code Analysis with Pylint') {
+            steps {
+                dir(REPO_DIR) {
+                    sh 'pipx run pylint . > pylint_report.txt || true'
+                }
+            }
+        }
+
+        stage('Code Analysis with Flake8') {
+            steps {
+                dir(REPO_DIR) {
+                    sh 'pipx run flake8 . > flake8_report.txt || true'
+                }
+            }
+        }
+
+        stage('Security Analysis with Bandit') {
+            steps {
+                dir(REPO_DIR) {
+                    sh 'pipx run bandit -r . -f json -o bandit_report.json || true'
+                }
+            }
+        }
 
         stage('Build and Deploy') {
             steps {
@@ -89,11 +112,18 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            script {
-                sh 'rm -f .env'
-            }
+post {
+    always {
+        script {
+            recordIssues tools: [
+                pylint(pattern: '${REPO_DIR}/pylint_report.txt'),
+                flake8(pattern: '${REPO_DIR}/flake8_report.txt'),
+                bandit(pattern: '${REPO_DIR}/bandit_report.json', id: 'bandit')
+            ]
+              sh 'rm -f .env'
         }
+        archiveArtifacts artifacts: '${REPO_DIR}/*.txt, ${REPO_DIR}/*.json', allowEmptyArchive: true
+        cleanWs()
+    }
     }
 }
