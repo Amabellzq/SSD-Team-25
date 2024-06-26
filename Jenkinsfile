@@ -117,7 +117,7 @@ post {
                         sh "cat ${REPO_DIR}flake8_report.txt"
 
                         // Record Flake8 issues
-                        recordIssues tools: [flake8(pattern: "${REPO_DIR}flake8_report.txt")]
+                        recordIssues tools: [flake8(pattern: 'flake8_report.txt')]
                     } else {
                         error "flake8 report not found at ${REPO_DIR}flake8_report.txt"
                     }
