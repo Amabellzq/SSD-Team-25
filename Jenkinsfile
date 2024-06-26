@@ -102,21 +102,21 @@ pipeline {
                 }
             }
         }
-//         stage('Code Analysis with bandit') {
-//             steps {
-//                 dir(REPO_DIR) {
-//                     script {
-//                         // Run bandit and capture the exit status
-//                         def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
-//                         if (banditStatus != 0) {
-//                             echo "bandit found issues. Check the report at bandit_report.json"
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
-
+        stage('Code Analysis with bandit') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Run bandit and capture the exit status
+                        def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
+                        if (banditStatus != 0) {
+                            echo "bandit found issues. Check the report at bandit_report.json"
+                        } else {
+                            echo "bandit completed successfully with no issues."
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Build and Deploy') {
             steps {
@@ -140,6 +140,11 @@ post {
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
+                    recordIssues (
+                    enabledForFailure: true,
+                    aggregatingResults: true,
+                    tools: [bandit(name: 'Bandit', pattern: 'bandit_report.json')]
+                    )
 
 
               sh 'rm -f .env'
