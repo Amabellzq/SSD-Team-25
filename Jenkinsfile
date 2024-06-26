@@ -123,7 +123,7 @@ post {
 
                     // Record Bandit issues
                     recordIssues tools: [bandit(pattern: "${REPO_DIR}/bandit_report.json")]
-                }
+                
               sh 'rm -f .env'
         }
 
