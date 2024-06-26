@@ -107,13 +107,22 @@ pipeline {
 
 post {
     always {
-        script {
+    script {
+                    // Ensure the flake8 report file exists
+                    def reportExists = fileExists("${REPO_DIR}flake8_report.txt")
+                    if (reportExists) {
+                        echo "flake8 report found at ${REPO_DIR}flake8_report.txt"
 
-                    // Record Flake8 issues
-                    recordIssues tools: [flake8(pattern: "${REPO_DIR}/flake8_report.txt")]
+                        // Print the contents of the flake8 report for debugging
+                        sh "cat ${REPO_DIR}flake8_report.txt"
 
-              sh 'rm -f .env'
-        }
+                        // Record Flake8 issues
+                        recordIssues tools: [flake8(pattern: "${REPO_DIR}flake8_report.txt")]
+                    } else {
+                        error "flake8 report not found at ${REPO_DIR}flake8_report.txt"
+                    }
+                }
+
 
     }
     }
