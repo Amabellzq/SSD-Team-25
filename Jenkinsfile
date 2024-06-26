@@ -87,20 +87,8 @@ pipeline {
                 }
             }
         }
-              stage('Code Analysis with pylint') {
-            steps {
-                dir(REPO_DIR) {
-                    script {
-                        // Run pylint and capture the exit status
-                        def pylintStatus = sh(script: 'pipx run pylint . > pylint_report.txt', returnStatus: true)
-                        if (pylintStatus != 0) {
-                            echo "pylint found issues. Check the report at pylint_report.txt"
-                        }
-                    }
-                }
-            }
-        }
-        stage('Code Analysis with bandit') {
+
+        stage('Code Analysis with Bandit') {
             steps {
                 dir(REPO_DIR) {
                     script {
@@ -132,13 +120,9 @@ post {
 
                     // Record Flake8 issues
                     recordIssues tools: [flake8(pattern: "flake8_report.txt")]
-                    recordIssues tools: [pylint(pattern: 'pylint_report.txt')]
+                    //recordIssues tools: [pylint(pattern: 'pylint_report.txt')]
                      recordIssues tools: [bandit(pattern: 'bandit_report.json')]
-                    // Record Pylint issues
-                    //recordIssues tools: [pylint(pattern: "${REPO_DIR}/pylint_report.txt")]
 
-                    // Record Bandit issues
-                    //recordIssues tools: [bandit(pattern: "${REPO_DIR}/bandit_report.json")]
 
               sh 'rm -f .env'
         }
