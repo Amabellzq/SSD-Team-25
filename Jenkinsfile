@@ -95,6 +95,8 @@ pipeline {
                         def pylintStatus = sh(script: 'pipx run pylint -f parseable --reports=no *.py > pylint_report.log', returnStatus: true)
                         if (pylintStatus != 0) {
                             echo "pylint found issues. Check the report at pylint_report.log"
+                        } else {
+                            echo "pylint completed successfully with no issues."
                         }
                     }
                 }
@@ -132,7 +134,6 @@ post {
 
                     // Record Flake8 issues
                     recordIssues tools: [flake8(pattern: "flake8_report.txt")]
-                    sh 'cat pylint.log'
                     recordIssues (
                     enabledForFailure: true,
                     aggregatingResults: true,
