@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
-from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
-from webapp.models import User, load_user
+from webapp.models import User, load_user, db
 from webapp.db import get_db_connection
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -56,13 +55,97 @@ def productDetails():
 @login_required
 def myaccount():
 
-    account_details_form = AccountDetailsForm()
-    if account_details_form.validate_on_submit():
+    print("Request method:", request.method)
+    user_id = current_user.id  # Assuming you have `current_user` from Flask-Login
 
-        # Process form data here (e.g., update user details in the database)
-        flash('Account details updated successfully.', 'success')
-        return redirect(url_for('account_details'))
-    return render_template('account.html', accountDetails = account_details_form)
+    ###############  ACCOUNT DETAILS ###############
+    account_details_form = AccountDetailsForm()
+    profile_pic_url = None
+
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            if request.method == 'GET':
+                print("Fetching user from database...")
+                cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                if not user:
+                    flash('User not found', 'danger')
+                    return redirect(url_for('main.adminDashboard'))
+
+                # Prepopulate the form with existing user data
+                account_details_form.username.data = user['username']
+                account_details_form.role.data = user['role']
+                account_details_form.account_status.data = user['account_status']
+            
+                if user['profile_pic_url']:
+                    profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
+
+        if request.method == 'POST':
+            print("POST request received.")
+            try:
+                if account_details_form.validate_on_submit():
+                    print("Form validated successfully.")
+                    username = account_details_form.username.data
+                    password = account_details_form.password.data
+                    profile_picture = account_details_form.profile_picture.data
+                
+                    # Hash the password if it is provided
+                    hashed_password = generate_password_hash(password) if password else None
+
+                    # Prepare SQL update statement
+                    sql_update_fields = ["username = %s"]
+                    sql_update_values = [username]
+
+                    if hashed_password:
+                        sql_update_fields.append("password = %s")
+                        sql_update_values.append(hashed_password)
+
+                    if profile_picture:
+                        filename = secure_filename(profile_picture.filename)
+                        picture_data = profile_picture.read()
+                        sql_update_fields.append("profile_pic_url = %s")
+                        sql_update_values.append(picture_data)
+
+                    sql_update_values.append(user_id)
+
+                    print("SQL update fields:", sql_update_fields)
+                    print("SQL update values:", sql_update_values)
+
+                    try:
+                        with conn.cursor() as cursor:
+                            sql = f"""
+                            UPDATE User SET {", ".join(sql_update_fields)} WHERE user_id = %s
+                            """
+                            print("Executing SQL:", sql)
+                            cursor.execute(sql, tuple(sql_update_values))
+                            conn.commit()
+                            print("Database update successful.")
+                        flash('User updated successfully!', 'success')
+                        return redirect(url_for('main.sellerDashboard'))
+                    
+                    except Exception as e:
+                        print(f"Database error: {str(e)}")  # Debug
+                        flash(f'An error occurred: {str(e)}', 'danger')
+                else:
+                    print("Form validation failed")  # Debug
+                    for field, errors in account_details_form.errors.items():
+                        for error in errors:
+                            print(f"Error in {field}: {error}")
+                    flash('Form validation failed. Please check your input.', 'danger')
+
+            except Exception as e:
+                print(f"Error during form submission: {str(e)}")  # Debug
+                flash(f'An unexpected error occurred: {str(e)}', 'danger')
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debug
+        
+    finally:
+        conn.close()
+    ###############   END ACCOUNT DETAILS ###############
+
+    return render_template('account.html', accountDetails = account_details_form, profile_pic_url = profile_pic_url, user=user)
 
 #######################################################################
 ########                       BUYER ROUTES                   #########
@@ -93,47 +176,109 @@ def checkout():
 ################################                AUTHENTICATION ROUTES                    ###########################
 ####################################################################################################################
 
+# @main.route('/login', methods=['GET', 'POST'])
+# def login():
+    
+#     form = LoginForm()
+
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         password = form.password.data
+
+#         conn = None
+
+#         try:
+#             print("Attempting to get a database connection")
+#             conn = get_db_connection()
+#             print("Database connection established")
+#             with conn.cursor() as cursor:
+#                 sql = "SELECT * FROM User WHERE username = %s"
+#                 cursor.execute(sql, (username,))
+#                 user = cursor.fetchone()
+            
+#             if user:
+#                 print(f"User found: {user['username']}")
+#             else:
+#                 print("User not found")
+
+#             if user and check_password_hash(user['password'], password):
+#                 # Assuming `User` class and `login_user` are set up for Flask-Login
+#                 login_user(User(user))  # You need to implement User class for Flask-Login
+#                 return redirect(url_for('main.home'))  # Redirect to the standard user page or index
+#             else:
+#                 flash('Invalid username or password', 'danger')
+
+#         except Exception as e:
+#             if conn:
+#                 print("Closing database connection")
+#                 conn.close()
+#             else:
+#                 print("Connection was not established")
+
+#         finally:
+#             conn.close()
+#     return render_template('login.html', login_form=form)
+
+# @main.route('/logout')
+# def logout():
+#     logout_user()
+#     return redirect(url_for('main.home'))
+
+# @main.route('/register', methods=['GET', 'POST'])
+# def register():
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         role = form.role.data
+#         password = form.password.data
+#         profile_picture = form.profile_picture.data
+
+#         # Save the profile picture
+#         filename = secure_filename(profile_picture.filename)
+#         picture_data = profile_picture.read()
+
+#         # Hash the password for security
+#         hashed_password = generate_password_hash(password)
+
+#         try:
+#             conn = get_db_connection()
+#             with conn.cursor() as cursor:
+#                 sql = """
+#                 INSERT INTO User (username, password, profile_pic_url, role, account_status)
+#                 VALUES (%s, %s, %s, %s, 'Active')
+#                 """
+#                 cursor.execute(sql, (username, hashed_password, picture_data, role))
+#                 conn.commit()
+#             flash('Thanks for registering!', 'success')
+#             return redirect(url_for('main.login'))
+#         except Exception as e:
+#             print(f"Database error: {str(e)}")  # Debug
+#             flash(f'An error occurred: {str(e)}', 'danger')
+#         finally:
+#             conn.close()
+#     else:
+#         if request.method == 'POST':
+#             print("Form validation failed")  # Debug
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     print(f"Error in {field}: {error}")
+#             flash('Form validation failed. Please check your input.', 'danger')
+            
+#     return render_template('register.html', register_form=form)
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    
     form = LoginForm()
-
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
 
-        conn = None
-
-        try:
-            print("Attempting to get a database connection")
-            conn = get_db_connection()
-            print("Database connection established")
-            with conn.cursor() as cursor:
-                sql = "SELECT * FROM User WHERE username = %s"
-                cursor.execute(sql, (username,))
-                user = cursor.fetchone()
-            
-            if user:
-                print(f"User found: {user['username']}")
-            else:
-                print("User not found")
-
-            if user and check_password_hash(user['password'], password):
-                # Assuming `User` class and `login_user` are set up for Flask-Login
-                login_user(User(user))  # You need to implement User class for Flask-Login
-                return redirect(url_for('main.home'))  # Redirect to the standard user page or index
-            else:
-                flash('Invalid username or password', 'danger')
-
-        except Exception as e:
-            if conn:
-                print("Closing database connection")
-                conn.close()
-            else:
-                print("Connection was not established")
-
-        finally:
-            conn.close()
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid username or password', 'danger')
     return render_template('login.html', login_form=form)
 
 @main.route('/logout')
@@ -157,25 +302,18 @@ def register():
         # Hash the password for security
         hashed_password = generate_password_hash(password)
 
+        new_user = User(username=username, password=hashed_password, role=role)
+
         try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                sql = """
-                INSERT INTO User (username, password, profile_pic_url, role, account_status)
-                VALUES (%s, %s, %s, %s, 'Active')
-                """
-                cursor.execute(sql, (username, hashed_password, picture_data, role))
-                conn.commit()
+            db.session.add(new_user)
+            db.session.commit()
             flash('Thanks for registering!', 'success')
             return redirect(url_for('main.login'))
         except Exception as e:
-            print(f"Database error: {str(e)}")  # Debug
+            db.session.rollback()
             flash(f'An error occurred: {str(e)}', 'danger')
-        finally:
-            conn.close()
     else:
         if request.method == 'POST':
-            print("Form validation failed")  # Debug
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
@@ -402,37 +540,34 @@ def sellerDashboard():
     print("Request method:", request.method)
     user_id = current_user.id  # Assuming you have `current_user` from Flask-Login
 
+    ###############  ACCOUNT DETAILS ###############
     account_details_form = AccountDetailsForm()
     profile_pic_url = None
 
     try:
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            print("Fetching user from database...")
-            cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
-            user = cursor.fetchone()
-            if not user:
-                flash('User not found', 'danger')
-                return redirect(url_for('main.adminDashboard'))
+            if request.method == 'GET':
+                print("Fetching user from database...")
+                cursor.execute("SELECT * FROM User WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                if not user:
+                    flash('User not found', 'danger')
+                    return redirect(url_for('main.adminDashboard'))
 
-            # Prepopulate the form with existing user data
-            account_details_form.username.data = user['username']
-            account_details_form.role.data = user['role']
-            account_details_form.account_status.data = user['account_status']
-        
-            if user['profile_pic_url']:
-                profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
+                # Prepopulate the form with existing user data
+                account_details_form.username.data = user['username']
+                account_details_form.role.data = user['role']
+                account_details_form.account_status.data = user['account_status']
+            
+                if user['profile_pic_url']:
+                    profile_pic_url = base64.b64encode(user['profile_pic_url']).decode('utf-8')
 
         if request.method == 'POST':
             print("POST request received.")
             try:
                 if account_details_form.validate_on_submit():
                     print("Form validated successfully.")
-                    print("Form data:")
-                    print("Username:", account_details_form.username.data)
-                    print("Password:", account_details_form.password.data)
-                    print("Profile Picture:", account_details_form.profile_picture.data)
-
                     username = account_details_form.username.data
                     password = account_details_form.password.data
                     profile_picture = account_details_form.profile_picture.data
@@ -490,6 +625,10 @@ def sellerDashboard():
         
     finally:
         conn.close()
+
+
+    ###############   END ACCOUNT DETAILS ###############
+
 
     return render_template('sellerDashboard.html',  accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
 

@@ -43,14 +43,73 @@
         <div class="row">
             <div class="col-lg-3 col-md-4"> <!-- Smaller column for filters -->
                 <ul class="account_filter__controls">
-                    <li class="active" data-filter=".Orders">Orders</li>
                     <li data-filter=".accountDetails">Account Details</li>
+<<<<<<< HEAD
+=======
+                    <li class="active" data-filter=".Orders">My Orders</li>
+                    <!-- <li data-filter=".kid">Skin Care</li>
+                    <li data-filter=".accessories">Accessories</li>
+                    <li data-filter=".cosmetic">Cosmetics</li> -->
+>>>>>>> 632dcfa5a9b1f6e33569019d9b474c6578b3f500
                 </ul>
             </div>
             <div class="col-lg-9 col-md-8"> <!-- Larger column for products -->
                 <div class="row property__gallery">
                     <!-- Orders Section, hidden by default -->
-                    <div class="col-lg-12 mix Orders"> <!-- Ensure this is initially hidden -->
+
+                    <div class="col-lg-12 mix accountDetails"> <!-- Ensure this is initially hidden -->
+                        <h2>Account Details</h2>
+                        <form method="POST" action="{{ url_for('main.myaccount') }}" enctype="multipart/form-data">
+                            {{ accountDetails.hidden_tag() }}
+                            <div class="form-group text-center">
+                                {% if profile_pic_url %}
+                                    <img src="data:image/png;base64,{{ profile_pic_url }}" style="width: 25%; height: auto;" alt="Profile Picture">
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ accountDetails.profile_picture.label(class="form-label") }}
+                                {{ accountDetails.profile_picture(class="form-control") }}
+                                {% if accountDetails.profile_picture.errors %}
+                                    {% for error in accountDetails.profile_picture.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ accountDetails.username.label(class="form-label") }}
+                                {{ accountDetails.username(class="form-control") }}
+                                {% if accountDetails.username.errors %}
+                                    {% for error in accountDetails.username.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                {{ accountDetails.role.label(class="form-label") }}
+                                {{ accountDetails.role(class="form-control", readonly=True) }}
+                            </div>
+                            <div class="form-group">
+                                {{ accountDetails.account_status.label(class="form-label") }}
+                                {{ accountDetails.account_status(class="form-control", readonly=True) }}
+                            </div>
+                            <div class="form-group">
+                                {{ accountDetails.password.label(class="form-label") }}
+                                {{ accountDetails.password(class="form-control") }}
+                                {% if accountDetails.password.errors %}
+                                    {% for error in accountDetails.password.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
+                                    {{ accountDetails.submit.label.text }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-lg-12 mix Orders"  style="display: none;"> <!-- Ensure this is initially hidden -->
                         <h3>My Purchases</h3>
                         <table class="table">
                             <thead>
@@ -75,49 +134,7 @@
                         </table>
                     </div>
 
-                    <div class="col-lg-12 mix accountDetails" style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h2>Account Details</h2>
-                        <form method="POST" action="{{ url_for('main.myaccount') }}">
-                            {{ accountDetails.hidden_tag() }}
-                            <div class="form-group">
-                                {{ accountDetails.username.label(class="form-label") }}
-                                {{ accountDetails.username(class="form-control") }}
-                                {% if accountDetails.username.errors %}
-                                    {% for error in accountDetails.username.errors %}
-                                        <div class="alert alert-danger">{{ error }}</div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            <div class="form-group">
-                                {{ accountDetails.email.label(class="form-label") }}
-                                {{ accountDetails.email(class="form-control") }}
-                                {% if accountDetails.email.errors %}
-                                    {% for error in accountDetails.email.errors %}
-                                        <div class="alert alert-danger">{{ error }}</div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            <div class="form-group">
-                                {{ accountDetails.password.label(class="form-label") }}
-                                {{ accountDetails.password(class="form-control") }}
-                                {% if accountDetails.password.errors %}
-                                    {% for error in accountDetails.password.errors %}
-                                        <div class="alert alert-danger">{{ error }}</div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            <div class="form-group">
-                                {{ accountDetails.confirm_password.label(class="form-label") }}
-                                {{ accountDetails.confirm_password(class="form-control") }}
-                                {% if accountDetails.confirm_password.errors %}
-                                    {% for error in accountDetails.confirm_password.errors %}
-                                        <div class="alert alert-danger">{{ error }}</div>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-                            <button type="submit" class="btn btn-primary">{{ accountDetails.submit.label.text }}</button>
-                        </form>
-                    </div>
+
                 </div>
             </div>
         </div>
