@@ -7,6 +7,7 @@ load_dotenv()
 
 
 class Config:
+    # SECRET_KEY = os.getenv('SECRET_KEY', 'ssdT25')
     MYSQL_HOST = os.getenv('MYSQL_HOST')
     MYSQL_PORT = os.getenv('MYSQL_PORT')
     MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')

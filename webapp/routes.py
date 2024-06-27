@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
-from webapp.models import User, load_user
+from webapp.models import User, load_user, db
 from webapp.db import get_db_connection
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -176,47 +176,109 @@ def checkout():
 ################################                AUTHENTICATION ROUTES                    ###########################
 ####################################################################################################################
 
+# @main.route('/login', methods=['GET', 'POST'])
+# def login():
+    
+#     form = LoginForm()
+
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         password = form.password.data
+
+#         conn = None
+
+#         try:
+#             print("Attempting to get a database connection")
+#             conn = get_db_connection()
+#             print("Database connection established")
+#             with conn.cursor() as cursor:
+#                 sql = "SELECT * FROM User WHERE username = %s"
+#                 cursor.execute(sql, (username,))
+#                 user = cursor.fetchone()
+            
+#             if user:
+#                 print(f"User found: {user['username']}")
+#             else:
+#                 print("User not found")
+
+#             if user and check_password_hash(user['password'], password):
+#                 # Assuming `User` class and `login_user` are set up for Flask-Login
+#                 login_user(User(user))  # You need to implement User class for Flask-Login
+#                 return redirect(url_for('main.home'))  # Redirect to the standard user page or index
+#             else:
+#                 flash('Invalid username or password', 'danger')
+
+#         except Exception as e:
+#             if conn:
+#                 print("Closing database connection")
+#                 conn.close()
+#             else:
+#                 print("Connection was not established")
+
+#         finally:
+#             conn.close()
+#     return render_template('login.html', login_form=form)
+
+# @main.route('/logout')
+# def logout():
+#     logout_user()
+#     return redirect(url_for('main.home'))
+
+# @main.route('/register', methods=['GET', 'POST'])
+# def register():
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         role = form.role.data
+#         password = form.password.data
+#         profile_picture = form.profile_picture.data
+
+#         # Save the profile picture
+#         filename = secure_filename(profile_picture.filename)
+#         picture_data = profile_picture.read()
+
+#         # Hash the password for security
+#         hashed_password = generate_password_hash(password)
+
+#         try:
+#             conn = get_db_connection()
+#             with conn.cursor() as cursor:
+#                 sql = """
+#                 INSERT INTO User (username, password, profile_pic_url, role, account_status)
+#                 VALUES (%s, %s, %s, %s, 'Active')
+#                 """
+#                 cursor.execute(sql, (username, hashed_password, picture_data, role))
+#                 conn.commit()
+#             flash('Thanks for registering!', 'success')
+#             return redirect(url_for('main.login'))
+#         except Exception as e:
+#             print(f"Database error: {str(e)}")  # Debug
+#             flash(f'An error occurred: {str(e)}', 'danger')
+#         finally:
+#             conn.close()
+#     else:
+#         if request.method == 'POST':
+#             print("Form validation failed")  # Debug
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     print(f"Error in {field}: {error}")
+#             flash('Form validation failed. Please check your input.', 'danger')
+            
+#     return render_template('register.html', register_form=form)
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    
     form = LoginForm()
-
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
 
-        conn = None
-
-        try:
-            print("Attempting to get a database connection")
-            conn = get_db_connection()
-            print("Database connection established")
-            with conn.cursor() as cursor:
-                sql = "SELECT * FROM User WHERE username = %s"
-                cursor.execute(sql, (username,))
-                user = cursor.fetchone()
-            
-            if user:
-                print(f"User found: {user['username']}")
-            else:
-                print("User not found")
-
-            if user and check_password_hash(user['password'], password):
-                # Assuming `User` class and `login_user` are set up for Flask-Login
-                login_user(User(user))  # You need to implement User class for Flask-Login
-                return redirect(url_for('main.home'))  # Redirect to the standard user page or index
-            else:
-                flash('Invalid username or password', 'danger')
-
-        except Exception as e:
-            if conn:
-                print("Closing database connection")
-                conn.close()
-            else:
-                print("Connection was not established")
-
-        finally:
-            conn.close()
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid username or password', 'danger')
     return render_template('login.html', login_form=form)
 
 @main.route('/logout')
@@ -240,25 +302,18 @@ def register():
         # Hash the password for security
         hashed_password = generate_password_hash(password)
 
+        new_user = User(username=username, password=hashed_password, role=role)
+
         try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                sql = """
-                INSERT INTO User (username, password, profile_pic_url, role, account_status)
-                VALUES (%s, %s, %s, %s, 'Active')
-                """
-                cursor.execute(sql, (username, hashed_password, picture_data, role))
-                conn.commit()
+            db.session.add(new_user)
+            db.session.commit()
             flash('Thanks for registering!', 'success')
             return redirect(url_for('main.login'))
         except Exception as e:
-            print(f"Database error: {str(e)}")  # Debug
+            db.session.rollback()
             flash(f'An error occurred: {str(e)}', 'danger')
-        finally:
-            conn.close()
     else:
         if request.method == 'POST':
-            print("Form validation failed")  # Debug
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
