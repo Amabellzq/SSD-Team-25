@@ -69,6 +69,54 @@
                     </tbody>
                 </table>
             </div>
+            
+            <div class="col-lg-12 mix merchantRequest"  style="display: none;"> <!-- Ensure this is initially hidden -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
+                    <h3>Merchant Requests</h3>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Merchant ID</th>
+                            <th>User ID</th>
+                            <th>Business Name</th>
+                            <th>Business Address</th>
+                            <th>Account Status</th>
+                            <th>Approved Date</th>
+                            <th colspan="2" style="text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for merchant in merchants %}
+                        <tr>
+                            <td>{{ merchant.merchant_id }}</td>
+                            <td>{{ merchant.user_id }}</td>
+                            <td>{{ merchant.business_name }}</td>
+                            <td>{{ merchant.business_address }}</td>
+                            <td>{{ merchant.account_status }}</td>
+                            <td>{{ merchant.approved_date.strftime('%Y-%m-%d %H:%M:%S') if merchant.approved_date else '' }}</td>
+                            <td>
+                                <form action="{{ url_for('main.approve_merchant', merchant_id=merchant.merchant_id) }}" method="POST" style="display:inline;">
+                                    {% if merchant.account_status == 'Active' %}
+                                    <button type="submit" class="btn btn-success">Approved</button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-warning">Pending</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                            <td>
+                                {% if merchant.account_status == 'Active' %}
+                                    <form action="{{ url_for('main.suspend_merchant', merchant_id=merchant.merchant_id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger">Suspend</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
             <div class="col-lg-12 mix Category"  style="display: none;"> <!-- Ensure this is initially hidden -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
@@ -80,7 +128,6 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Category ID</th>
                             <th>Category Name</th>
                             <th>Description</th>
                             <th>Manage</th>
@@ -90,7 +137,6 @@
                     <tbody>
                         {% for category in categories %}
                         <tr id="category-row-{{ category['category_id'] }}">
-                            <td>{{ category['category_id'] }}</td>
                             <td>{{ category['name'] }}</td>
                             <td>{{ category['description'] }}</td>
                             <td>

@@ -1,9 +1,10 @@
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, RegisterBusinessForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
+from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, Session, ShoppingCart, CartItem, OrderItem, Payment
 
 main = Blueprint('main', __name__)
@@ -81,20 +82,6 @@ def checkout():
         # Process the order here
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
-
-# @main.route('/login', methods=['GET', 'POST'])
-# def login():
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         username = form.username.data
-#         password = form.password.data
-#         user = User.get_by_username(username)
-#         if user and check_password_hash(user.password, password):
-#             login_user(user)
-#             return redirect(url_for('main.home'))
-#         else:
-#             flash('Invalid username or password', 'danger')
-#     return render_template('login.html', login_form=form)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -193,13 +180,14 @@ def forgetPass():
 @login_required
 def adminDashboard():
     users = User.query.all()
+    merchants = Merchant.query.all()
     categories = Category.query.all()
-
+    
     for user in users:
         if user.profile_pic_url:
             user.profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
 
-    return render_template('adminDashboard.html', users=users, categories=categories)
+    return render_template('adminDashboard.html', users=users, categories=categories, merchants = merchants)
 
 @main.route('/editUser/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -239,6 +227,38 @@ def delete_user(user_id):
         flash('User not found', 'danger')
     return redirect(url_for('main.adminDashboard'))
 
+@main.route('/approve_merchant/<int:merchant_id>', methods=['POST'])
+@login_required
+def approve_merchant(merchant_id):
+    merchant = Merchant.get(merchant_id)
+    if merchant:
+        merchant.account_status = 'Active'
+        utc_now = datetime.utcnow()
+        utc_plus_8 = utc_now + timedelta(hours=8)
+        merchant.approved_date = utc_plus_8        
+        db.session.commit()
+        flash('Merchant approved successfully!', 'success')
+    else:
+        flash('Merchant not found.', 'danger')
+    return redirect(url_for('main.adminDashboard'))
+
+@main.route('/suspend_merchant/<int:merchant_id>', methods=['POST'])
+def suspend_merchant(merchant_id):
+    merchant = Merchant.get(merchant_id)
+    if merchant:
+        try:
+            merchant.account_status = 'Inactive'
+            merchant.approved_date = datetime.utcnow() + timedelta(hours=8)  # Adjust to UTC+8
+            db.session.commit()
+            flash('Merchant suspended successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error suspending merchant: {str(e)}')
+            flash('An error occurred while suspending the merchant.', 'danger')
+    else:
+        flash('Merchant not found.', 'danger')
+    return redirect(url_for('main.adminDashboard'))
+
 @main.route('/createCategory', methods=['GET', 'POST'])
 @login_required
 def adminCreateCategory():
@@ -253,16 +273,37 @@ def adminCreateCategory():
         return redirect(url_for('main.adminDashboard'))
     return render_template('adminCreateCategory.html', createNewCategory=create_category)
 
-@main.route('/deleteCategory/<int:category_id>', methods=['POST'])
-@login_required
+# @main.route('/deleteCategory/<int:category_id>', methods=['POST'])
+# @login_required
+# def delete_category(category_id):
+#     category = Category.get(category_id)
+#     if category:
+#         db.session.delete(category)
+#         db.session.commit()
+#         flash('Category deleted successfully!', 'success')
+#     else:
+#         flash('Category not found', 'danger')
+#     return redirect(url_for('main.adminDashboard'))
+@main.route('/delete_category/<int:category_id>', methods=['POST'])
 def delete_category(category_id):
     category = Category.get(category_id)
     if category:
-        db.session.delete(category)
-        db.session.commit()
-        flash('Category deleted successfully!', 'success')
+        try:
+            # Delete all products associated with this category
+            products = Product.query.filter_by(category_id=category_id).all()
+            for product in products:
+                db.session.delete(product)
+            
+            # Delete the category
+            db.session.delete(category)
+            db.session.commit()
+            flash('Category and associated products deleted successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error deleting category: {str(e)}')
+            flash('An error occurred while deleting the category.', 'danger')
     else:
-        flash('Category not found', 'danger')
+        flash('Category not found.', 'danger')
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
@@ -288,26 +329,90 @@ def edit_category(category_id):
 
     return render_template('adminEditCategory.html', form=form, category_id=category_id)
 
-@main.route('/sellerDashboard', methods=['GET', 'POST'])
+# @main.route('/sellerDashboard', methods=['GET', 'POST'])
+# @login_required
+# def sellerDashboard():
+#     user_id = current_user.user_id
+#     account_details_form = AccountDetailsForm()
+#     update_business_form = BusinessForm()
+#     profile_pic_url = None
+
+#     user = User.get(user_id)
+#     if not user:
+#         flash('User not found', 'danger')
+#         return redirect(url_for('main.adminDashboard'))
+
+#     if request.method == 'GET':
+#         account_details_form.username.data = user.username
+#         account_details_form.role.data = user.role
+#         account_details_form.account_status.data = user.account_status
+#         if user.profile_pic_url:
+#             profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+
+#         # businessForm set the user_id field
+#         update_business_form.user_id.data = user_id 
+
+#     if request.method == 'POST':
+#         if account_details_form.validate_on_submit():
+#             user.username = account_details_form.username.data
+#             if account_details_form.password.data:
+#                 user.password = generate_password_hash(account_details_form.password.data)
+#             if account_details_form.profile_picture.data:
+#                 profile_picture = account_details_form.profile_picture.data
+#                 filename = secure_filename(profile_picture.filename)
+#                 user.profile_pic_url = profile_picture.read()
+#             db.session.commit()
+#             flash('User updated successfully!', 'success')
+#             return redirect(url_for('main.sellerDashboard'))
+
+#         elif update_business_form.validate_on_submit():
+#             merchant = Merchant.query.filter_by(user_id=user_id).first()
+#             if merchant:
+#                 merchant.business_name = update_business_form.business_name.data
+#                 merchant.business_address = update_business_form.business_address.data
+#                 db.session.commit()
+#                 flash('Business details updated successfully!', 'success')
+#                 return redirect(url_for('main.sellerDashboard'))
+#             else:
+#                 flash('Merchant not found', 'danger')
+
+#     return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form ,profile_pic_url=profile_pic_url, user=user)
+@main.route('/sellerDashboard', methods=['GET'])
 @login_required
 def sellerDashboard():
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
+    update_business_form = RegisterBusinessForm()
     profile_pic_url = None
 
-    if request.method == 'GET':
-        user = User.get(user_id)
-        if not user:
-            flash('User not found', 'danger')
-            return redirect(url_for('main.adminDashboard'))
+    user = User.get(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('main.adminDashboard'))
 
-        account_details_form.username.data = user.username
-        account_details_form.role.data = user.role
-        account_details_form.account_status.data = user.account_status
-        if user.profile_pic_url:
-            profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+    account_details_form.username.data = user.username
+    account_details_form.role.data = user.role
+    account_details_form.account_status.data = user.account_status
+    if user.profile_pic_url:
+        profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
 
-    if request.method == 'POST' and account_details_form.validate_on_submit():
+    # business details 
+    # Pre-populate the business form with existing merchant data if available
+    merchant = Merchant.query.filter_by(user_id=user_id).first()
+    if merchant:
+        update_business_form.business_name.data = merchant.business_name
+        update_business_form.business_address.data = merchant.business_address
+
+        update_business_form.user_id.data = user_id
+
+    return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user)
+
+@main.route('/update_account', methods=['POST'])
+@login_required
+def update_account():
+    user_id = current_user.user_id
+    account_details_form = AccountDetailsForm()
+    if account_details_form.validate_on_submit():
         user = User.get(user_id)
         if user:
             user.username = account_details_form.username.data
@@ -319,11 +424,96 @@ def sellerDashboard():
                 user.profile_pic_url = profile_picture.read()
             db.session.commit()
             flash('User updated successfully!', 'success')
-            return redirect(url_for('main.sellerDashboard'))
         else:
             flash('User not found', 'danger')
+    return redirect(url_for('main.sellerDashboard'))
 
-    return render_template('sellerDashboard.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
+@main.route('/register_business', methods=['GET', 'POST'])
+@login_required
+def register_business():
+    user_id = current_user.user_id
+    update_business_form = RegisterBusinessForm()
+
+    current_app.logger.debug(f"Form data received: {request.form}")
+    current_app.logger.debug(f"Form validation status: {update_business_form.validate_on_submit()}")
+
+    if request.method == 'POST':
+        if update_business_form.validate_on_submit():
+            try:
+                merchant = Merchant.query.filter_by(user_id=user_id).first()
+                if merchant:
+                    current_app.logger.debug(f"Merchant found: {merchant.business_name}")
+                    merchant.business_name = update_business_form.business_name.data
+                    merchant.business_address = update_business_form.business_address.data
+                    db.session.commit()
+                    current_app.logger.debug("Merchant details updated successfully!")
+                    flash('Business details updated successfully!', 'success')
+                else:
+                    # If the merchant does not exist, create a new one
+                    Merchant.create(
+                        user_id=user_id,
+                        business_name=update_business_form.business_name.data,
+                        business_address=update_business_form.business_address.data,
+                        account_status='Inactive'
+                    )
+                    current_app.logger.debug("Merchant created successfully!")
+                    flash('Business registered successfully!', 'success')
+                return redirect(url_for('main.sellerDashboard'))
+            except Exception as e:
+                current_app.logger.error(f"Error updating business details: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while updating business details.', 'danger')
+        else:
+            current_app.logger.debug("Form did not validate.")
+            for field, errors in update_business_form.errors.items():
+                for error in errors:
+                    current_app.logger.debug(f"Error in {field}: {error}")
+
+    # Pre-populate the form with existing merchant data if available
+    merchant = Merchant.query.filter_by(user_id=user_id).first()
+    if merchant:
+        update_business_form.business_name.data = merchant.business_name
+        update_business_form.business_address.data = merchant.business_address
+
+    # Set the user_id field to the current user's ID
+    update_business_form.user_id.data = user_id
+
+    return render_template('sellerRegBusiness.html', updateBusiness=update_business_form)
+
+@main.route('/update_business', methods=['POST'])
+@login_required
+def update_business():
+    user_id = current_user.user_id
+    update_business_form = RegisterBusinessForm()
+
+    if update_business_form.validate_on_submit():
+        try:
+            merchant = Merchant.query.filter_by(user_id=user_id).first()
+            if merchant:
+                merchant.business_name = update_business_form.business_name.data
+                merchant.business_address = update_business_form.business_address.data
+
+                # Log before commit
+                current_app.logger.debug(f"Updating merchant: {merchant}")
+                
+                db.session.commit()
+                
+                # Log after commit to verify
+                current_app.logger.debug("Merchant details updated successfully!")
+                return redirect(url_for('main.sellerDashboard'))
+            else:
+                flash('Merchant not found', 'danger')
+                return redirect(url_for('main.sellerDashboard'))
+        except Exception as e:
+            current_app.logger.error(f"Error updating business details: {str(e)}")
+            db.session.rollback()
+            flash('An error occurred while updating business details.', 'danger')
+    else:
+        for field, errors in update_business_form.errors.items():
+            for error in errors:
+                current_app.logger.debug(f"Error in {field}: {error}")
+
+    return render_template('sellerDashboard.html', updateBusiness=update_business_form)
 
 @main.route('/orderDetails')
 @login_required

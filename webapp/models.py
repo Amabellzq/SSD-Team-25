@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
@@ -96,11 +96,19 @@ class Merchant(db.Model):
 
     @staticmethod
     def create(user_id, business_name, business_address, account_status):
-        new_merchant = Merchant(user_id=user_id, business_name=business_name, business_address=business_address, account_status=account_status)
+        # Calculate the current time in UTC+8
+        current_time_utc_plus_8 = datetime.utcnow() + timedelta(hours=8)
+        new_merchant = Merchant(
+            user_id=user_id, 
+            business_name=business_name, 
+            business_address=business_address, 
+            account_status=account_status,
+            approved_date=current_time_utc_plus_8
+        )
         db.session.add(new_merchant)
         db.session.commit()
         return new_merchant
-
+    
     @staticmethod
     def delete(merchant_id):
         merchant = Merchant.get(merchant_id)
@@ -245,7 +253,7 @@ class Product(db.Model):
     price = db.Column(db.Numeric(10, 2))
     quantity = db.Column(db.Integer)
     availability = db.Column(db.Enum('In Stock', 'Out of Stock'))
-    image_url = db.Column(db.LargeBinary)
+    image_url = db.Column(db.LargeBinary, nullable=True)  # Ensure this column is defined as LargeBinary
     merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)

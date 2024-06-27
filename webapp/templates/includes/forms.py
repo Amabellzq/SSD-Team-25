@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
 from flask_wtf.file import FileRequired, FileAllowed
 
@@ -16,7 +16,7 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
-    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
+    profile_picture = FileField('Set Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Register')
@@ -58,7 +58,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # Merchant #
+    # ADMIN #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -66,5 +66,12 @@ class CreateCategory(FlaskForm):
     categoryDescription = StringField('Category Description', validators=[DataRequired()])
     saveCategory = SubmitField('Save Category')
 
+#############################
+    # MERCHANT #
+#############################
 
-
+class RegisterBusinessForm(FlaskForm):
+    user_id = IntegerField('User ID', validators=[DataRequired(), NumberRange(min=1)])
+    business_name = StringField('Business Name', validators=[DataRequired(), Length(min=4, max=100)])
+    business_address = StringField('Business Address', validators=[DataRequired(), Length(min=10, max=255)])
+    submit = SubmitField('Submit Details')
