@@ -30,5 +30,5 @@ from .routes import main # Import routes after LoginManager setup to avoid circu
 app.register_blueprint(main)
 
 # Create database tables
-with app.app_context():
-    db.create_all()
+#with app.app_context():
+#   db.create_all()
