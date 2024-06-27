@@ -5,7 +5,7 @@ from flask_login import UserMixin
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'user'
+    __tablename__ = 'User'
     user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
@@ -53,9 +53,9 @@ class User(UserMixin, db.Model):
         return None
 
 class Administrator(db.Model):
-    __tablename__ = 'administrator'
+    __tablename__ = 'Administrator'
     admin_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
 
     @staticmethod
     def get(admin_id):
@@ -78,9 +78,9 @@ class Administrator(db.Model):
         return False
 
 class Merchant(db.Model):
-    __tablename__ = 'merchant'
+    __tablename__ = 'Merchant'
     merchant_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
     business_name = db.Column(db.String(255))
     business_address = db.Column(db.String(255))
     account_status = db.Column(db.Enum('Active', 'Inactive'))
@@ -118,9 +118,9 @@ class Merchant(db.Model):
         return None
 
 class Session(db.Model):
-    __tablename__ = 'session'
+    __tablename__ = 'Session'
     session_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
     session_token = db.Column(db.String(255))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     expiry_date = db.Column(db.DateTime)
@@ -158,9 +158,9 @@ class Session(db.Model):
         return None
 
 class ShoppingCart(db.Model):
-    __tablename__ = 'shoppingcart'
+    __tablename__ = 'ShoppingCart'
     cart_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
     cart_items = db.relationship('CartItem', backref='shoppingcart')
@@ -196,10 +196,10 @@ class ShoppingCart(db.Model):
         return None
 
 class CartItem(db.Model):
-    __tablename__ = 'cartitem'
+    __tablename__ = 'CartItem'
     cart_item_id = db.Column(db.Integer, primary_key=True)
-    cart_id = db.Column(db.Integer, db.ForeignKey('shoppingcart.cart_id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.product_id'))
+    cart_id = db.Column(db.Integer, db.ForeignKey('ShoppingCart.cart_id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
 
@@ -234,16 +234,16 @@ class CartItem(db.Model):
         return None
 
 class Product(db.Model):
-    __tablename__ = 'product'
+    __tablename__ = 'Product'
     product_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
-    category_id = db.Column(db.Integer, db.ForeignKey('category.category_id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('Category.category_id'))
     price = db.Column(db.Numeric(10, 2))
     quantity = db.Column(db.Integer)
     availability = db.Column(db.Enum('In Stock', 'Out of Stock'))
     image_url = db.Column(db.LargeBinary)
-    merchant_id = db.Column(db.Integer, db.ForeignKey('merchant.merchant_id'))
+    merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
     order_items = db.relationship('OrderItem', backref='product')
@@ -280,7 +280,7 @@ class Product(db.Model):
         return None
 
 class Category(db.Model):
-    __tablename__ = 'category'
+    __tablename__ = 'Category'
     category_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
@@ -317,10 +317,10 @@ class Category(db.Model):
         return None
 
 class Order(db.Model):
-    __tablename__ = 'order'
+    __tablename__ = 'Order'
     order_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
-    merchant_id = db.Column(db.Integer, db.ForeignKey('merchant.merchant_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
+    merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     total_price = db.Column(db.Numeric(10, 2))
     collection_status = db.Column(db.Enum('Not Collected', 'Collected'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -350,10 +350,10 @@ class Order(db.Model):
         return None
 
 class OrderItem(db.Model):
-    __tablename__ = 'orderitem'
+    __tablename__ = 'OrderItem'
     order_item_id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.product_id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('Order.order_id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
 
@@ -379,9 +379,9 @@ class OrderItem(db.Model):
         return None
 
 class Payment(db.Model):
-    __tablename__ = 'payment'
+    __tablename__ = 'Payment'
     payment_id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('Order.order_id'))
     payment_method = db.Column(db.Enum('Credit Card', 'Debit Card'))
     amount = db.Column(db.Numeric(10, 2))
     payment_status = db.Column(db.Enum('Pending', 'Completed', 'Failed'))
@@ -397,7 +397,6 @@ class Payment(db.Model):
         db.session.add(new_payment)
         db.session.commit()
         return new_payment
-
 
     @staticmethod
     def update(payment_id, **kwargs):
