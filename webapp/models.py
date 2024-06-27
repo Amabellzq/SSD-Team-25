@@ -11,13 +11,16 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255), nullable=False)
     profile_pic_url = db.Column(db.LargeBinary)
     role = db.Column(db.Enum('Admin', 'Merchant', 'Customer'), nullable=False)
-    account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False)
+    account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
     sessions = db.relationship('Session', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
 
+    def get_id(self):
+        return str(self.user_id)
+    
     @staticmethod
     def get(user_id):
         return User.query.get(user_id)
@@ -27,8 +30,8 @@ class User(UserMixin, db.Model):
         return User.query.filter_by(username=username).first()
 
     @staticmethod
-    def create(username, password, role, account_status):
-        new_user = User(username=username, password=password, role=role, account_status=account_status)
+    def create(username, password, role):
+        new_user = User(username=username, password=password, role=role, account_status='Active')
         db.session.add(new_user)
         db.session.commit()
         return new_user

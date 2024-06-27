@@ -7,6 +7,7 @@ from .models import db, User  # Import your user model
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'ssdT25'
+app.config['DEBUG'] = True  # Enable debug mode
 
 # Initialize SQLAlchemy
 db.init_app(app)

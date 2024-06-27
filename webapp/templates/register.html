@@ -42,15 +42,6 @@
             <div class="field">
                 {{ register_form.role(class="form-control", required=True) }}
             </div>
-            <div class="field file-input-wrapper">
-                <!-- {{ register_form.profile_picture.label(class="form-label") }} -->
-                {{ register_form.profile_picture(class="form-control") }}
-                {% if register_form.profile_picture.errors %}
-                    {% for error in register_form.profile_picture.errors %}
-                        <div class="error">{{ error }}</div>
-                    {% endfor %}
-                {% endif %}
-            </div>
             <div class="field">
                 {{ register_form.password(class="form-control", required=True) }}
                 {% if register_form.password.errors %}

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, redirect, url_for, flash, request
+from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
 from werkzeug.utils import secure_filename
@@ -82,20 +82,64 @@ def checkout():
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
 
+# @main.route('/login', methods=['GET', 'POST'])
+# def login():
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         password = form.password.data
+#         user = User.get_by_username(username)
+#         if user and check_password_hash(user.password, password):
+#             login_user(user)
+#             return redirect(url_for('main.home'))
+#         else:
+#             flash('Invalid username or password', 'danger')
+#     return render_template('login.html', login_form=form)
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    if request.method == 'POST':
+        print('Form submitted')  # Debug statement
     if form.validate_on_submit():
+        print('Form validated successfully')  # Debug statement
         username = form.username.data
         password = form.password.data
+        print(f'Attempting to log in user: {username}')  # Debug statement
+
         user = User.get_by_username(username)
+        if user:
+            print(f'User found: {user.username}')  # Debug statement
+        else:
+            print(f'User not found: {username}')  # Debug statement
+
         if user and check_password_hash(user.password, password):
             login_user(user)
+            flash('Login successful', 'success')
+            print(f'Login successful for user: {user.username}')  # Debug statement
+            
             return redirect(url_for('main.home'))
+            # # Redirect based on role
+            # if user.role == 'Admin':
+            #     print('Redirecting to admin dashboard')  # Debug statement
+            #     return redirect(url_for('main.adminDashboard'))
+            # elif user.role == 'Merchant':
+            #     print('Redirecting to seller dashboard')  # Debug statement
+            #     return redirect(url_for('main.sellerDashboard'))
+            # else:
+            #     print('Redirecting to home page')  # Debug statement
+            #     return redirect(url_for('main.home'))
         else:
             flash('Invalid username or password', 'danger')
-    return render_template('login.html', login_form=form)
+            print('Invalid username or password')  # Debug statement
+    else:
+        if request.method == 'POST':
+            print('Form validation failed')  # Debug statement
+        else:
+            print('GET request')  # Debug statement
 
+    return render_template('login.html', login_form=form)
+    
 @main.route('/logout')
 def logout():
     logout_user()
@@ -111,20 +155,30 @@ def register():
         profile_picture = form.profile_picture.data
 
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_password, role=role)
-
-        if profile_picture:
-            filename = secure_filename(profile_picture.filename)
-            new_user.profile_pic_url = profile_picture.read()
 
         try:
-            db.session.add(new_user)
-            db.session.commit()
+            # Create the new user
+            new_user = User.create(username=username, password=hashed_password, role=role)
+
+            if profile_picture:
+                filename = secure_filename(profile_picture.filename)
+                new_user.profile_pic_url = profile_picture.read()
+                db.session.commit()
+
             flash('Thanks for registering!', 'success')
             return redirect(url_for('main.login'))
         except Exception as e:
             db.session.rollback()
+            current_app.logger.error(f'Error while registering user: {str(e)}')
             flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            current_app.logger.debug('Form validation failed')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    current_app.logger.debug(f'{field}: {error}')
+            flash('Form validation failed. Please check your input.', 'danger')
+
     return render_template('register.html', register_form=form)
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
