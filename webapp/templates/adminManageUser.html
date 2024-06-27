@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Manage User - ShopMe{% endblock %}
+  
+{% block content %} 
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/adminDashboard"><i class="fa fa-home"></i> Admin Dashboard </a>
+                    <span>Manage Users</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+<!-- Product Section Begin -->
+<section class="product spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-4">
+                <div class="section-title">
+                    <h4>Manage User</h4>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12"> <!-- Larger column for products -->
+                <div class="row property__gallery">
+                    <!-- Users Section, hidden by default -->
+
+                    <div class="col-lg-12 mix accountDetails"> <!-- Ensure this is initially hidden -->
+                        <h2>Account Details</h2>
+                        <form method="POST"  action="{{ url_for('main.edit_user', user_id=user['user_id']) }}" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            <div class="profile-picture">
+                                {% if profile_pic_url %}
+                                <img src="data:image/png;base64,{{ profile_pic_url }}" alt="Profile Picture" width="50">
+                                {% endif %}
+                            </div>
+                            <div class="form-fields">
+                                <div class="form-group">
+                                    {{ form.username.label(class="form-label") }}
+                                    {{ form.username(class="form-control", readonly=True) }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form.role.label(class="form-label") }}
+                                    {{ form.role(class="form-control", readonly = True) }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form.account_status.label(class="form-label") }}
+                                    {{ form.account_status(class="form-control") }}
+                                </div>
+                                <div class="text-center">
+                                    {{ form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
+                                </div>           
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Inline CSS -->
+<style>
+    .profile-picture img {
+        width: 150px;
+        height: auto;
+        border-radius: 50%;
+        margin-right: 20px;
+    }
+
+    .form-fields {
+        flex-grow: 1;
+    }
+
+    .d-flex {
+        display: flex;
+    }
+
+    .align-items-center {
+        align-items: center;
+    }
+</style>
+
+{% endblock %}

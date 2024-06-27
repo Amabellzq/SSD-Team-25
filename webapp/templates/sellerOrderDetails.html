@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - ShopMe{% endblock %}
+  
+{% block content %} 
+
+ <!-- Breadcrumb Begin -->
+ <div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/sellerDashboard"><i class="fa fa-home"></i> Seller Dashboard </a>
+                    <span>Order Details</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+
+<div class="container">
+    <h3>Order Details</h3>
+    <form id="editOrderForm">
+        <div class="form-group">
+            <label for="orderId">Order ID</label>
+            <input type="text" class="form-control" id="orderId" value="#001" readonly>
+        </div>
+        <div class="shop__cart__table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="cart__product__item">
+                            <img src="img/shop-cart/cp-1.jpg" alt="">
+                            <div class="cart__product__item__title">
+                                <h6>Chain bucket bag</h6>
+                            </div>
+                        </td>
+                        <td class="cart__price">$ 150.0</td>
+                        <td class="cart__quantity">
+                            <div class="pro-qty">
+                                <input type="text" value="2" readonly>
+                            </div>
+                        </td>
+                        <td class="cart__total">$ 300.0</td>
+                    </tr>
+                    <tr>
+                        <td class="cart__product__item">
+                            <img src="img/shop-cart/cp-2.jpg" alt="">
+                            <div class="cart__product__item__title">
+                                <h6>Zip-pockets pebbled tote briefcase</h6>
+                            </div>
+                        </td>
+                        <td class="cart__price">$ 170.0</td>
+                        <td class="cart__quantity">
+                            <div class="pro-qty">
+                                <input type="text" value="1" readonly>
+                            </div>
+                        </td>
+                        <td class="cart__total">$ 170.0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="form-group">
+            <label for="createdDate">Created Date</label>
+            <input type="date" class="form-control" id="createdDate" value="2023-06-01" readonly>
+        </div>
+        <div class="form-group">
+            <label for="totalPaid">Total Paid</label>
+            <input type="number" class="form-control" id="totalPaid" value="59.0" readonly>
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label>
+            <input type="text" class="form-control" id="status" value="Pending" readonly>
+        </div>
+        <button type="button" class="btn btn-success" onclick="markAsCompleted()">Mark as Completed</button>
+        <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>    
+    </form>
+</div>
+
+<script>
+    function markAsCompleted() {
+        document.getElementById('status').value = 'Completed';
+        document.getElementById('editOrderForm').submit();
+    }
+</script>
+
+{% endblock %}

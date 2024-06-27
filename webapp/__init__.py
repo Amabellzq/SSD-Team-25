@@ -1,12 +1,16 @@
 from flask import Flask
-from .routes import main
 from config import Config
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from .models import User, load_user  # Import your user model
+from .routes import main
+from flask_login import LoginManager
+from .models import db, User  # Import your user model
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = 'ssdT25'
+app.config['DEBUG'] = True  # Enable debug mode
+
+# Initialize SQLAlchemy
+db.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -14,7 +18,15 @@ login_manager.login_view = 'main.login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get_by_id(user_id)
+    return User.get(user_id)
 
-from .routes import main # Import routes after LoginManager setup to avoid circular imports
+# Register Blueprint
 app.register_blueprint(main)
+
+# Optional: Uncomment if you want to create tables in a new setup
+# Create database tables
+# with app.app_context():
+#    db.create_all()
+
+# To ensure no circular import issues
+from .routes import main

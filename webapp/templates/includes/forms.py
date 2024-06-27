@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
+from flask_wtf.file import FileRequired, FileAllowed
 
 #############################
     #Authentication#
@@ -14,16 +15,9 @@ class LoginForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    email = EmailField('Email', validators=[DataRequired(), Email()])
-    contact = StringField('Contact Number', validators=[
-            DataRequired(),
-            Regexp(r'^\d{8}$', message="Contact number must be exactly 8 digits.")
-        ])   
-    role = SelectField('I am a', choices=[
-        ('user', 'User'),
-        ('seller', 'Seller')
-    ], validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=40)])
+    role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Register')
 
@@ -51,12 +45,26 @@ class CheckoutForm(FlaskForm):
 
 class AccountDetailsForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=40)])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
+    profile_picture = FileField('Profile Picture', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
+    role = SelectField('Role', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    account_status = SelectField('Account Status', choices=[('Active', 'Active'), ('Inactive', 'Inactive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
+    password = PasswordField('New Password', validators=[Length(min=0, max=40)])
     submit = SubmitField('Update Details')
 
+class EditUserForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
+    role = SelectField('Role', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
+    account_status = SelectField('account Status', choices=[ ('Active', 'Active'), ('InActive', 'InActive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
+    submit = SubmitField('Save')
 
 #############################
     # Merchant #
 #############################
+
+class CreateCategory(FlaskForm):
+    categoryName = StringField('Category Name', validators=[DataRequired()])
+    categoryDescription = StringField('Category Description', validators=[DataRequired()])
+    saveCategory = SubmitField('Save Category')
+
+
+
