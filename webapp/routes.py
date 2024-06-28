@@ -102,7 +102,6 @@ def login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            flash('Login successful', 'success')
             print(f'Login successful for user: {user.username}')  # Debug statement
             
             return redirect(url_for('main.home'))
@@ -142,24 +141,28 @@ def register():
         password = form.password.data
         profile_picture = form.profile_picture.data
 
-        hashed_password = generate_password_hash(password)
+        # Check for duplicate username
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists. Please choose a different username.', 'danger')
+        else:
+            hashed_password = generate_password_hash(password)
+            try:
+                # Create the new user
+                new_user = User.create(username=username, password=hashed_password, role=role)
 
-        try:
-            # Create the new user
-            new_user = User.create(username=username, password=hashed_password, role=role)
-
-            if profile_picture:
-                filename = secure_filename(profile_picture.filename)
-                new_user.profile_pic_url = profile_picture.read()
-                db.session.commit()
-            
-            registration_successful = True
-            flash('Thanks for registering!', 'success')
-            return redirect(url_for('main.login'))
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f'Error while registering user: {str(e)}')
-            flash(f'An error occurred: {str(e)}', 'danger')
+                if profile_picture:
+                    filename = secure_filename(profile_picture.filename)
+                    new_user.profile_pic_url = profile_picture.read()
+                    db.session.commit()
+                
+                registration_successful = True
+                flash('Registeration Successful', 'success')
+                return redirect(url_for('main.login'))
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f'Error while registering user: {str(e)}')
+                flash(f'An error occurred: {str(e)}', 'danger')
     else:
         if request.method == 'POST':
             current_app.logger.debug('Form validation failed')
