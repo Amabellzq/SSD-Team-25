@@ -181,18 +181,94 @@ def forgetPass():
         return redirect(url_for('main.login'))
     return render_template('forgetPW.html', resetpass_form=form)
 
-@main.route('/adminDashboard')
+@main.route('/adminDashboard', methods=['GET', 'POST'])
 @login_required
 def adminDashboard():
+    user_id = current_user.user_id
     users = User.query.all()
     merchants = Merchant.query.all()
     categories = Category.query.all()
-    
-    for user in users:
-        if user.profile_pic_url:
-            user.profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+    accountDetails = AccountDetailsForm()  # Create an instance of the form
+    profile_pic_url = None
 
-    return render_template('adminDashboard.html', users=users, categories=categories, merchants = merchants)
+    user = User.get(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('main.adminDashboard'))
+
+    accountDetails.username.data = user.username
+    accountDetails.role.data = user.role
+    accountDetails.account_status.data = user.account_status
+    if user.profile_pic_url:
+        profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+
+    return render_template('adminDashboard.html', users=users, categories=categories, merchants=merchants,profile_pic_url=profile_pic_url, user = user, accountDetails=accountDetails)
+
+@main.route('/updateAdmin_account', methods=['POST'])
+@login_required
+def updateAdmin_account():
+    user_id = current_user.user_id
+    account_details_form = AccountDetailsForm()
+    if account_details_form.validate_on_submit():
+        user = User.get(user_id)
+        if user:
+            user.username = account_details_form.username.data
+            if account_details_form.password.data:
+                user.password = generate_password_hash(account_details_form.password.data)
+            if account_details_form.profile_picture.data:
+                profile_picture = account_details_form.profile_picture.data
+                filename = secure_filename(profile_picture.filename)
+                user.profile_pic_url = profile_picture.read()
+            db.session.commit()
+            flash('User updated successfully!', 'success')
+        else:
+            flash('User not found', 'danger')
+    return redirect(url_for('main.adminDashboard'))
+
+@main.route('/registerAdmin', methods=['GET', 'POST'])
+def registerAdmin():
+    form = RegistrationForm()
+    registration_successful = False
+    if form.validate_on_submit():
+        username = form.username.data
+        role = 'Admin'  # Set role to 'Admin' explicitly
+        password = form.password.data
+        profile_picture = form.profile_picture.data
+
+        # Check for duplicate username
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists. Please choose a different username.', 'danger')
+        else:
+            hashed_password = generate_password_hash(password)
+            try:
+                # Create the new user
+                new_user = User(username=username, password=hashed_password, role=role)
+
+                if profile_picture:
+                    filename = secure_filename(profile_picture.filename)
+                    new_user.profile_pic_url = profile_picture.read()
+                
+                db.session.add(new_user)
+                db.session.commit()
+                
+                registration_successful = True
+                flash('Registration Successful', 'success')
+                return redirect(url_for('main.adminDashboard'))
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f'Error while registering user: {str(e)}')
+                flash(f'An error occurred: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            current_app.logger.debug('Form validation failed')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    current_app.logger.debug(f'{field}: {error}')
+            flash('Form validation failed. Please check your input.', 'danger')
+
+    return render_template('adminRegister.html', register_form=form, registration_successful=registration_successful)
+
 
 @main.route('/editUser/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -382,6 +458,7 @@ def edit_category(category_id):
 #                 flash('Merchant not found', 'danger')
 
 #     return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form ,profile_pic_url=profile_pic_url, user=user)
+
 @main.route('/sellerDashboard', methods=['GET'])
 @login_required
 def sellerDashboard():
