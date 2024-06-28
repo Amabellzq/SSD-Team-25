@@ -135,6 +135,7 @@ def logout():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
+    registration_successful = False
     if form.validate_on_submit():
         username = form.username.data
         role = form.role.data
@@ -151,7 +152,8 @@ def register():
                 filename = secure_filename(profile_picture.filename)
                 new_user.profile_pic_url = profile_picture.read()
                 db.session.commit()
-
+            
+            registration_successful = True
             flash('Thanks for registering!', 'success')
             return redirect(url_for('main.login'))
         except Exception as e:
@@ -166,7 +168,7 @@ def register():
                     current_app.logger.debug(f'{field}: {error}')
             flash('Form validation failed. Please check your input.', 'danger')
 
-    return render_template('register.html', register_form=form)
+    return render_template('register.html', register_form=form, registration_successful=registration_successful)
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
 def forgetPass():
