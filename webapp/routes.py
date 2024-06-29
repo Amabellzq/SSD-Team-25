@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -165,7 +165,7 @@ def register():
                 new_user.profile_pic_url = profile_picture.read()
                 db.session.commit()
 
-            flash('Thanks for registering!', 'success')
+            flash('Registration successful, thanks for registering!', 'success')
             return redirect(url_for('main.login'))
         except Exception as e:
             db.session.rollback()
@@ -291,6 +291,8 @@ def edit_category(category_id):
 @main.route('/sellerDashboard', methods=['GET', 'POST'])
 @login_required
 def sellerDashboard():
+    
+    # retrieve account details
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
     profile_pic_url = None
@@ -299,7 +301,7 @@ def sellerDashboard():
         user = User.get(user_id)
         if not user:
             flash('User not found', 'danger')
-            return redirect(url_for('main.adminDashboard'))
+            return redirect(url_for('main.sellerDashboard'))
 
         account_details_form.username.data = user.username
         account_details_form.role.data = user.role
@@ -323,7 +325,16 @@ def sellerDashboard():
         else:
             flash('User not found', 'danger')
 
-    return render_template('sellerDashboard.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
+    # retrieve orders
+    orders = Order.query.all()
+
+    # Retrieve products
+    products = Product.query.all()
+    for product in products:
+        if product.image:
+            product.image = base64.b64encode(product.image).decode('utf-8')
+
+    return render_template('sellerDashboard.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user, orders=orders, products=products)
 
 @main.route('/orderDetails')
 @login_required
@@ -335,10 +346,56 @@ def orderDetails():
 def newProduct():
     return render_template('sellerNewProduct.html', user=current_user)
 
-@main.route('/updateProduct')
+@main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
 @login_required
-def updateProduct():
-    return render_template('sellerUpdateProduct.html', user=current_user)
+def updateProduct(product_id):
+    form = UpdateProductForm()
+    product = Product.get(product_id)
+
+
+    if not product:
+        flash('Product not found', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
+
+
+    if request.method == 'GET':
+        form.productID.data = product.product_id
+        image = None
+        if product.image:
+            image = base64.b64encode(product.image).decode('utf-8')
+        form.productName.data = product.name
+        form.productDescription.data = product.description
+        form.productCategoryID.choices = [(c.id, c.name) for c in Category.query.all()]
+        form.productPrice.data = product.price
+        form.productQuantity.data = product.quantity
+        form.productCreatedDate.data = product.created_date
+        form.productLastUpdated.data = product.last_updated_date
+
+    if request.method == 'POST' and form.validate_on_submit():
+        product.name = form.productName.data
+        product.description = form.productDescription.data
+        product.category_id = form.productCategoryID.data
+        product.price = form.productPrice.data
+        product.quantity = form.productQuantity.data
+        product.created_date = form.productCreatedDate.data
+        product.last_updated_date = form.productLastUpdated.data
+        db.session.commit()
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('main.adminDashboard'))
+
+    return render_template('sellerUpdateProduct.html', form=form, image=image, product_id=product_id)
+
+@main.route('/deleteProduct/<int:product_id>', methods=['POST'])
+@login_required
+def delete_product(product_id):
+    product = Product.get(product_id)
+    if product:
+        db.session.delete(product)
+        db.session.commit()
+        flash('Product deleted successfully!', 'success')
+    else:
+        flash('Product not found', 'danger')
+    return redirect(url_for('main.sellerDashboard'))
 
 @main.route('/db_check')
 def db_check():

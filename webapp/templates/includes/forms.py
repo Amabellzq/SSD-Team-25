@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
 from flask_wtf.file import FileRequired, FileAllowed
 
@@ -58,7 +58,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # Merchant #
+    # Admin #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -66,5 +66,17 @@ class CreateCategory(FlaskForm):
     categoryDescription = StringField('Category Description', validators=[DataRequired()])
     saveCategory = SubmitField('Save Category')
 
+#############################
+    # Merchant #
+#############################
 
-
+class UpdateProductForm(FlaskForm):
+    productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', validators=[DataRequired()], choices=[])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Update Product')

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="utf-8">
-      <title>Shop Me | I am New</title>
-      <link rel="stylesheet" href="../static/css/auth_style.css">
-      <style>
+<head>
+    <meta charset="utf-8">
+    <title>Shop Me | I am New</title>
+    <link rel="stylesheet" href="../static/css/auth_style.css">
+    <style>
         .center-align {
             display: flex;
             justify-content: center;
@@ -12,8 +12,8 @@
             flex-direction: column;
         }
         .field {
-             margin-bottom: 5px;
-         }
+            margin-bottom: 5px;
+        }
         .file-input-wrapper {
             display: flex;
             justify-content: center;
@@ -28,11 +28,35 @@
             width: 100%;
             height: 60px; /* Adjust the height to match other fields */
         }
-     </style>
-   </head>
-   <body>
-      <div class="wrapper">
+        .flash-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
         <div class="title">Registration Form</div>
+        <!-- Flash message block -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <form method="POST" action="{{ url_for('main.register') }}" enctype="multipart/form-data">
             {{ register_form.hidden_tag() }}
             <div class="field">
@@ -65,10 +89,9 @@
                 {{ register_form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
             </div>
             <div class="signup-link">
-               Already used me? <a href="/login">Login now</a>
+                Already used me? <a href="{{ url_for('main.login') }}">Login now</a>
             </div>
-         </form>
         </form>
-      </div>
-   </body>
+    </div>
+</body>
 </html>
