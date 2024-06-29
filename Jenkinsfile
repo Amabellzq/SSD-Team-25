@@ -117,6 +117,17 @@ pipeline {
                 }
             }
         }
+        stage('Code Quality Check via SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarQube';
+                    withSonarQubeEnv('SonarQube') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=."
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Build and Deploy') {
             steps {
@@ -140,6 +151,7 @@ post {
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
+                    recordIssues enabledForFailure: true, tool: sonarQube()
 
 
               sh 'rm -f .env'
