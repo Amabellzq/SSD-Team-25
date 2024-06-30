@@ -153,8 +153,8 @@
                                     <td>{{ product['product_id'] }}</td>
                                     <td>{{ product['name'] }}</td>
                                     <td>
-                                        {% if product['image'] %}
-                                            <img src="data:image/jpeg;base64,{{ product['image'] }}" alt="Product Image" style="width: 100px; height: 100px;"/>
+                                        {% if product['image_url'] %}
+                                            <img src="data:image/jpeg;base64,{{ product['image_url'] }}" alt="Product Image" style="width: 100px; height: 100px;"/>
                                         {% else %}
                                             No Image
                                         {% endif %}
@@ -167,7 +167,7 @@
                                     <td>{{ product['created_date'] }}</td>
                                     <td>{{ product['last_updated_date'] }}</td>
                                     <td>
-                                        <form action="{{ url_for('main.update_product', product_id=product['product_id']) }}" method="GET" style="display:inline;">
+                                        <form action="{{ url_for('main.updateProduct', product_id=product['product_id']) }}" method="GET" style="display:inline;">
                                             <button class="btn btn-primary">Edit</button>
                                         </form>
                                     </td>

@@ -20,15 +20,26 @@
 
 <div class="container">
     <h3>Update Product</h3>
-    <form method="POST" action="{{ url_for('main.update_product', product_id=product_id) }}">
+    <form method="POST" action="{{ url_for('main.updateProduct', product_id=product_id) }}">
         {{ form.hidden_tag() }}        
         <div class="form-group">
             {{ form.productID.label(class="form-label") }}
-            {{ form.productID(class="form-control"), readonly = True }}
+            {{ form.productID(class="form-control") }}
         </div>
         <div class="product-image">
-            {% if image %}
-            <img src="data:image/png;base64,{{ image }}" alt="Product Image" width="50">
+            {% if image_url %}
+                <img src="data:image/png;base64,{{ image_url }}" alt="Product Image" width="50">
+            {% else %}
+                No Image
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.image_url.label(class="form-label") }}
+            {{ form.image_url(class="form-control") }}
+            {% if form.image_url.errors %}
+                {% for error in form.image_url.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
             {% endif %}
         </div>
         <div class="form-group">
@@ -53,20 +64,20 @@
         </div>
         <div class="form-group">
             {{ form.productCreatedDate.label(class="form-label") }}
-            {{ form.productCreatedDate(class="form-control", readonly=True) }}
+            {{ form.productCreatedDate(class="form-control") }}
         </div>
         <div class="form-group">
             {{ form.productLastUpdated.label(class="form-label") }}
-            {{ form.productLastUpdated(class="form-control", readonly=True) }}
+            {{ form.productLastUpdated(class="form-control") }}
         </div>
         <div class="text-center">
-            {{ form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
-        </div>   
+            <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
+                {{ form.submit.label.text }}
+            </button>
+        </div>  
         <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>      
     </form>
 </div>
-
-
 <!-- Section End -->
 
 

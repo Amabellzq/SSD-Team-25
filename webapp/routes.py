@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -499,8 +499,8 @@ def sellerDashboard():
     # Retrieve products
     products = Product.query.all()
     for product in products:
-        if product.image:
-            product.image = base64.b64encode(product.image).decode('utf-8')
+        if product.image_url:
+            product.image_url = base64.b64encode(product.image_url).decode('utf-8')
 
     return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user, orders=orders, products=products)
 
@@ -615,47 +615,63 @@ def update_business():
 def orderDetails():
     return render_template('sellerOrderDetails.html', user=current_user)
 
-@main.route('/newProduct')
+@main.route('/newProduct', methods=['GET', 'POST'])
 @login_required
 def newProduct():
-    return render_template('sellerNewProduct.html', user=current_user)
+    form = CreateProductForm()
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
 
-@main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
+    if form.validate_on_submit():
+        product_name = form.productName.data
+        product_description = form.productDescription.data 
+        product_category_id = form.productCategoryID.data
+        product_price = form.productPrice.data 
+        product_quantity = form.productQuantity.data 
+        product_created_date = form.productCreatedDate.data 
+        product_last_updated_date = form.productLastUpdated.data 
+        image_data = form.image_url.data.read()
+        create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
+                                 price=product_price, quantity=product_quantity, created_date=product_created_date, 
+                                 last_updated=product_last_updated_date, image=image_data)
+        db.session.add(create_product)
+        db.session.commit()
+        print("Product added to the database")
+        flash('Product created successfully!', 'success')
+        return redirect(url_for('main.sellerDashboard'))
+    else:
+        print("Form validation failed")
+        for field, errors in form.errors.items():
+            for error in errors:
+                print(f"Error in {field}: {error}")
+
+    return render_template('sellerNewProduct.html', form=form)
+
+
+@main.route('/updateProduct/<int:product_id>', methods=['POST'])
 @login_required
 def updateProduct(product_id):
     form = UpdateProductForm()
-    product = Product.get(product_id)
+    product = Product.query.get(product_id)
 
     if not product:
         flash('Product not found', 'danger')
         return redirect(url_for('main.sellerDashboard'))
 
-    if request.method == 'GET':
-        form.productID.data = product.product_id
-        image = None
-        if product.image:
-            image = base64.b64encode(product.image).decode('utf-8')
-        form.productName.data = product.name
-        form.productDescription.data = product.description
-        form.productCategoryID.choices = [(c.id, c.name) for c in Category.query.all()]
-        form.productPrice.data = product.price
-        form.productQuantity.data = product.quantity
-        form.productCreatedDate.data = product.created_date
-        form.productLastUpdated.data = product.last_updated_date
+    image_url = None
+    form.productID.data = product.product_id
+    if product.image_url:
+        image_url = base64.b64encode(product.image_url).decode('utf-8')
+    form.productName.data = product.name
+    form.productDescription.data = product.description
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    form.productCategoryID.data = product.category_id
+    form.productPrice.data = product.price
+    form.productQuantity.data = product.quantity
+    form.productCreatedDate.data = product.created_date
+    form.productLastUpdated.data = product.last_updated_date
 
-    if request.method == 'POST' and form.validate_on_submit():
-        product.name = form.productName.data
-        product.description = form.productDescription.data
-        product.category_id = form.productCategoryID.data
-        product.price = form.productPrice.data
-        product.quantity = form.productQuantity.data
-        product.created_date = form.productCreatedDate.data
-        product.last_updated_date = form.productLastUpdated.data
-        db.session.commit()
-        flash('Product updated successfully!', 'success')
-        return redirect(url_for('main.adminDashboard'))
+    return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
 
-    return render_template('sellerUpdateProduct.html', form=form, image=image, product_id=product_id)
 
 @main.route('/deleteProduct/<int:product_id>', methods=['POST'])
 @login_required

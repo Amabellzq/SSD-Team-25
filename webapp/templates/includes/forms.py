@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
 import re
 
@@ -77,8 +77,25 @@ class RegisterBusinessForm(FlaskForm):
     business_address = StringField('Business Address', validators=[DataRequired(), Length(min=10, max=255)])
     submit = SubmitField('Submit Details')
 
+class CreateProductForm(FlaskForm):
+    productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
+    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Save Product')
+
+    def validate_image_url(form, field):
+        if not field.data:
+            raise ValidationError('Image is required.')
+
 class UpdateProductForm(FlaskForm):
     productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
+    image_url = FileField('Product Image', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
     productName = StringField('Product Name', validators=[DataRequired()])
     productDescription = StringField('Product Description', validators=[DataRequired()])
     productCategoryID = SelectField('Category', validators=[DataRequired()], choices=[])

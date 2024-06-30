@@ -18,47 +18,67 @@
 </div>
 <!-- Breadcrumb End -->
 
+<!-- Section Start -->
 <div class="container">
-    <h3>Add New Product</h3>
-    <form id="addProductForm" method="POST" action="/addProduct" enctype="multipart/form-data">
+    <h3>Update Product</h3>
+    <form method="POST" action="{{ url_for('main.newProduct') }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}        
         <div class="form-group">
-            <label for="productId">Product ID</label>
-            <input type="text" class="form-control" id="productId" name="productId" readonly>
+            {{ form.productID.label(class="form-label") }}
+            {{ form.productID(class="form-control") }}
+        </div>
+        <div class="product-image">
+            {% if image_url %}
+                <img src="data:image/png;base64,{{ image_url }}" alt="Product Image" width="50">
+            {% else %}
+                No Image
+            {% endif %}
         </div>
         <div class="form-group">
-            <label for="productImage">Product Image</label>
-            <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" required>
+            {{ form.image_url.label(class="form-label") }}
+            {{ form.image_url(class="form-control") }}
+            {% if form.image_url.errors %}
+                {% for error in form.image_url.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
         </div>
         <div class="form-group">
-            <label for="description">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+            {{ form.productName.label(class="form-label") }}
+            {{ form.productName(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="categoryId">Category ID</label>
-            <input type="text" class="form-control" id="categoryId" name="categoryId" required>
+            {{ form.productDescription.label(class="form-label") }}
+            {{ form.productDescription(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+            {{ form.productCategoryID.label(class="form-label") }}
+            {{ form.productCategoryID(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" required>
+            {{ form.productPrice.label(class="form-label") }}
+            {{ form.productPrice(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="dateCreated">Date Created</label>
-            <input type="date" class="form-control" id="dateCreated" name="dateCreated" required>
+            {{ form.productQuantity.label(class="form-label") }}
+            {{ form.productQuantity(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="dateLastUpdated">Date Last Updated</label>
-            <input type="date" class="form-control" id="dateLastUpdated" name="dateLastUpdated" required>
+            {{ form.productCreatedDate.label(class="form-label") }}
+            {{ form.productCreatedDate(class="form-control") }}
         </div>
-        <button type="submit" class="btn btn-primary">Confirm</button>
-        <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>       
+        <div class="form-group">
+            {{ form.productLastUpdated.label(class="form-label") }}
+            {{ form.productLastUpdated(class="form-control") }}
+        </div>
+        <div class="text-center">
+            <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
+                {{ form.submit.label.text }}
+            </button>
+        </div>  
+        <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>      
     </form>
 </div>
-
-
 <!-- Section End -->
 
 
