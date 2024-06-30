@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Create Category - ShopMe{% endblock %}
+  
+{% block content %} 
+ <!-- Breadcrumb Begin -->
+ <div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/sellerDashboard"><i class="fa fa-home"></i> Seller Dashboard </a>
+                    <span>Merchant Create Category</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+
+<!-- Product Section Begin -->
+<section class="product spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-4">
+                <div class="section-title">
+                    <h4>Register My Business</h4>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12"> <!-- Larger column for products -->
+                <div class="row property__gallery">
+                    <!-- Users Section, hidden by default -->
+
+                    <div class="col-lg-12 mix accountDetails"> <!-- Ensure this is initially hidden createNewCategory-->
+                        <form method="POST" action="">
+                            {{ updateBusiness.hidden_tag() }}
+                            <div class="form-group">
+                                {{ updateBusiness.user_id.label }}
+                                {{ updateBusiness.user_id(class="form-control", readonly=True) }}
+                            </div>
+                            <div class="form-group">
+                                {{ updateBusiness.business_name.label }}
+                                {{ updateBusiness.business_name(class="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                {{ updateBusiness.business_address.label }}
+                                {{ updateBusiness.business_address(class="form-control") }}
+                            </div>
+                            <div class="form-group">
+                            </div>
+                            <div class="form-group text-center">
+                                <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
+                                    {{ updateBusiness.submit.label.text }}
+                                </button>
+                            </div>                    
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Product Section End -->
+
+
+{% endblock %}

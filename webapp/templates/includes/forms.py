@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
 from flask_wtf.file import FileRequired, FileAllowed
+import re
 
 #############################
     #Authentication#
@@ -10,13 +11,13 @@ from flask_wtf.file import FileRequired, FileAllowed
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Regexp(r'^\S+@\S+\.\S+$', message="Invalid Email")])    
     role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
-    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
+    profile_picture = FileField('Set Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Register')
@@ -58,7 +59,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # Admin #
+    # ADMIN #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -69,6 +70,12 @@ class CreateCategory(FlaskForm):
 #############################
     # Merchant #
 #############################
+
+class RegisterBusinessForm(FlaskForm):
+    user_id = IntegerField('User ID', validators=[DataRequired(), NumberRange(min=1)])
+    business_name = StringField('Business Name', validators=[DataRequired(), Length(min=4, max=100)])
+    business_address = StringField('Business Address', validators=[DataRequired(), Length(min=10, max=255)])
+    submit = SubmitField('Submit Details')
 
 class UpdateProductForm(FlaskForm):
     productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
