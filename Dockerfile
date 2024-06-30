@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Update Pip
 RUN pip install --upgrade pip
 
+# Install SQLite support
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
+
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -21,6 +24,10 @@ RUN pip install flask-login
 
 # Command to install WTF forms 
 RUN pip install Flask-WTF
+
+# Install pytest and plugins
+RUN pip install pytest pytest-flask pytest-cov pytest-html pytest-junitxml
+
 
 # Copy the rest of the application code into the container
 COPY . .

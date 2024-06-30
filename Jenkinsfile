@@ -6,6 +6,7 @@ pipeline {
         GIT_BRANCH = 'main' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
+        FLASK_CONTAINER = 'flask'
     }
 
       stages {
@@ -117,16 +118,36 @@ pipeline {
                 }
             }
         }
-        stage('Code Quality Check via SonarQube') {
+        stage('Unit Testing using PyTest') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarQube';
+                    // Get the container ID of the Flask application container
+                    def flaskContainerId = sh(script: "docker-compose ps -q ${FLASK_CONTAINER}", returnStdout: true).trim()
+
+                    // Run pytest inside the Flask application container with coverage and reporting options
+                    sh "docker exec ${flaskContainerId} pytest --cov=app --cov-report=xml:/app/coverage.xml --junitxml=/app/report.xml"
+
+                    // Copy the reports from the Flask container to the Jenkins workspace
+                    sh "docker cp ${flaskContainerId}:/webapp/coverage.xml ${WORKSPACE}/SSD_Pipeline/coverage.xml"
+                    sh "docker cp ${flaskContainerId}:/webapp/report.xml ${WORKSPACE}/SSD_Pipeline/report.xml"
+                }
+            }
+      stage('Code Quality Check via SonarQube') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarQube'
                     withSonarQubeEnv('SonarQube') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=. "
-                        }
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=SSD_Grp25_OWASP \
+                        -Dsonar.sources=. \
+                        -Dsonar.python.coverage.reportPaths=${WORKSPACE}/SSD_Pipeline/coverage.xml \
+                        -Dsonar.junit.reportPaths=${WORKSPACE}/SSD_Pipeline/report.xml
+                        """
                     }
                 }
             }
+        }
 
 
         stage('Build and Deploy') {
