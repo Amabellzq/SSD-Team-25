@@ -264,7 +264,7 @@ class Product(db.Model):
         return Product.query.get(product_id)
 
     @staticmethod
-    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id):
+    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id, created_date, last_updated_date):
         new_product = Product(
             name=name,
             description=description,
@@ -274,8 +274,8 @@ class Product(db.Model):
             availability=availability,
             image_url=image_url,
             merchant_id=merchant_id,
-            created_date=db.Column(db.DateTime, default=datetime.utcnow), 
-            last_updated_date=db.Column(db.DateTime, default=datetime.utcnow)
+            created_date=created_date,
+            last_updated_date=last_updated_date
         )
         db.session.add(new_product)
         db.session.commit()
