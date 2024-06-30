@@ -122,7 +122,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'SonarQube';
                     withSonarQubeEnv('SonarQube') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=."
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=. -Dsonar.report.export.path=sonar-report.json"
                         }
                     }
                 }
