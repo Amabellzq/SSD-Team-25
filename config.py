@@ -24,3 +24,4 @@ class Config:
         f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
