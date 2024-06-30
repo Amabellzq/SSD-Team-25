@@ -26,7 +26,7 @@ RUN pip install flask-login
 RUN pip install Flask-WTF
 
 # Install pytest and plugins
-RUN pip install pytest pytest-flask pytest-cov pytest-html pytest-junitxml
+RUN pip install pytest pytest-flask pytest-cov pytest-html #pytest-junitxml
 
 
 # Copy the rest of the application code into the container
