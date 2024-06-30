@@ -18,50 +18,6 @@
 </div>
 <!-- Breadcrumb End -->
 
-<!-- Section Start
-<div class="container">
-    <h3>Create New Product</h3>
-    <form method="POST" action="{{ url_for('main.newProduct') }}" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}       
-        <div class="form-group">
-            {{ form.image_url.label(class="form-label") }}
-            {{ form.image_url(class="form-control") }}
-            {% if form.image_url.errors %}
-                {% for error in form.image_url.errors %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                {% endfor %}
-            {% endif %}
-        </div>
-        <div class="form-group">
-            {{ form.productName.label(class="form-label") }}
-            {{ form.productName(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.productDescription.label(class="form-label") }}
-            {{ form.productDescription(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.productCategoryID.label(class="form-label") }}
-            {{ form.productCategoryID(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.productPrice.label(class="form-label") }}
-            {{ form.productPrice(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.productQuantity.label(class="form-label") }}
-            {{ form.productQuantity(class="form-control") }}
-        </div>
-        <div class="text-center">
-            <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
-                {{ form.submit.label.text }}
-            </button>
-        </div>  
-        <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>      
-    </form>
-</div> -->
-<!-- Section End -->
-
 <!-- Section Start -->
 <div class="container">
     <h3>Create New Product</h3>
