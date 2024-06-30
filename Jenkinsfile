@@ -85,7 +85,7 @@ pipeline {
                     // Ensure a clean state by stopping and removing any existing containers
                     sh 'docker-compose down --remove-orphans'
                     // Start the Docker containers in detached mode
-                    sh 'docker-compose up -d'
+                    sh 'docker-compose up --build -d'
                 }
             }
         }
