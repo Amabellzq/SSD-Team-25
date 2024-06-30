@@ -59,7 +59,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # ADMIN #
+    # Admin #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -79,7 +79,6 @@ class RegisterBusinessForm(FlaskForm):
 
 class CreateProductForm(FlaskForm):
     productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
-    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
     productName = StringField('Product Name', validators=[DataRequired()])
     productDescription = StringField('Product Description', validators=[DataRequired()])
     productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
@@ -89,9 +88,8 @@ class CreateProductForm(FlaskForm):
     productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
     submit = SubmitField('Save Product')
 
-    def validate_image_url(form, field):
-        if not field.data:
-            raise ValidationError('Image is required.')
+    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    
 
 class UpdateProductForm(FlaskForm):
     productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})

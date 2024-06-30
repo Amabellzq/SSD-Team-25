@@ -26,22 +26,7 @@
             {{ form.productID.label(class="form-label") }}
             {{ form.productID(class="form-control") }}
         </div>
-        <div class="product-image">
-            {% if image_url %}
-                <img src="data:image/png;base64,{{ image_url }}" alt="Product Image" width="50">
-            {% else %}
-                No Image
-            {% endif %}
-        </div>
-        <div class="form-group">
-            {{ form.image_url.label(class="form-label") }}
-            {{ form.image_url(class="form-control") }}
-            {% if form.image_url.errors %}
-                {% for error in form.image_url.errors %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                {% endfor %}
-            {% endif %}
-        </div>
+        
         <div class="form-group">
             {{ form.productName.label(class="form-label") }}
             {{ form.productName(class="form-control") }}

@@ -187,6 +187,10 @@ def forgetPass():
         return redirect(url_for('main.login'))
     return render_template('forgetPW.html', resetpass_form=form)
 
+#############################
+    # Admin #
+#############################
+
 @main.route('/adminDashboard', methods=['GET', 'POST'])
 @login_required
 def adminDashboard():
@@ -414,6 +418,10 @@ def edit_category(category_id):
 
     return render_template('adminEditCategory.html', form=form, category_id=category_id)
 
+#############################
+    # Merchant #
+#############################
+
 # @main.route('/sellerDashboard', methods=['GET', 'POST'])
 # @login_required
 # def sellerDashboard():
@@ -618,31 +626,38 @@ def orderDetails():
 @main.route('/newProduct', methods=['GET', 'POST'])
 @login_required
 def newProduct():
-    form = CreateProductForm()
-    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    try:
+        form = CreateProductForm()
+        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
 
-    if form.validate_on_submit():
-        product_name = form.productName.data
-        product_description = form.productDescription.data 
-        product_category_id = form.productCategoryID.data
-        product_price = form.productPrice.data 
-        product_quantity = form.productQuantity.data 
-        product_created_date = form.productCreatedDate.data 
-        product_last_updated_date = form.productLastUpdated.data 
-        image_data = form.image_url.data.read()
-        create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
+        if form.validate_on_submit():
+            product_name = form.productName.data
+            product_description = form.productDescription.data 
+            product_category_id = form.productCategoryID.data
+            product_price = form.productPrice.data 
+            product_quantity = form.productQuantity.data 
+            product_created_date = form.productCreatedDate.data 
+            product_last_updated_date = form.productLastUpdated.data 
+            image_data = form.image_url.data.read()
+            create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
                                  price=product_price, quantity=product_quantity, created_date=product_created_date, 
                                  last_updated=product_last_updated_date, image=image_data)
-        db.session.add(create_product)
-        db.session.commit()
-        print("Product added to the database")
-        flash('Product created successfully!', 'success')
-        return redirect(url_for('main.sellerDashboard'))
-    else:
-        print("Form validation failed")
-        for field, errors in form.errors.items():
-            for error in errors:
-                print(f"Error in {field}: {error}")
+            db.session.add(create_product)
+            db.session.commit()
+            print("Product added to the database")
+            flash('Product created successfully!', 'success')
+            return redirect(url_for('main.sellerDashboard'))
+        else:
+            print("Form validation failed")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+
+    except Exception as e:
+        # Log the exception
+        print(f'Error: {e}')
+        flash('An error occurred. Please try again later.', 'danger')
+        return redirect(url_for('main.sellerDashboard'))          
 
     return render_template('sellerNewProduct.html', form=form)
 
@@ -658,17 +673,43 @@ def updateProduct(product_id):
         return redirect(url_for('main.sellerDashboard'))
 
     image_url = None
-    form.productID.data = product.product_id
-    if product.image_url:
-        image_url = base64.b64encode(product.image_url).decode('utf-8')
-    form.productName.data = product.name
-    form.productDescription.data = product.description
-    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
-    form.productCategoryID.data = product.category_id
-    form.productPrice.data = product.price
-    form.productQuantity.data = product.quantity
-    form.productCreatedDate.data = product.created_date
-    form.productLastUpdated.data = product.last_updated_date
+    if request.method == 'GET':
+        form.productID.data = product.product_id
+        if product.image_url:
+            image_url = base64.b64encode(product.image_url).decode('utf-8')
+        form.productName.data = product.name
+        form.productDescription.data = product.description
+        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+        form.productCategoryID.data = product.category_id
+        form.productPrice.data = product.price
+        form.productQuantity.data = product.quantity
+        form.productCreatedDate.data = product.created_date
+        form.productLastUpdated.data = product.last_updated_date
+
+    if request.method == 'POST' and form.validate_on_submit():
+        print("Form validated successfully")
+        product.name = form.productName.data
+        product.description = form.productDescription.data
+        product.category_id = form.productCategoryID.data
+        product.price = form.productPrice.data
+        product.quantity = form.productQuantity.data
+        product.created_date = form.productCreatedDate.data
+        product.last_updated_date = form.productLastUpdated.data
+
+        if product.image_url.data:
+            image_url = form.image_url.data
+            filename = secure_filename(image_url.filename)
+            product.image_url = image_url.read()
+       
+        print(f"Updating product: {product.__dict__}")
+        db.session.commit()
+        print("Product updated and committed to the database")
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('main.sellerDashboard'))
+
+    if request.method == 'POST' and not form.validate_on_submit():
+        print("Form validation failed")
+        print(form.errors)
 
     return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
 
