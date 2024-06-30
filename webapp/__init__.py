@@ -23,10 +23,5 @@ def load_user(user_id):
 # Register Blueprint
 app.register_blueprint(main)
 
-# Optional: Uncomment if you want to create tables in a new setup
-# Create database tables
-# with app.app_context():
-#    db.create_all()
-
 # To ensure no circular import issues
 from .routes import main
