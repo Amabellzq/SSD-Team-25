@@ -122,7 +122,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'SonarQube';
                     withSonarQubeEnv('SonarQube') {
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=. -Dsonar.report.export.path=sonar-report.json"
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=SSD_Grp25_OWASP -Dsonar.sources=. "
                         }
                     }
                 }
@@ -151,7 +151,7 @@ post {
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
                      //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
-                    recordIssues enabledForFailure: true, tool: sonarQube()
+                     //recordIssues enabledForFailure: true, tool: sonarQube()
 
 
               sh 'rm -f .env'
