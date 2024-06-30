@@ -22,7 +22,11 @@ def home():
 
 @main.route('/shop')
 def shop():
-    return render_template('shop.html')
+    categories = Category.query.all()
+    print(categories)  # Debugging: Print categories to ensure they are fetched
+    for category in categories:
+        print(category.name)  # Debugging: Print category names
+    return render_template('shop.html', categories=categories)
 
 @main.route('/contact')
 def contact():
@@ -137,6 +141,7 @@ def register():
     registration_successful = False
     if form.validate_on_submit():
         username = form.username.data
+        email = form.email.data
         role = form.role.data
         password = form.password.data
         profile_picture = form.profile_picture.data
@@ -146,30 +151,31 @@ def register():
         if existing_user:
             flash('Username already exists. Please choose a different username.', 'danger')
         else:
-            hashed_password = generate_password_hash(password)
-            try:
-                # Create the new user
-                new_user = User.create(username=username, password=hashed_password, role=role)
-
-                if profile_picture:
-                    filename = secure_filename(profile_picture.filename)
-                    new_user.profile_pic_url = profile_picture.read()
-                    db.session.commit()
+            # Check for duplicate email
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                flash('Email already exists.', 'danger')
+            else:
+                hashed_password = generate_password_hash(password)
+                try:
+                    # Create the new user
+                    new_user = User.create(username=username, email = email, password=hashed_password, role=role)
+                    
+                    registration_successful = True
+                    flash('Registeration Successful', 'success')
+                    return redirect(url_for('main.login'))
                 
-                registration_successful = True
-                flash('Registeration Successful', 'success')
-                return redirect(url_for('main.login'))
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.error(f'Error while registering user: {str(e)}')
-                flash(f'An error occurred: {str(e)}', 'danger')
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'Error while registering user: {str(e)}')
+                    flash(f'An error occurred: {str(e)}', 'danger')
     else:
         if request.method == 'POST':
             current_app.logger.debug('Form validation failed')
-            for field, errors in form.errors.items():
+            for field_name, errors in form.errors.items():
+                field = getattr(form, field_name)
                 for error in errors:
-                    current_app.logger.debug(f'{field}: {error}')
-            flash('Form validation failed. Please check your input.', 'danger')
+                    flash(f'{field.label.text}: {error}', 'danger')
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
 
@@ -303,9 +309,7 @@ def delete_user(user_id):
     if user:
         db.session.delete(user)
         db.session.commit()
-        flash('User deleted successfully!', 'success')
-    else:
-        flash('User not found', 'danger')
+
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/approve_merchant/<int:merchant_id>', methods=['POST'])
@@ -583,9 +587,7 @@ def update_business():
                 # Log after commit to verify
                 current_app.logger.debug("Merchant details updated successfully!")
                 return redirect(url_for('main.sellerDashboard'))
-            else:
-                flash('Merchant not found', 'danger')
-                return redirect(url_for('main.sellerDashboard'))
+
         except Exception as e:
             current_app.logger.error(f"Error updating business details: {str(e)}")
             db.session.rollback()

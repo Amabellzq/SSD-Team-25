@@ -94,6 +94,7 @@
                             <th>Profile Pic</th>
                             <th>Username</th>
                             <th>Role</th>
+                            <th>Email</th>
                             <th>Account Status</th>
                             <th>Manage</th>
                             <th>Action</th>
@@ -111,6 +112,7 @@
                             </td>
                             <td>{{ user['username'] }}</td>
                             <td>{{ user['role'] }}</td>
+                            <td>{{ user['email'] }}</td>
                             <td>{{ user['account_status'] }}</td>
                             <td>
                                 <form action="{{ url_for('main.edit_user', user_id=user['user_id']) }}" method="GET" style="display:inline;">

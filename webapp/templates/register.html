@@ -13,12 +13,19 @@
                 padding: 10px; /* Optional: add some padding */
             }
             .alert-danger {
+                
                 background-color: #ff0000; /* Red background for error messages */
                 border-color: #ff0000; /* Red border for error messages */
             }
             .alert-success {
                 background-color: #28a745; /* Green background for success messages */
                 border-color: #28a752; /* Green border for success messages */
+            }
+            .alert-container {
+            margin-top: 10px; /* Add margin to separate from the Confirm Password field */
+            }
+            .field {
+                margin-bottom: 10px; /* Ensure there is space between fields */
             }
         </style>
         <script>
@@ -51,6 +58,10 @@
             <div class="field">
                 {{ register_form.username(class="form-control", required=True) }}
                 {{ register_form.username.label(class="form-label") }}
+            </div>
+            <div class="field">
+                {{ register_form.email(class="form-control", required=True) }}
+                {{ register_form.email.label(class="form-label") }}
             </div>
             <div class="field">
                 {{ register_form.role(class="form-control", required=True) }}
