@@ -664,72 +664,65 @@ def orderDetails():
 @main.route('/newProduct', methods=['GET','POST'])
 @login_required
 def newProduct():
-    try:
-        print("Initializing CreateProductForm")
-        form = CreateProductForm()
-        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
-        print(f"Product categories loaded: {form.productCategoryID.choices}")
+    print("Initializing CreateProductForm")
+    form = CreateProductForm()
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    print(f"Product categories loaded: {form.productCategoryID.choices}")
 
-        # Retrieve the merchant_id for the current user
-        merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
-        if not merchant:
-            flash('No merchant found for the current user.', 'danger')
-            return redirect(url_for('main.sellerDashboard'))
-        
-        # Prepopulate the merchant_id field
-        form.merchant_id.data = merchant.merchant_id
-
-        if request.method == 'POST':
-            print("Form submitted with POST method")
-            print(form.data)  # Debugging statement to print form data
-            if form.validate_on_submit():
-                print("Form validated successfully")
-                product_name = form.productName.data
-                product_description = form.productDescription.data
-                product_category_id = form.productCategoryID.data
-                product_price = form.productPrice.data
-                product_quantity = form.productQuantity.data
-                availability = form.Availability.data
-                image_data = form.image_url.data.read()  # Read image file as binary data
-
-                # Calculate Singapore time (UTC+8)
-                utc_now = datetime.utcnow()
-                singapore_time = utc_now + timedelta(hours=8)
-                created_date = singapore_time
-                last_updated_date = singapore_time
-
-                print(f"Creating product with name: {product_name}, description: {product_description}, "
-                      f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
-
-                create_product = Product.create(
-                    name=product_name,
-                    description=product_description,
-                    category_id=product_category_id,
-                    price=product_price,
-                    quantity=product_quantity,
-                    availability=availability,
-                    image_url=image_data,
-                    merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
-                    created_date = created_date,
-                    last_updated_date=last_updated_date
-                )
-
-                print("Product added to the database")
-                flash('Product created successfully!', 'success')
-                return redirect(url_for('main.sellerDashboard'))
-            else:
-                print("Form validation failed")
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        print(f"Error in {field}: {error}")
-        else:
-            print("GET request received")
-
-    except Exception as e:
-        # Log the exception
-        print(f'Error: {e}')
-        flash('An error occurred. Please try again later.', 'danger')
+    # Retrieve the merchant_id for the current user
+    merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+    if not merchant:
+        flash('No merchant found for the current user.', 'danger')
         return redirect(url_for('main.sellerDashboard'))
+        
+    # Prepopulate the merchant_id field
+    form.merchant_id.data = merchant.merchant_id
+
+    if request.method == 'POST':
+        print("Form submitted with POST method")
+        print(form.data)  # Debugging statement to print form data
+        if form.validate_on_submit():
+            print("Form validated successfully")
+            product_name = form.productName.data
+            product_description = form.productDescription.data
+            product_category_id = form.productCategoryID.data
+            product_price = form.productPrice.data
+            product_quantity = form.productQuantity.data
+            availability = form.Availability.data
+            image_data = form.image_url.data.read()  # Read image file as binary data
+
+            # Calculate Singapore time (UTC+8)
+            utc_now = datetime.utcnow()
+            singapore_time = utc_now + timedelta(hours=8)
+            created_date = singapore_time
+            last_updated_date = singapore_time
+
+            print(f"Creating product with name: {product_name}, description: {product_description}, "
+                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
+
+            create_product = Product.create(
+                name=product_name,
+                description=product_description,
+                category_id=product_category_id,
+                price=product_price,
+                quantity=product_quantity,
+                availability=availability,
+                image_url=image_data,
+                merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
+                created_date = created_date,
+                last_updated_date=last_updated_date
+            )
+
+            print("Product added to the database")
+            flash('Product created successfully!', 'success')
+            return redirect(url_for('main.sellerDashboard'))
+        else:
+            print("Form validation failed")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+    else:
+        print("GET request received")
 
     print("Rendering new product form")
     return render_template('sellerNewProduct.html', form=form)
