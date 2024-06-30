@@ -78,21 +78,19 @@ class RegisterBusinessForm(FlaskForm):
     submit = SubmitField('Submit Details')
 
 class CreateProductForm(FlaskForm):
-    productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
     productName = StringField('Product Name', validators=[DataRequired()])
     productDescription = StringField('Product Description', validators=[DataRequired()])
     productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
     productPrice = DecimalField('Price', validators=[DataRequired()])
     productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    Availability = SelectField('Availability', choices=[ ('In Stock', 'In Stock'), ('Out of Stock', 'Out of Stock')], validators=[DataRequired()])
+    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    merchant_id = IntegerField('Merchant ID', validators=[DataRequired(), NumberRange(min=1)])
     productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
     productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
     submit = SubmitField('Save Product')
 
-    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
-    
-
 class UpdateProductForm(FlaskForm):
-    productID = StringField('Product ID', validators=[DataRequired()], render_kw={'readonly': True})
     image_url = FileField('Product Image', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
     productName = StringField('Product Name', validators=[DataRequired()])
     productDescription = StringField('Product Description', validators=[DataRequired()])

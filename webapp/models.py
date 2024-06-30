@@ -258,8 +258,6 @@ class Product(db.Model):
     merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
-    order_items = db.relationship('OrderItem', backref='product')
-    cart_items = db.relationship('CartItem', backref='product')
 
     @staticmethod
     def get(product_id):
@@ -267,7 +265,18 @@ class Product(db.Model):
 
     @staticmethod
     def create(name, description, category_id, price, quantity, availability, image_url, merchant_id):
-        new_product = Product(name=name, description=description, category_id=category_id, price=price, quantity=quantity, availability=availability, image_url=image_url, merchant_id=merchant_id)
+        new_product = Product(
+            name=name,
+            description=description,
+            category_id=category_id,
+            price=price,
+            quantity=quantity,
+            availability=availability,
+            image_url=image_url,
+            merchant_id=merchant_id,
+            created_date=db.Column(db.DateTime, default=datetime.utcnow), 
+            last_updated_date=db.Column(db.DateTime, default=datetime.utcnow)
+        )
         db.session.add(new_product)
         db.session.commit()
         return new_product

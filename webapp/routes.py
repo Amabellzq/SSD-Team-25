@@ -623,27 +623,95 @@ def update_business():
 def orderDetails():
     return render_template('sellerOrderDetails.html', user=current_user)
 
-@main.route('/newProduct', methods=['GET', 'POST'])
+# @main.route('/newProduct', methods=['GET', 'POST'])
+# @login_required
+# def newProduct():
+#     try:
+#         form = CreateProductForm()
+#         form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+
+#         if form.validate_on_submit():
+#             product_name = form.productName.data
+#             product_description = form.productDescription.data 
+#             product_category_id = form.productCategoryID.data
+#             product_price = form.productPrice.data 
+#             product_quantity = form.productQuantity.data 
+#             product_created_date = form.productCreatedDate.data 
+#             product_last_updated_date = form.productLastUpdated.data 
+#             image_data = form.image_url.data.read()
+#             create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
+#                                  price=product_price, quantity=product_quantity, created_date=product_created_date, 
+#                                  last_updated=product_last_updated_date, image=image_data)
+#             db.session.add(create_product)
+#             db.session.commit()
+#             print("Product added to the database")
+#             flash('Product created successfully!', 'success')
+#             return redirect(url_for('main.sellerDashboard'))
+#         else:
+#             print("Form validation failed")
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     print(f"Error in {field}: {error}")
+
+#     except Exception as e:
+#         # Log the exception
+#         print(f'Error: {e}')
+#         flash('An error occurred. Please try again later.', 'danger')
+#         return redirect(url_for('main.sellerDashboard'))          
+
+#     return render_template('sellerNewProduct.html', form=form)
+
+@main.route('/newProduct', methods=['POST'])
 @login_required
 def newProduct():
     try:
+        print("Initializing CreateProductForm")
         form = CreateProductForm()
         form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+        print(f"Product categories loaded: {form.productCategoryID.choices}")
+
+        # Retrieve the merchant_id for the current user
+        merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+        if not merchant:
+            flash('No merchant found for the current user.', 'danger')
+            return redirect(url_for('main.sellerDashboard'))
+        
+        # Prepopulate the merchant_id field
+        form.merchant_id.data = merchant.merchant_id
 
         if form.validate_on_submit():
+            print("Form validated successfully")
             product_name = form.productName.data
-            product_description = form.productDescription.data 
+            product_description = form.productDescription.data
             product_category_id = form.productCategoryID.data
-            product_price = form.productPrice.data 
-            product_quantity = form.productQuantity.data 
-            product_created_date = form.productCreatedDate.data 
-            product_last_updated_date = form.productLastUpdated.data 
-            image_data = form.image_url.data.read()
-            create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
-                                 price=product_price, quantity=product_quantity, created_date=product_created_date, 
-                                 last_updated=product_last_updated_date, image=image_data)
-            db.session.add(create_product)
-            db.session.commit()
+            product_price = form.productPrice.data
+            product_quantity = form.productQuantity.data
+            availability = form.Availability.data
+            image_data = form.image_url.data.read()  # Read image file as binary data
+            product_created_date = datetime.now(pytz.timezone('Asia/Singapore'))
+            product_last_updated_date = datetime.now(pytz.timezone('Asia/Singapore'))
+
+            print(f"Creating product with name: {product_name}, description: {product_description}, "
+                    f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
+
+            # Retrieve the merchant_id for the current user
+            merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+            if not merchant:
+                flash('No merchant found for the current user.', 'danger')
+                return redirect(url_for('main.sellerDashboard'))
+            
+            create_product = Product.create(
+                name=product_name,
+                description=product_description,
+                category_id=product_category_id,
+                price=product_price,
+                quantity=product_quantity,
+                availability=availability,
+                image_url=image_data,
+                merchant_id= 1,  # Use merchant_id from the Merchant table
+                created_date=product_created_date,
+                last_updated_date=product_last_updated_date
+            )
             print("Product added to the database")
             flash('Product created successfully!', 'success')
             return redirect(url_for('main.sellerDashboard'))
@@ -657,12 +725,12 @@ def newProduct():
         # Log the exception
         print(f'Error: {e}')
         flash('An error occurred. Please try again later.', 'danger')
-        return redirect(url_for('main.sellerDashboard'))          
+        return redirect(url_for('main.sellerDashboard'))
 
+    print("Rendering new product form")
     return render_template('sellerNewProduct.html', form=form)
 
-
-@main.route('/updateProduct/<int:product_id>', methods=['POST'])
+@main.route('/updateProduct/<int:product_id>', methods=['GET','POST'])
 @login_required
 def updateProduct(product_id):
     form = UpdateProductForm()
