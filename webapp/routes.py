@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+from flask_mail import Mail, Message
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,6 +12,8 @@ main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+
+mail = Mail()
 
 
 @login_manager.user_loader
@@ -115,11 +118,16 @@ def login():
             print(f'User not found: {username}')  # Debug statement
 
         if user and check_password_hash(user.password, password):
-            login_user(user)
-            print(f'Login successful for user: {user.username}')  # Debug statement
-            session['user_id'] = user.get_id()  # Store user ID in session
-            print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            return redirect(url_for('main.home'))
+             if user.is_verified:
+                verification_code = user.generate_verification_code()
+                
+                # Send verification email
+                msg = Message('Your Login Verification Code', sender=current_app.config['MAIL_USERNAME'], recipients=[user.email])
+                msg.body = f'Your verification code is {verification_code}'
+                mail.send(msg)
+
+                session['email'] = user.email
+                return redirect(url_for('login_verify.html'))
             # # Redirect based on role
             # if user.role == 'Admin':
             #     print('Redirecting to admin dashboard')  # Debug statement
@@ -173,6 +181,17 @@ def register():
                 try:
                     # Create the new user
                     new_user = User.create(username=username, email=email, password=hashed_password, role=role)
+                    
+                    verification_code = new_user.generate_verification_code()
+
+                    # Send verification email
+
+                    msg = Message('Your Verification Code', sender=current_app.config['MAIL_USERNAME'], recipients=[email])
+                    msg.body = f'Your verification code is {verification_code}'
+                    mail.send(msg)
+                    
+                    session['email'] = email
+                    flash('Registration successful! Check your email for the verification code.', 'success')
 
                     registration_successful = True
                     flash('Registeration Successful', 'success')
@@ -191,6 +210,49 @@ def register():
                     flash(f'{field.label.text}: {error}', 'danger')
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
+
+
+@main.route('/verify', methods=['GET', 'POST'])
+def verify():
+    if 'email' not in session:
+        return redirect(url_for('main.register'))
+
+    if request.method == 'POST':
+        code = request.form['code']
+        user = User.query.filter_by(email=session['email']).first()
+
+        if user and user.verify_code(code):
+            user.is_verified = True
+            user.verification_code = None
+            user.verification_expiry = None
+            db.session.commit()
+            flash('Your account is verified!', 'success')
+            return redirect(url_for('main.login'))
+        else:
+            flash('Invalid verification code', 'danger')
+
+    return render_template('verify.html')
+
+@main.route('/login_verify', methods=['GET', 'POST'])
+def login_verify():
+    if 'email' not in session:
+        return redirect(url_for('main.login'))
+
+    if request.method == 'POST':
+        code = request.form['code']
+        user = User.query.filter_by(email=session['email']).first()
+
+        if user and user.verify_code(code):
+            login_user(user)
+            user.verification_code = None
+            user.verification_expiry = None
+            db.session.commit()
+            flash('You are logged in!', 'success')
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid verification code', 'danger')
+
+    return render_template('login_verify.html')
 
 
 @main.route('/forgetPW', methods=['GET', 'POST'])

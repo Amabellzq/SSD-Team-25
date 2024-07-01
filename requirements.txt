@@ -6,3 +6,4 @@ SQLAlchemy
 Flask-SQLAlchemy
 Flask-Bootstrap==3.3.7.1
 Flask-Session ~= 0.8.0
+Flask-Mail==0.9.1
