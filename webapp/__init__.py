@@ -4,6 +4,7 @@ from .routes import main
 from flask_login import LoginManager
 from .models import db, User  # Import your user model
 from flask_session import Session
+from datetime import timedelta
 import base64
 import os
 
