@@ -18,15 +18,29 @@ def load_user(user_id):
 
 @main.route('/')
 def home():
-    return render_template('index.html')
+    categories = Category.query.all()
+   
+    unique_categories = {}
+    for category in categories:
+        if category.name not in unique_categories:
+            unique_categories[category.name] = category
+
+    return render_template('index.html', categories = unique_categories.values()) #, products=products
 
 @main.route('/shop')
 def shop():
     categories = Category.query.all()
-    print(categories)  # Debugging: Print categories to ensure they are fetched
+    products = Product.query.all()  # Query all products
+
+    unique_categories = {}
     for category in categories:
-        print(category.name)  # Debugging: Print category names
-    return render_template('shop.html', categories=categories)
+        if category.name not in unique_categories:
+            unique_categories[category.name] = []
+        unique_categories[category.name].append(category.description)
+
+    for product in products:
+        print(product.name)  # Debugging: Print product names
+    return render_template('shop.html', categories = unique_categories, products=products)
 
 @main.route('/contact')
 def contact():
