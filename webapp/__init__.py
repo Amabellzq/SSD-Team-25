@@ -16,7 +16,6 @@ app.config['DEBUG'] = True  # Enable debug mode
 # Configure session settings
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
-app.config['SESSION_SQLALCHEMY'] = db
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
 
