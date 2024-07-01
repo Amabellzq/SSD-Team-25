@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from flask import Flask
 from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 
 from config import Config
 from .routes import main
@@ -16,12 +17,15 @@ app.config['DEBUG'] = True  # Enable debug mode
 # Initialize SQLAlchemy
 db.init_app(app)
 
+session_db = SQLAlchemy(app)
+
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'main.login'
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
-app.config['SESSION_SQLALCHEMY'] = db
+app.config['SESSION_SQLALCHEMY'] = session_db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
 Session(app)
 
