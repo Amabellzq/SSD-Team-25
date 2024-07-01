@@ -497,7 +497,7 @@ def sellerDashboard():
     orders = Order.query.all()
 
     # Retrieve products
-    products = Product.query.all()
+    products = Product.query.filter_by(merchant_id=merchant.merchant_id).all()    
     for product in products:
         if product.image_url:
             product.image_url = base64.b64encode(product.image_url).decode('utf-8')
@@ -616,7 +616,45 @@ def update_business():
 def orderDetails():
     return render_template('sellerOrderDetails.html', user=current_user)
 
-@main.route('/newProduct', methods=['POST'])
+# @main.route('/newProduct', methods=['GET', 'POST'])
+# @login_required
+# def newProduct():
+#     try:
+#         form = CreateProductForm()
+#         form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+
+#         if form.validate_on_submit():
+#             product_name = form.productName.data
+#             product_description = form.productDescription.data 
+#             product_category_id = form.productCategoryID.data
+#             product_price = form.productPrice.data 
+#             product_quantity = form.productQuantity.data 
+#             product_created_date = form.productCreatedDate.data 
+#             product_last_updated_date = form.productLastUpdated.data 
+#             image_data = form.image_url.data.read()
+#             create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
+#                                  price=product_price, quantity=product_quantity, created_date=product_created_date, 
+#                                  last_updated=product_last_updated_date, image=image_data)
+#             db.session.add(create_product)
+#             db.session.commit()
+#             print("Product added to the database")
+#             flash('Product created successfully!', 'success')
+#             return redirect(url_for('main.sellerDashboard'))
+#         else:
+#             print("Form validation failed")
+#             for field, errors in form.errors.items():
+#                 for error in errors:
+#                     print(f"Error in {field}: {error}")
+
+#     except Exception as e:
+#         # Log the exception
+#         print(f'Error: {e}')
+#         flash('An error occurred. Please try again later.', 'danger')
+#         return redirect(url_for('main.sellerDashboard'))          
+
+#     return render_template('sellerNewProduct.html', form=form)
+
+@main.route('/newProduct', methods=['GET','POST'])
 @login_required
 def newProduct():
     print("Initializing CreateProductForm")
@@ -649,7 +687,7 @@ def newProduct():
             product_category_id = form.productCategoryID.data
             product_price = form.productPrice.data
             product_quantity = form.productQuantity.data
-            availability = form.Availability.data
+            product_availability = form.availability.data
             image_data = form.image_url.data.read()  # Read image file as binary data
 
             # Calculate Singapore time (UTC+8)
@@ -659,7 +697,7 @@ def newProduct():
             last_updated_date = singapore_time
 
             print(f"Creating product with name: {product_name}, description: {product_description}, "
-                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
+                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {product_availability}")
 
             create_product = Product.create(
                 name=product_name,
@@ -667,7 +705,7 @@ def newProduct():
                 category_id=product_category_id,
                 price=product_price,
                 quantity=product_quantity,
-                availability=availability,
+                availability=product_availability,
                 image_url=image_data,
                 merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
                 created_date = created_date,
@@ -688,24 +726,31 @@ def newProduct():
     print("Rendering new product form")
     return render_template('sellerNewProduct.html', form=form)
 
-@main.route('/updateProduct/<int:product_id>', methods=['GET','POST'])
+@main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def updateProduct(product_id):
     form = UpdateProductForm()
     product = Product.query.get(product_id)
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    image_url = None
 
     if not product:
         flash('Product not found', 'danger')
         return redirect(url_for('main.sellerDashboard'))
 
-    image_url = None
+    # Retrieve the merchant_id for the current user
+    merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+    if not merchant:
+        flash('No merchant found for the current user.', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
+        
+    # Prepopulate the merchant_id field
+    form.merchant_id.data = merchant.merchant_id
     if request.method == 'GET':
-        form.productID.data = product.product_id
         if product.image_url:
             image_url = base64.b64encode(product.image_url).decode('utf-8')
         form.productName.data = product.name
         form.productDescription.data = product.description
-        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
         form.productCategoryID.data = product.category_id
         form.productPrice.data = product.price
         form.productQuantity.data = product.quantity
@@ -719,10 +764,14 @@ def updateProduct(product_id):
         product.category_id = form.productCategoryID.data
         product.price = form.productPrice.data
         product.quantity = form.productQuantity.data
-        product.created_date = form.productCreatedDate.data
-        product.last_updated_date = form.productLastUpdated.data
+        product.availability = form.availability.data
 
-        if product.image_url.data:
+        # Calculate Singapore time (UTC+8)
+        utc_now = datetime.utcnow()
+        singapore_time = utc_now + timedelta(hours=8)
+        product.last_updated_date = singapore_time
+
+        if form.image_url.data:
             image_url = form.image_url.data
             filename = secure_filename(image_url.filename)
             product.image_url = image_url.read()
@@ -738,7 +787,6 @@ def updateProduct(product_id):
         print(form.errors)
 
     return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
-
 
 @main.route('/deleteProduct/<int:product_id>', methods=['POST'])
 @login_required
