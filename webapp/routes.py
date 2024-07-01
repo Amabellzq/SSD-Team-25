@@ -39,20 +39,66 @@ def home():
     return render_template('index.html', categories = unique_categories.values(), categorized_products=categorized_products) #, products=products
 
 
+# @main.route('/shop')
+# def shop():
+#     categories = Category.query.all()
+#     products = Product.query.all()  # Query all products
+
+#     unique_categories = {}
+#     for category in categories:
+#         if category.name not in unique_categories:
+#             unique_categories[category.name] = {
+#                 'descriptions': [],
+#                 'products': []
+#             }
+#         unique_categories[category.name]['descriptions'].append(category.description)
+
+#     for product in products:
+#         category_name = product.category.name
+#         if category_name in unique_categories:
+#             unique_categories[category_name]['products'].append(product)
+    
+#     return render_template('shop.html', categories = unique_categories)
+
+# @main.route('/shop')
+# def shop():
+#     categories = Category.query.all()
+#     products = Product.query.all()  # Query all products
+
+#     unique_categories = {}
+#     categorized_products = {}
+#     for category in categories:
+#         if category.name not in unique_categories:
+#             unique_categories[category.name] = category
+#             categorized_products[category.name] = []
+
+#     for product in products:
+#         if product.category.name in categorized_products:
+#             categorized_products[product.category.name].append(product)
+#         else:
+#             categorized_products[product.category.name] = [product]
+    
+#     return render_template('shop.html', categories = unique_categories.values(), categorized_products=categorized_products)
+
 @main.route('/shop')
 def shop():
     categories = Category.query.all()
     products = Product.query.all()  # Query all products
 
     unique_categories = {}
+    categorized_products = {}
     for category in categories:
         if category.name not in unique_categories:
-            unique_categories[category.name] = []
-        unique_categories[category.name].append(category.description)
+            unique_categories[category.name] = category
+            categorized_products[category.name] = []
 
     for product in products:
-        print(product.name)  # Debugging: Print product names
-    return render_template('shop.html', categories = unique_categories, products=products)
+        if product.category.name in categorized_products:
+            categorized_products[product.category.name].append(product)
+        else:
+            categorized_products[product.category.name] = [product]
+
+    return render_template('shop.html', categories=unique_categories.values(), categorized_products=categorized_products)
 
 
 @main.route('/contact')
@@ -143,17 +189,19 @@ def login():
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+
+             # Check user role and merchant ID
+            if user.role == 'Merchant':
+                merchant = Merchant.query.filter_by(user_id=user.user_id).first()
+                if merchant:
+                    print(f'Merchant found: {merchant.merchant_id}')  # Debug statement
+                    return redirect(url_for('main.sellerDashboard'))
+                else:
+                    print('No merchant found for the current user.')  # Debug statement
+                    return redirect(url_for('main.register_business'))
+                
             return redirect(url_for('main.home'))
-            # # Redirect based on role
-            # if user.role == 'Admin':
-            #     print('Redirecting to admin dashboard')  # Debug statement
-            #     return redirect(url_for('main.adminDashboard'))
-            # elif user.role == 'Merchant':
-            #     print('Redirecting to seller dashboard')  # Debug statement
-            #     return redirect(url_for('main.sellerDashboard'))
-            # else:
-            #     print('Redirecting to home page')  # Debug statement
-            #     return redirect(url_for('main.home'))
+
         else:
             flash('Invalid username or password', 'danger')
             print('Invalid username or password')  # Debug statement
@@ -401,17 +449,6 @@ def adminCreateCategory():
     return render_template('adminCreateCategory.html', createNewCategory=create_category)
 
 
-# @main.route('/deleteCategory/<int:category_id>', methods=['POST'])
-# @login_required
-# def delete_category(category_id):
-#     category = Category.get(category_id)
-#     if category:
-#         db.session.delete(category)
-#         db.session.commit()
-#         flash('Category deleted successfully!', 'success')
-#     else:
-#         flash('Category not found', 'danger')
-#     return redirect(url_for('main.adminDashboard'))
 @main.route('/delete_category/<int:category_id>', methods=['POST'])
 def delete_category(category_id):
     category = Category.get(category_id)
