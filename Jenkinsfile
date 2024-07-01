@@ -45,8 +45,8 @@ pipeline {
                     string(credentialsId: 'MYSQL_USER_PASSWORD', variable: 'MYSQL_USER_PASSWORD'),
                     string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
                     string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
-                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST')
-                     string(credentialsId: 'MYSQL_PORT', variable: 'MYSQL_PORT')
+                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST'),
+                    string(credentialsId: 'MYSQL_PORT', variable: 'MYSQL_PORT')
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
@@ -62,7 +62,7 @@ pipeline {
                         envContent += "MYSQL_READONLY_USER=${MYSQL_READONLY_USER}\n"
                         envContent += "MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}\n"
                         envContent += "MYSQL_HOST=${MYSQL_HOST}\n"
-                         envContent += "MYSQL_PORT=${MYSQL_PORT}\n"
+                        envContent += "MYSQL_PORT=${MYSQL_PORT}\n"
 
                         writeFile file: '.env', text: envContent
                     }
