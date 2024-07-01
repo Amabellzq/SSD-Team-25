@@ -33,16 +33,85 @@ def load_user(user_id):
 
 @main.route('/')
 def home():
-    return render_template('index.html')
+    categories = Category.query.all()
+    products = Product.query.all()  # Query all products
 
+    unique_categories = {}
+    categorized_products = {}
+    for category in categories:
+        if category.name not in unique_categories:
+            unique_categories[category.name] = category
+            categorized_products[category.name] = []
+
+    for product in products:
+        if product.category.name in categorized_products:
+            categorized_products[product.category.name].append(product)
+        else:
+            categorized_products[product.category.name] = [product]
+
+    return render_template('index.html', categories = unique_categories.values(), categorized_products=categorized_products) #, products=products
+
+
+# @main.route('/shop')
+# def shop():
+#     categories = Category.query.all()
+#     products = Product.query.all()  # Query all products
+
+#     unique_categories = {}
+#     for category in categories:
+#         if category.name not in unique_categories:
+#             unique_categories[category.name] = {
+#                 'descriptions': [],
+#                 'products': []
+#             }
+#         unique_categories[category.name]['descriptions'].append(category.description)
+
+#     for product in products:
+#         category_name = product.category.name
+#         if category_name in unique_categories:
+#             unique_categories[category_name]['products'].append(product)
+    
+#     return render_template('shop.html', categories = unique_categories)
+
+# @main.route('/shop')
+# def shop():
+#     categories = Category.query.all()
+#     products = Product.query.all()  # Query all products
+
+#     unique_categories = {}
+#     categorized_products = {}
+#     for category in categories:
+#         if category.name not in unique_categories:
+#             unique_categories[category.name] = category
+#             categorized_products[category.name] = []
+
+#     for product in products:
+#         if product.category.name in categorized_products:
+#             categorized_products[product.category.name].append(product)
+#         else:
+#             categorized_products[product.category.name] = [product]
+    
+#     return render_template('shop.html', categories = unique_categories.values(), categorized_products=categorized_products)
 
 @main.route('/shop')
 def shop():
     categories = Category.query.all()
-    print(categories)  # Debugging: Print categories to ensure they are fetched
+    products = Product.query.all()  # Query all products
+
+    unique_categories = {}
+    categorized_products = {}
     for category in categories:
-        print(category.name)  # Debugging: Print category names
-    return render_template('shop.html', categories=categories)
+        if category.name not in unique_categories:
+            unique_categories[category.name] = category
+            categorized_products[category.name] = []
+
+    for product in products:
+        if product.category.name in categorized_products:
+            categorized_products[product.category.name].append(product)
+        else:
+            categorized_products[product.category.name] = [product]
+
+    return render_template('shop.html', categories=unique_categories.values(), categorized_products=categorized_products)
 
 
 @main.route('/contact')
@@ -53,7 +122,6 @@ def contact():
 @main.route('/productDetails')
 def productDetails():
     return render_template('product-details.html')
-
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
@@ -67,9 +135,10 @@ def myaccount():
         user = User.get(user_id)
         if not user:
             flash('User not found', 'danger')
-            return redirect(url_for('main.adminDashboard'))
+            return redirect(url_for('main.myaccount'))
 
         account_details_form.username.data = user.username
+        account_details_form.email.data = user.email
         account_details_form.role.data = user.role
         account_details_form.account_status.data = user.account_status
         if user.profile_pic_url:
@@ -79,6 +148,7 @@ def myaccount():
         user = User.get(user_id)
         if user:
             user.username = account_details_form.username.data
+            user.email = account_details_form.email.data
             if account_details_form.password.data:
                 user.password = generate_password_hash(account_details_form.password.data)
             if account_details_form.profile_picture.data:
@@ -87,7 +157,7 @@ def myaccount():
                 user.profile_pic_url = profile_picture.read()
             db.session.commit()
             flash('User updated successfully!', 'success')
-            return redirect(url_for('main.sellerDashboard'))
+            return redirect(url_for('main.myaccount'))
         else:
             flash('User not found', 'danger')
     return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url,
@@ -139,19 +209,19 @@ def login():
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            response = redirect(url_for('main.home'))
-            response.set_cookie('session_token', new_session_token)
-            return response
-            # # Redirect based on role
-            # if user.role == 'Admin':
-            #     print('Redirecting to admin dashboard')  # Debug statement
-            #     return redirect(url_for('main.adminDashboard'))
-            # elif user.role == 'Merchant':
-            #     print('Redirecting to seller dashboard')  # Debug statement
-            #     return redirect(url_for('main.sellerDashboard'))
-            # else:
-            #     print('Redirecting to home page')  # Debug statement
-            #     return redirect(url_for('main.home'))
+
+             # Check user role and merchant ID
+            if user.role == 'Merchant':
+                merchant = Merchant.query.filter_by(user_id=user.user_id).first()
+                if merchant:
+                    print(f'Merchant found: {merchant.merchant_id}')  # Debug statement
+                    return redirect(url_for('main.sellerDashboard'))
+                else:
+                    print('No merchant found for the current user.')  # Debug statement
+                    return redirect(url_for('main.register_business'))
+                
+            return redirect(url_for('main.home'))
+
         else:
             flash('Invalid username or password', 'danger')
             print('Invalid username or password')  # Debug statement
@@ -239,16 +309,17 @@ def adminDashboard():
     users = User.query.all()
     merchants = Merchant.query.all()
     categories = Category.query.all()
-    accountDetails = AccountDetailsForm()  # Create an instance of the form
+    accountDetails = AccountDetailsForm() 
     profile_pic_url = None
 
     user = User.get(user_id)
     if not user:
-        flash('User not found', 'danger')
+
         return redirect(url_for('main.adminDashboard'))
 
     accountDetails.username.data = user.username
     accountDetails.role.data = user.role
+    accountDetails.email.data = user.email
     accountDetails.account_status.data = user.account_status
     if user.profile_pic_url:
         profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
@@ -266,6 +337,7 @@ def updateAdmin_account():
         user = User.get(user_id)
         if user:
             user.username = account_details_form.username.data
+            user.email = account_details_form.email.data
             if account_details_form.password.data:
                 user.password = generate_password_hash(account_details_form.password.data)
             if account_details_form.profile_picture.data:
@@ -273,9 +345,7 @@ def updateAdmin_account():
                 filename = secure_filename(profile_picture.filename)
                 user.profile_pic_url = profile_picture.read()
             db.session.commit()
-            flash('User updated successfully!', 'success')
-        else:
-            flash('User not found', 'danger')
+
     return redirect(url_for('main.adminDashboard'))
 
 
@@ -285,6 +355,7 @@ def registerAdmin():
     registration_successful = False
     if form.validate_on_submit():
         username = form.username.data
+        email = form.email.data
         role = 'Admin'  # Set role to 'Admin' explicitly
         password = form.password.data
         profile_picture = form.profile_picture.data
@@ -297,7 +368,7 @@ def registerAdmin():
             hashed_password = generate_password_hash(password)
             try:
                 # Create the new user
-                new_user = User(username=username, password=hashed_password, role=role)
+                new_user = User(username=username, email = email, password=hashed_password, role=role)
 
                 if profile_picture:
                     filename = secure_filename(profile_picture.filename)
@@ -307,19 +378,16 @@ def registerAdmin():
                 db.session.commit()
 
                 registration_successful = True
-                flash('Registration Successful', 'success')
                 return redirect(url_for('main.adminDashboard'))
             except Exception as e:
                 db.session.rollback()
                 current_app.logger.error(f'Error while registering user: {str(e)}')
-                flash(f'An error occurred: {str(e)}', 'danger')
     else:
         if request.method == 'POST':
             current_app.logger.debug('Form validation failed')
             for field, errors in form.errors.items():
                 for error in errors:
                     current_app.logger.debug(f'{field}: {error}')
-            flash('Form validation failed. Please check your input.', 'danger')
 
     return render_template('adminRegister.html', register_form=form, registration_successful=registration_successful)
 
@@ -331,7 +399,6 @@ def edit_user(user_id):
     user = User.get(user_id)
 
     if not user:
-        flash('User not found', 'danger')
         return redirect(url_for('main.adminDashboard'))
 
     if request.method == 'GET':
@@ -345,7 +412,6 @@ def edit_user(user_id):
     if request.method == 'POST' and form.validate_on_submit():
         user.account_status = form.account_status.data
         db.session.commit()
-        flash('User updated successfully!', 'success')
         return redirect(url_for('main.adminDashboard'))
 
     return render_template('adminManageUser.html', form=form, profile_pic_url=profile_pic_url, user=user)
@@ -372,9 +438,7 @@ def approve_merchant(merchant_id):
         utc_plus_8 = utc_now + timedelta(hours=8)
         merchant.approved_date = utc_plus_8
         db.session.commit()
-        flash('Merchant approved successfully!', 'success')
-    else:
-        flash('Merchant not found.', 'danger')
+
     return redirect(url_for('main.adminDashboard'))
 
 
@@ -406,22 +470,10 @@ def adminCreateCategory():
         new_category = Category(name=category_name, description=category_description)
         db.session.add(new_category)
         db.session.commit()
-        flash('Category created successfully!', 'success')
         return redirect(url_for('main.adminDashboard'))
     return render_template('adminCreateCategory.html', createNewCategory=create_category)
 
 
-# @main.route('/deleteCategory/<int:category_id>', methods=['POST'])
-# @login_required
-# def delete_category(category_id):
-#     category = Category.get(category_id)
-#     if category:
-#         db.session.delete(category)
-#         db.session.commit()
-#         flash('Category deleted successfully!', 'success')
-#     else:
-#         flash('Category not found', 'danger')
-#     return redirect(url_for('main.adminDashboard'))
 @main.route('/delete_category/<int:category_id>', methods=['POST'])
 def delete_category(category_id):
     category = Category.get(category_id)
@@ -472,55 +524,6 @@ def edit_category(category_id):
     # Merchant #
 #############################
 
-# @main.route('/sellerDashboard', methods=['GET', 'POST'])
-# @login_required
-# def sellerDashboard():
-#     user_id = current_user.user_id
-#     account_details_form = AccountDetailsForm()
-#     update_business_form = BusinessForm()
-#     profile_pic_url = None
-
-#     user = User.get(user_id)
-#     if not user:
-#         flash('User not found', 'danger')
-#         return redirect(url_for('main.adminDashboard'))
-
-#     if request.method == 'GET':
-#         account_details_form.username.data = user.username
-#         account_details_form.role.data = user.role
-#         account_details_form.account_status.data = user.account_status
-#         if user.profile_pic_url:
-#             profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
-
-#         # businessForm set the user_id field
-#         update_business_form.user_id.data = user_id
-
-#     if request.method == 'POST':
-#         if account_details_form.validate_on_submit():
-#             user.username = account_details_form.username.data
-#             if account_details_form.password.data:
-#                 user.password = generate_password_hash(account_details_form.password.data)
-#             if account_details_form.profile_picture.data:
-#                 profile_picture = account_details_form.profile_picture.data
-#                 filename = secure_filename(profile_picture.filename)
-#                 user.profile_pic_url = profile_picture.read()
-#             db.session.commit()
-#             flash('User updated successfully!', 'success')
-#             return redirect(url_for('main.sellerDashboard'))
-
-#         elif update_business_form.validate_on_submit():
-#             merchant = Merchant.query.filter_by(user_id=user_id).first()
-#             if merchant:
-#                 merchant.business_name = update_business_form.business_name.data
-#                 merchant.business_address = update_business_form.business_address.data
-#                 db.session.commit()
-#                 flash('Business details updated successfully!', 'success')
-#                 return redirect(url_for('main.sellerDashboard'))
-#             else:
-#                 flash('Merchant not found', 'danger')
-
-#     return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form ,profile_pic_url=profile_pic_url, user=user)
-
 @main.route('/sellerDashboard', methods=['GET'])
 @login_required
 def sellerDashboard():
@@ -537,6 +540,7 @@ def sellerDashboard():
         return redirect(url_for('main.sellerDashboard'))
 
     account_details_form.username.data = user.username
+    account_details_form.email.data = user.email
     account_details_form.role.data = user.role
     account_details_form.account_status.data = user.account_status
     if user.profile_pic_url:
@@ -571,6 +575,7 @@ def update_account():
         user = User.get(user_id)
         if user:
             user.username = account_details_form.username.data
+            user.email = account_details_form.email.data
             if account_details_form.password.data:
                 user.password = generate_password_hash(account_details_form.password.data)
             if account_details_form.profile_picture.data:
@@ -578,7 +583,6 @@ def update_account():
                 filename = secure_filename(profile_picture.filename)
                 user.profile_pic_url = profile_picture.read()
             db.session.commit()
-            flash('User updated successfully!', 'success')
         else:
             flash('User not found', 'danger')
     return redirect(url_for('main.sellerDashboard'))
@@ -603,7 +607,6 @@ def register_business():
                     merchant.business_address = update_business_form.business_address.data
                     db.session.commit()
                     current_app.logger.debug("Merchant details updated successfully!")
-                    flash('Business details updated successfully!', 'success')
                 else:
                     # If the merchant does not exist, create a new one
                     Merchant.create(
@@ -613,7 +616,6 @@ def register_business():
                         account_status='Inactive'
                     )
                     current_app.logger.debug("Merchant created successfully!")
-                    flash('Business registered successfully!', 'success')
                 return redirect(url_for('main.sellerDashboard'))
             except Exception as e:
                 current_app.logger.error(f"Error updating business details: {str(e)}")
@@ -719,8 +721,14 @@ def orderDetails():
 def newProduct():
     print("Initializing CreateProductForm")
     form = CreateProductForm()
-    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
-    print(f"Product categories loaded: {form.productCategoryID.choices}")
+
+    # Load unique categories
+    categories = Category.query.all()
+    unique_categories = {}
+    for c in categories:
+        if c.name not in unique_categories:
+            unique_categories[c.name] = c.category_id
+    form.productCategoryID.choices = [(category_id, name) for name, category_id in unique_categories.items()]
 
     # Retrieve the merchant_id for the current user
     merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()

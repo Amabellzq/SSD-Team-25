@@ -1360,7 +1360,6 @@ ol {
 .categories__accordion .card-body li {
 	list-style: none;
 	position: relative;
-	padding-left: 16px;
 }
 
 .categories__accordion .card-body li:before {
@@ -1377,38 +1376,6 @@ ol {
 	font-size: 14px;
 	color: #666666;
 	line-height: 30px;
-}
-
-.categories__accordion .card-heading a:after,
-.categories__accordion .card-heading>a.active[aria-expanded=false]:after {
-	content: "";
-	font-size: 14px;
-	font-family: "FontAwesome";
-	color: #666666;
-	position: absolute;
-	right: 30px;
-	top: 0px;
-}
-
-.categories__accordion .card-heading.active a:after {
-	content: "";
-	font-size: 14px;
-	font-family: "FontAwesome";
-	color: #666666;
-	position: absolute;
-	right: 30px;
-	top: -1px;
-}
-
-.categories__accordion .card-heading a[aria-expanded=true]:after,
-.categories__accordion .card-heading>a.active:after {
-	content: "";
-	font-size: 14px;
-	font-family: "FontAwesome";
-	color: #666666;
-	position: absolute;
-	right: 30px;
-	top: -1px;
 }
 
 .sidebar__filter {
