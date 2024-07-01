@@ -23,7 +23,8 @@ app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
-Session(app)
+test_session= Session()
+test_session.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
