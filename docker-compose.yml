@@ -43,7 +43,6 @@ services:
       - MYSQL_READONLY_USER=${MYSQL_READONLY_USER}
       - MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}
       - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_PORT=${MYSQL_PORT}
     volumes:
       - mysql-data:/var/lib/mysql
 
