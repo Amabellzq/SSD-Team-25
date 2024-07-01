@@ -13,16 +13,15 @@ app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key-if-none-found')
 app.config['DEBUG'] = True  # Enable debug mode
 
+# Initialize SQLAlchemy
+db.init_app(app)
 
 # Configure session settings
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
-Session(app)
-
-# Initialize SQLAlchemy
-db.init_app(app)
+server_session = Session(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
