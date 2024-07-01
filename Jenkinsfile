@@ -7,6 +7,8 @@ pipeline {
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
+        CRT_FILE = credentials('CRT_CERT')
+        KEY_FILE = credentials('SSL_KEY')
     }
 
       stages {
@@ -128,17 +130,8 @@ pipeline {
                 }
             }
         }
-//          stage('Unit Tesing with Pytest') {
-//             steps {
-//                 script {
-//                     // Get the container ID of the Flask application container
-//                     def flaskContainerId = sh(script: "docker-compose ps -q ${FLASK_CONTAINER}", returnStdout: true).trim()
-//
-//                     // Run pytest inside the Flask application container with coverage and reporting options
-//                     sh "docker exec ${flaskContainerId} pytest --cov=app --cov-report=xml:coverage.xml --junitxml=report.xml"
-//                 }
-//             }
-//          }
+
+
         stage('Code Quality Check via SonarQube') {
             steps {
                 script {
@@ -155,14 +148,7 @@ pipeline {
                 }
     	    }
         }
-//                 stage('Clean Up Test Deployment') {
-//             steps {
-//                 script {
-//                     // Stop and remove the Docker containers after testing
-//                     sh 'docker-compose down --remove-orphans'
-//                 }
-//             }
-//         }
+
 
 
         stage('Build and Deploy') {
