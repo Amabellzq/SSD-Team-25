@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
@@ -8,13 +8,13 @@ class User(UserMixin, db.Model):
     __tablename__ = 'User'
     user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     profile_pic_url = db.Column(db.LargeBinary)
     role = db.Column(db.Enum('Admin', 'Merchant', 'Customer'), nullable=False)
     account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
-    sessions = db.relationship('Session', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
 
@@ -30,8 +30,8 @@ class User(UserMixin, db.Model):
         return User.query.filter_by(username=username).first()
 
     @staticmethod
-    def create(username, password, role):
-        new_user = User(username=username, password=password, role=role, account_status='Active')
+    def create(username,email, password, role):
+        new_user = User(username=username, email=email, password=password, role=role, account_status='Active')
         db.session.add(new_user)
         db.session.commit()
         return new_user
@@ -96,11 +96,19 @@ class Merchant(db.Model):
 
     @staticmethod
     def create(user_id, business_name, business_address, account_status):
-        new_merchant = Merchant(user_id=user_id, business_name=business_name, business_address=business_address, account_status=account_status)
+        # Calculate the current time in UTC+8
+        current_time_utc_plus_8 = datetime.utcnow() + timedelta(hours=8)
+        new_merchant = Merchant(
+            user_id=user_id, 
+            business_name=business_name, 
+            business_address=business_address, 
+            account_status=account_status,
+            approved_date=current_time_utc_plus_8
+        )
         db.session.add(new_merchant)
         db.session.commit()
         return new_merchant
-
+    
     @staticmethod
     def delete(merchant_id):
         merchant = Merchant.get(merchant_id)
@@ -118,46 +126,6 @@ class Merchant(db.Model):
                 setattr(merchant, key, value)
             db.session.commit()
             return merchant
-        return None
-
-class Session(db.Model):
-    __tablename__ = 'Session'
-    session_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
-    session_token = db.Column(db.String(255))
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
-    expiry_date = db.Column(db.DateTime)
-    last_activity_date = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
-
-    @staticmethod
-    def get(session_id):
-        return Session.query.get(session_id)
-
-    @staticmethod
-    def create(user_id, session_token, expiry_date, is_active=True):
-        new_session = Session(user_id=user_id, session_token=session_token, expiry_date=expiry_date, is_active=is_active)
-        db.session.add(new_session)
-        db.session.commit()
-        return new_session
-
-    @staticmethod
-    def delete(session_id):
-        session = Session.get(session_id)
-        if session:
-            db.session.delete(session)
-            db.session.commit()
-            return True
-        return False
-
-    @staticmethod
-    def update(session_id, **kwargs):
-        session = Session.get(session_id)
-        if session:
-            for key, value in kwargs.items():
-                setattr(session, key, value)
-            db.session.commit()
-            return session
         return None
 
 class ShoppingCart(db.Model):
@@ -238,27 +206,36 @@ class CartItem(db.Model):
 
 class Product(db.Model):
     __tablename__ = 'Product'
-    product_id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
     category_id = db.Column(db.Integer, db.ForeignKey('Category.category_id'))
     price = db.Column(db.Numeric(10, 2))
     quantity = db.Column(db.Integer)
     availability = db.Column(db.Enum('In Stock', 'Out of Stock'))
-    image_url = db.Column(db.LargeBinary)
+    image_url = db.Column(db.LargeBinary, nullable=True)  # Ensure this column is defined as LargeBinary
     merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
-    order_items = db.relationship('OrderItem', backref='product')
-    cart_items = db.relationship('CartItem', backref='product')
 
     @staticmethod
     def get(product_id):
         return Product.query.get(product_id)
 
     @staticmethod
-    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id):
-        new_product = Product(name=name, description=description, category_id=category_id, price=price, quantity=quantity, availability=availability, image_url=image_url, merchant_id=merchant_id)
+    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id, created_date, last_updated_date):
+        new_product = Product(
+            name=name,
+            description=description,
+            category_id=category_id,
+            price=price,
+            quantity=quantity,
+            availability=availability,
+            image_url=image_url,
+            merchant_id=merchant_id,
+            created_date=created_date,
+            last_updated_date=last_updated_date
+        )
         db.session.add(new_product)
         db.session.commit()
         return new_product
