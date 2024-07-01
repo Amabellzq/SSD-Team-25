@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 from flask import Flask
+from flask_session import Session
+
 from config import Config
 from .routes import main
 from flask_login import LoginManager
@@ -19,7 +21,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'main.login'
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
-app.config['SESSION_SQLALCHEMY'] = db123
+app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
 Session(app)
 
