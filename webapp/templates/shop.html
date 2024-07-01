@@ -18,138 +18,243 @@
     </div>
     <!-- Breadcrumb End -->
 
-        <!-- Shop Section Begin -->
-        <section class="shop spad">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-3 col-md-3">
-                        <div class="shop__sidebar">
-                            <div class="sidebar__categories">
-                                <div class="section-title">
-                                    <h4>Categories</h4>
-                                </div> 
-                                <div class="categories__accordion">
-                                    <div class="accordion" id="accordionExample">
-                                        <div class="card">
-                                            <div class="card-heading active">
-                                                <a href="javascript:void(0);" class="category-filter" data-filter="all">All</a>
-                                            </div>
-                                        </div>
-                                        {% for category in categories %}
-                                        <div class="card">
-                                            <div class="card-heading active">
-                                                <a href="javascript:void(0);" class="category-filter" data-filter="{{ category.name | lower | replace(' ', '-') }}">{{ category.name }}</a>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-9 col-md-9">
-                        <div class="row property__gallery">
-                            {% for category_name, products in categorized_products.items() %}
-                                {% for product in products %}
-                                    <div class="col-lg-4 col-md-6 mix {{ category_name | lower | replace(' ', '-') }}">
-                                        <div class="product__item">
-                                            <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
-                                                <ul class="product__hover">
-                                                    <li><a href="data:image/png;base64,{{ product.image_url | b64encode }}" class="image-popup"><span class="arrow_expand"></span></a></li>
-                                                </ul>
-                                            </div>
-                                            <div class="product__item__text">
-                                                <h6><a href="#">{{ product.name }}</a></h6>
-                                                <div class="product__price">${{ product.price }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% endfor %}
-                            <div class="col-lg-12 text-center">
-                                <div class="pagination__option">
-                                    <a href="#">1</a>
-                                    <a href="#">2</a>
-                                    <a href="#">3</a>
-                                    <a href="#"><i class="fa fa-angle-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Shop Section End -->
-    {% endblock %}
-
-
-    <!-- Product Section Begin
+    <!-- Shop Section Begin -->
     <section class="shop spad">
         <div class="container">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
-                    <div class="section-title">
-                        <h4>Products</h4>
-                    </div>
-                </div>
-                <div class="col-lg-8 col-md-8">
-                    <ul class="filter__controls">
-                        {% for category in categories %}
-                            <li data-filter=".{{ category.name | lower | replace(' ', '-') }}">{{ category.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="row property__gallery">
-                {% for category, products in categorized_products.items() %}
-                    {% for product in products %}
-                        <div class="col-lg-3 col-md-4 col-sm-6 mix {{ category | lower | replace(' ', '-') }}">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
-                                    <ul class="product__hover">
-                                        <li><a href="data:image/png;base64,{{ product.image_url | b64encode }}" class="image-popup"><span class="arrow_expand"></span></a></li>
-                                    </ul>
-                                </div>
-                                <div class="product__item__text">
-                                    <h6><a href="#">{{ product.name }}</a></h6>
-                                    <div class="product__price">${{ product.price }}</div>
+                <div class="col-lg-3 col-md-3">
+                    <div class="shop__sidebar">
+                        <div class="sidebar__categories">
+                            <div class="section-title">
+                                <h4>Categories</h4>
+                            </div>
+                            <div class="categories__accordion">
+                                <div class="accordion" id="accordionExample">
+                                    <div class="card">
+                                        <div class="card-heading active">
+                                            <a data-toggle="collapse" data-target="#collapseOne">Women</a>
+                                        </div>
+                                        <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <ul>
+                                                    <li><a href="#">Coats</a></li>
+                                                    <li><a href="#">Jackets</a></li>
+                                                    <li><a href="#">Dresses</a></li>
+                                                    <li><a href="#">Shirts</a></li>
+                                                    <li><a href="#">T-shirts</a></li>
+                                                    <li><a href="#">Jeans</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseTwo">Men</a>
+                                        </div>
+                                        <div id="collapseTwo" class="collapse" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <ul>
+                                                    <li><a href="#">Jackets</a></li>
+                                                    <li><a href="#">Shirts</a></li>
+                                                    <li><a href="#">T-shirts</a></li>
+                                                    <li><a href="#">Jeans</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseThree">Skin Care</a>
+                                        </div>
+                                        <div id="collapseThree" class="collapse" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <ul>
+                                                    <li><a href="#">Toner</a></li>
+                                                    <li><a href="#">Moisturizer</a></li>
+                                                    <li><a href="#">Serum</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseFour">Accessories</a>
+                                        </div>
+                                        <div id="collapseFour" class="collapse" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <ul>
+                                                    <li><a href="#">Earrings</a></li>
+                                                    <li><a href="#">Bracelet</a></li>
+                                                    <li><a href="#">Cap</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-heading">
+                                            <a data-toggle="collapse" data-target="#collapseFive">Cosmetics</a>
+                                        </div>
+                                        <div id="collapseFive" class="collapse" data-parent="#accordionExample">
+                                            <div class="card-body">
+                                                <ul>
+                                                    <li><a href="#">Eyes</a></li>
+                                                    <li><a href="#">Cheek</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    {% endfor %}
-                {% endfor %}
+                    </div>
+                </div>
+                <div class="col-lg-9 col-md-9">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-1.jpg">
+                                    <div class="label new">New</div>
+                                    <ul class="product__hover">
+                                        <li><a href="/productDetails" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Furry hooded parka</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 59.0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div class="col-lg-4 col-md-6">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-2.jpg">
+                                    <ul class="product__hover">
+                                        <li><a href="img/shop/shop-2.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                        <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                                        <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Flowy striped skirt</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 49.0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-3.jpg">
+                                    <ul class="product__hover">
+                                        <li><a href="img/shop/shop-3.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                        <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                                        <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Croc-effect bag</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 59.0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-4.jpg">
+                                    <ul class="product__hover">
+                                        <li><a href="img/shop/shop-4.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                        <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                                        <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Dark wash Xavi jeans</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 59.0</div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <!-- <div class="col-lg-4 col-md-6">
+                            <div class="product__item sale">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-5.jpg">
+                                    <div class="label">Sale</div>
+                                    <ul class="product__hover">
+                                        <li><a href="img/shop/shop-5.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                        <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                                        <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Ankle-cuff sandals</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 49.0 <span>$ 59.0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="product__item">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-6.jpg">
+                                    <ul class="product__hover">
+                                        <li><a href="img/shop/shop-6.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                        <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                                        <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                                    </ul>
+                                </div>
+                                <div class="product__item__text">
+                                    <h6><a href="#">Contrasting sunglasses</a></h6>
+                                    <div class="rating">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                    </div>
+                                    <div class="product__price">$ 59.0</div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="col-lg-12 text-center">
+                            <div class="pagination__option">
+                                <a href="#">1</a>
+                                <a href="#">2</a>
+                                <a href="#">3</a>
+                                <a href="#"><i class="fa fa-angle-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </section> -->
+    </section>
     <!-- Shop Section End -->
-    {% block scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const categoryFilters = document.querySelectorAll('.category-filter');
-            categoryFilters.forEach(filter => {
-                filter.addEventListener('click', function() {
-                    const filterValue = this.getAttribute('data-filter');
-                    const products = document.querySelectorAll('.property__gallery .mix');
-    
-                    console.log(`Filtering products with value: ${filterValue}`); // Debugging statement
-    
-                    products.forEach(product => {
-                        console.log(`Product classes: ${product.classList}`); // Debugging statement
-                        if (filterValue === 'all' || product.classList.contains(filterValue)) {
-                            product.style.display = 'block';
-                        } else {
-                            product.style.display = 'none';
-                        }
-                    });
-                });
-            });
-    
-            // Set background images for products
-            const setBgElements = document.querySelectorAll('.set-bg');
-            setBgElements.forEach(el => {
-                const bg = el.getAttribute('data-setbg');
-                el.style.backgroundImage = `url(${bg})`;
-            });
-        });
-    </script>
-    {% endblock %}
+
+{% endblock %}

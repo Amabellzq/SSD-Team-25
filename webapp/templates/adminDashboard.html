@@ -57,15 +57,6 @@
                         {% endif %}
                     </div>
                     <div class="form-group">
-                        {{ accountDetails.email.label(class="form-label") }}
-                        {{ accountDetails.email(class="form-control") }}
-                        {% if accountDetails.email.errors %}
-                            {% for error in accountDetails.email.errors %}
-                                <div class="alert alert-danger">{{ error }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
                         {{ accountDetails.role.label(class="form-label") }}
                         {{ accountDetails.role(class="form-control", value=accountDetails.role.data, readonly=True) }}
                     </div>
@@ -114,7 +105,7 @@
                         <tr id="user-row-{{ user['user_id'] }}">
                             <td>
                                 {% if user['profile_pic_url'] %}
-                                    <img src="data:image/png;base64,{{ user['profile_pic_url'] }}" alt="Profile Picture" style="width: 100px; height: 100px;"/>
+                                    <img src="data:image/jpeg;base64,{{ user['profile_pic_url'] }}" alt="Profile Picture" style="width: 100px; height: 100px;"/>
                                 {% else %}
                                     No Image
                                 {% endif %}
