@@ -18,7 +18,7 @@ app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
-
+app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
 # Initialize SQLAlchemy
 db.init_app(app)
 
