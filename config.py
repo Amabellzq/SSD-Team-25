@@ -14,6 +14,7 @@ class Config:
     MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
     MYSQL_ADMIN_USER = os.getenv('MYSQL_ADMIN_USER')
     MYSQL_ADMIN_PASSWORD = os.getenv('MYSQL_ADMIN_PASSWORD')
+    MYSQL_PORT = os.getenv('MYSQL_PORT')
 
     # URL-encode the username and password
     MYSQL_ADMIN_USER_ENCODED = quote_plus(MYSQL_ADMIN_USER)
