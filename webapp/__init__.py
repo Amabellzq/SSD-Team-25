@@ -13,16 +13,15 @@ app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key-if-none-found')
 app.config['DEBUG'] = True  # Enable debug mode
 
+# Initialize SQLAlchemy
+db.init_app(app)
+
 # Configure session settings
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
-app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
-# Initialize SQLAlchemy
-db.init_app(app)
-
-server_session = Session(app)
+Session(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -35,6 +34,11 @@ def load_user(user_id):
 # Register Blueprint
 app.register_blueprint(main)
 
+# Optional: Uncomment if you want to create tables in a new setup
+# Create database tables
+# with app.app_context():
+#    db.create_all()
+
 # Define the base64 encode filter
 def b64encode(value):
     return base64.b64encode(value).decode('utf-8')
@@ -44,7 +48,6 @@ app.jinja_env.filters['b64encode'] = b64encode
 
 # To ensure no circular import issues
 from .routes import main
-
 
 if __name__ == '__main__':
     app.run(debug=True)

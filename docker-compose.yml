@@ -1,55 +1,21 @@
+version: '3.8'
+
 services:
-  flask:
+  web:
     build: .
-    container_name: flask
-    networks:
-      - ecommerce_network
-    depends_on:
-      - db
-    working_dir: /webapp
-
-  nginx:
-    image: nginx:latest
-    build : ./nginx
-    container_name: nginx
     ports:
-      - "80:80"
-    depends_on:
-      - flask
-    networks:
-      - ecommerce_network
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf.d/:ro
-      - ${WORKSPACE}/flask/static:/usr/share/nginx/html/static:ro
-
-  db:
-    image: mysql:5.7
-    container_name: db
+      - "8080:8000"
     env_file:
       - .env
-    ports:
-      - "3306:3306"
-    networks:
-      - ecommerce_network
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
-      - MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}
-      - MYSQL_MERCHANT_USER=${MYSQL_MERCHANT_USER}
-      - MYSQL_MERCHANT_PASSWORD=${MYSQL_MERCHANT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_USER_PASSWORD=${MYSQL_USER_PASSWORD}
-      - MYSQL_READONLY_USER=${MYSQL_READONLY_USER}
-      - MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}
-      - MYSQL_HOST=${MYSQL_HOST}
     volumes:
-      - mysql-data:/var/lib/mysql
-
-networks:
-  ecommerce_network:
-    driver: bridge
-
-volumes:
-  mysql-data:
-  jenkins_home:
+      - .:/webapp
+    environment:
+      - GUNICORN_CMD_ARGS=--reload --workers 3 --bind 0.0.0.0:8000
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
