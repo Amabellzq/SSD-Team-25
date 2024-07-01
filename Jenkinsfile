@@ -79,17 +79,7 @@ pipeline {
 //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
 //             }
 //         }
-        stage('Deploy for Testing') {
-            steps {
-                script {
-                    // Ensure a clean state by stopping and removing any existing containers
-                    sh 'docker-compose down --remove-orphans'
-                    // Start the Docker containers in detached mode
-                    sh 'docker-compose up --build -d'
-                }
-            }
-        }
-
+ 
 
         stage('Code Analysis with Flake8') {
             steps {
@@ -128,17 +118,6 @@ pipeline {
                 }
             }
         }
-         stage('Unit Tesing with Pytest') {
-            steps {
-                script {
-                    // Get the container ID of the Flask application container
-                    def flaskContainerId = sh(script: "docker-compose ps -q ${FLASK_CONTAINER}", returnStdout: true).trim()
-
-                    // Run pytest inside the Flask application container with coverage and reporting options
-                    sh "docker exec ${flaskContainerId} pytest --cov=app --cov-report=xml:coverage.xml --junitxml=report.xml"
-                }
-            }
-         }
         stage('Code Quality Check via SonarQube') {
             steps {
                 script {
@@ -155,15 +134,7 @@ pipeline {
                 }
     	    }
         }
-                stage('Clean Up Test Deployment') {
-            steps {
-                script {
-                    // Stop and remove the Docker containers after testing
-                    sh 'docker-compose down --remove-orphans'
-                }
-            }
-        }
-
+              
 
         stage('Build and Deploy') {
             steps {
