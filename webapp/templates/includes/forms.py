@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
 import re
 
@@ -60,7 +60,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # ADMIN #
+    # Admin #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -69,7 +69,7 @@ class CreateCategory(FlaskForm):
     saveCategory = SubmitField('Save Category')
 
 #############################
-    # MERCHANT #
+    # Merchant #
 #############################
 
 class RegisterBusinessForm(FlaskForm):
@@ -77,3 +77,27 @@ class RegisterBusinessForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired(), Length(min=4, max=100)])
     business_address = StringField('Business Address', validators=[DataRequired(), Length(min=10, max=255)])
     submit = SubmitField('Submit Details')
+
+class CreateProductForm(FlaskForm):
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    Availability = SelectField('Availability', choices=[ ('In Stock', 'In Stock'), ('Out of Stock', 'Out of Stock')], validators=[DataRequired()])
+    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    merchant_id = IntegerField('Merchant ID', validators=[DataRequired(), NumberRange(min=1)])
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Save Product')
+
+class UpdateProductForm(FlaskForm):
+    image_url = FileField('Product Image', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', validators=[DataRequired()], choices=[])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Update Product')

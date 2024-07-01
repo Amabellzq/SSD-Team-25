@@ -1,20 +1,22 @@
-from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request
+from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, RegisterBusinessForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
 from datetime import datetime, timedelta
-from .models import db, User, Category, Merchant, Order, Product, Session, ShoppingCart, CartItem, OrderItem, Payment
+from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
+
 
 @main.route('/')
 def home():
@@ -26,6 +28,7 @@ def home():
             unique_categories[category.name] = category
 
     return render_template('index.html', categories = unique_categories.values()) #, products=products
+
 
 @main.route('/shop')
 def shop():
@@ -42,15 +45,16 @@ def shop():
         print(product.name)  # Debugging: Print product names
     return render_template('shop.html', categories = unique_categories, products=products)
 
+
 @main.route('/contact')
 def contact():
     return render_template('contact.html')
+
 
 @main.route('/productDetails')
 def productDetails():
     return render_template('product-details.html')
 
-# CUSTOMER PROFILE PAGE
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
 def myaccount():
@@ -88,12 +92,15 @@ def myaccount():
         else:
             flash('User not found', 'danger')
 
-    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
+    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url,
+                           user=user)
+
 
 @main.route('/cart')
 @login_required
 def cart():
     return render_template('cart.html', user=current_user)
+
 
 @main.route('/checkoutpage', methods=['GET', 'POST'])
 @login_required
@@ -103,6 +110,7 @@ def checkout():
         # Process the order here
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
+
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -124,7 +132,8 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
-            
+            session['user_id'] = user.get_id()  # Store user ID in session
+            print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
             return redirect(url_for('main.home'))
             # # Redirect based on role
             # if user.role == 'Admin':
@@ -146,11 +155,13 @@ def login():
             print('GET request')  # Debug statement
 
     return render_template('login.html', login_form=form)
-    
+
+
 @main.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('main.home'))
+
 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
@@ -176,12 +187,12 @@ def register():
                 hashed_password = generate_password_hash(password)
                 try:
                     # Create the new user
-                    new_user = User.create(username=username, email = email, password=hashed_password, role=role)
-                    
+                    new_user = User.create(username=username, email=email, password=hashed_password, role=role)
+
                     registration_successful = True
                     flash('Registeration Successful', 'success')
                     return redirect(url_for('main.login'))
-                
+
                 except Exception as e:
                     db.session.rollback()
                     current_app.logger.error(f'Error while registering user: {str(e)}')
@@ -196,6 +207,7 @@ def register():
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
 
+
 @main.route('/forgetPW', methods=['GET', 'POST'])
 def forgetPass():
     form = RegistrationForm()
@@ -203,6 +215,10 @@ def forgetPass():
         flash('Please check your email')
         return redirect(url_for('main.login'))
     return render_template('forgetPW.html', resetpass_form=form)
+
+#############################
+    # Admin #
+#############################
 
 @main.route('/adminDashboard', methods=['GET', 'POST'])
 @login_required
@@ -226,12 +242,9 @@ def adminDashboard():
     if user.profile_pic_url:
         profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
 
-    # Encode profile pictures for all users
-    for user in users:
-        if user.profile_pic_url:
-            user.profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+    return render_template('adminDashboard.html', users=users, categories=categories, merchants=merchants,
+                           profile_pic_url=profile_pic_url, user=user, accountDetails=accountDetails)
 
-    return render_template('adminDashboard.html', users=users, categories=categories, merchants=merchants,profile_pic_url=profile_pic_url, user = user, accountDetails=accountDetails)
 
 @main.route('/updateAdmin_account', methods=['POST'])
 @login_required
@@ -252,6 +265,7 @@ def updateAdmin_account():
             db.session.commit()
 
     return redirect(url_for('main.adminDashboard'))
+
 
 @main.route('/registerAdmin', methods=['GET', 'POST'])
 def registerAdmin():
@@ -277,10 +291,10 @@ def registerAdmin():
                 if profile_picture:
                     filename = secure_filename(profile_picture.filename)
                     new_user.profile_pic_url = profile_picture.read()
-                
+
                 db.session.add(new_user)
                 db.session.commit()
-                
+
                 registration_successful = True
                 return redirect(url_for('main.adminDashboard'))
             except Exception as e:
@@ -320,6 +334,7 @@ def edit_user(user_id):
 
     return render_template('adminManageUser.html', form=form, profile_pic_url=profile_pic_url, user=user)
 
+
 @main.route('/deleteUser/<int:user_id>', methods=['POST'])
 @login_required
 def delete_user(user_id):
@@ -330,6 +345,7 @@ def delete_user(user_id):
 
     return redirect(url_for('main.adminDashboard'))
 
+
 @main.route('/approve_merchant/<int:merchant_id>', methods=['POST'])
 @login_required
 def approve_merchant(merchant_id):
@@ -338,10 +354,11 @@ def approve_merchant(merchant_id):
         merchant.account_status = 'Active'
         utc_now = datetime.utcnow()
         utc_plus_8 = utc_now + timedelta(hours=8)
-        merchant.approved_date = utc_plus_8        
+        merchant.approved_date = utc_plus_8
         db.session.commit()
 
     return redirect(url_for('main.adminDashboard'))
+
 
 @main.route('/suspend_merchant/<int:merchant_id>', methods=['POST'])
 def suspend_merchant(merchant_id):
@@ -360,6 +377,7 @@ def suspend_merchant(merchant_id):
         flash('Merchant not found.', 'danger')
     return redirect(url_for('main.adminDashboard'))
 
+
 @main.route('/createCategory', methods=['GET', 'POST'])
 @login_required
 def adminCreateCategory():
@@ -372,6 +390,7 @@ def adminCreateCategory():
         db.session.commit()
         return redirect(url_for('main.adminDashboard'))
     return render_template('adminCreateCategory.html', createNewCategory=create_category)
+
 
 # @main.route('/deleteCategory/<int:category_id>', methods=['POST'])
 # @login_required
@@ -393,7 +412,7 @@ def delete_category(category_id):
             products = Product.query.filter_by(category_id=category_id).all()
             for product in products:
                 db.session.delete(product)
-            
+
             # Delete the category
             db.session.delete(category)
             db.session.commit()
@@ -405,6 +424,7 @@ def delete_category(category_id):
     else:
         flash('Category not found.', 'danger')
     return redirect(url_for('main.adminDashboard'))
+
 
 @main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
 @login_required
@@ -429,9 +449,15 @@ def edit_category(category_id):
 
     return render_template('adminEditCategory.html', form=form, category_id=category_id)
 
+#############################
+    # Merchant #
+#############################
+
 @main.route('/sellerDashboard', methods=['GET'])
 @login_required
 def sellerDashboard():
+    
+    # retrieve account details
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
     update_business_form = RegisterBusinessForm()
@@ -439,8 +465,8 @@ def sellerDashboard():
 
     user = User.get(user_id)
     if not user:
-
-        return redirect(url_for('main.adminDashboard'))
+        flash('User not found', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
 
     account_details_form.username.data = user.username
     account_details_form.email.data = user.email
@@ -449,7 +475,7 @@ def sellerDashboard():
     if user.profile_pic_url:
         profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
 
-    # business details 
+    # business details
     # Pre-populate the business form with existing merchant data if available
     merchant = Merchant.query.filter_by(user_id=user_id).first()
     if merchant:
@@ -458,7 +484,16 @@ def sellerDashboard():
 
         update_business_form.user_id.data = user_id
 
-    return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user)
+     # retrieve orders
+    orders = Order.query.all()
+
+    # Retrieve products
+    products = Product.query.all()
+    for product in products:
+        if product.image_url:
+            product.image_url = base64.b64encode(product.image_url).decode('utf-8')
+
+    return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user, orders=orders, products=products)
 
 @main.route('/update_account', methods=['POST'])
 @login_required
@@ -480,6 +515,7 @@ def update_account():
         else:
             flash('User not found', 'danger')
     return redirect(url_for('main.sellerDashboard'))
+
 
 @main.route('/register_business', methods=['GET', 'POST'])
 @login_required
@@ -531,6 +567,7 @@ def register_business():
 
     return render_template('sellerRegBusiness.html', updateBusiness=update_business_form)
 
+
 @main.route('/update_business', methods=['POST'])
 @login_required
 def update_business():
@@ -546,9 +583,9 @@ def update_business():
 
                 # Log before commit
                 current_app.logger.debug(f"Updating merchant: {merchant}")
-                
+
                 db.session.commit()
-                
+
                 # Log after commit to verify
                 current_app.logger.debug("Merchant details updated successfully!")
                 return redirect(url_for('main.sellerDashboard'))
@@ -564,6 +601,7 @@ def update_business():
 
     return render_template('sellerDashboard.html', updateBusiness=update_business_form)
 
+
 @main.route('/orderDetails')
 @login_required
 def orderDetails():
@@ -572,17 +610,139 @@ def orderDetails():
 @main.route('/newProduct')
 @login_required
 def newProduct():
-    return render_template('sellerNewProduct.html', user=current_user)
+    print("Initializing CreateProductForm")
+    form = CreateProductForm()
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    print(f"Product categories loaded: {form.productCategoryID.choices}")
 
-@main.route('/updateProduct')
+    # Retrieve the merchant_id for the current user
+    merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+    if not merchant:
+        flash('No merchant found for the current user.', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
+        
+    # Prepopulate the merchant_id field
+    form.merchant_id.data = merchant.merchant_id
+
+    if request.method == 'POST':
+        print("Form submitted with POST method")
+        print(form.data)  # Debugging statement to print form data
+        if form.validate_on_submit():
+            print("Form validated successfully")
+            product_name = form.productName.data
+            product_description = form.productDescription.data
+            product_category_id = form.productCategoryID.data
+            product_price = form.productPrice.data
+            product_quantity = form.productQuantity.data
+            availability = form.Availability.data
+            image_data = form.image_url.data.read()  # Read image file as binary data
+
+            # Calculate Singapore time (UTC+8)
+            utc_now = datetime.utcnow()
+            singapore_time = utc_now + timedelta(hours=8)
+            created_date = singapore_time
+            last_updated_date = singapore_time
+
+            print(f"Creating product with name: {product_name}, description: {product_description}, "
+                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
+
+            create_product = Product.create(
+                name=product_name,
+                description=product_description,
+                category_id=product_category_id,
+                price=product_price,
+                quantity=product_quantity,
+                availability=availability,
+                image_url=image_data,
+                merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
+                created_date = created_date,
+                last_updated_date=last_updated_date
+            )
+
+            print("Product added to the database")
+            flash('Product created successfully!', 'success')
+            return redirect(url_for('main.sellerDashboard'))
+        else:
+            print("Form validation failed")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"Error in {field}: {error}")
+    else:
+        print("GET request received")
+
+    print("Rendering new product form")
+    return render_template('sellerNewProduct.html', form=form)
+
+@main.route('/updateProduct/<int:product_id>', methods=['GET','POST'])
 @login_required
-def updateProduct():
-    return render_template('sellerUpdateProduct.html', user=current_user)
+def updateProduct(product_id):
+    form = UpdateProductForm()
+    product = Product.query.get(product_id)
 
-@main.route('/db_check')
-def db_check():
-    try:
-        db_name = db.engine.execute("SELECT DATABASE()").fetchone()[0]
-        return jsonify({"status": "success", "database": db_name}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    if not product:
+        flash('Product not found', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
+
+    image_url = None
+    if request.method == 'GET':
+        form.productID.data = product.product_id
+        if product.image_url:
+            image_url = base64.b64encode(product.image_url).decode('utf-8')
+        form.productName.data = product.name
+        form.productDescription.data = product.description
+        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+        form.productCategoryID.data = product.category_id
+        form.productPrice.data = product.price
+        form.productQuantity.data = product.quantity
+        form.productCreatedDate.data = product.created_date
+        form.productLastUpdated.data = product.last_updated_date
+
+    if request.method == 'POST' and form.validate_on_submit():
+        print("Form validated successfully")
+        product.name = form.productName.data
+        product.description = form.productDescription.data
+        product.category_id = form.productCategoryID.data
+        product.price = form.productPrice.data
+        product.quantity = form.productQuantity.data
+        product.created_date = form.productCreatedDate.data
+        product.last_updated_date = form.productLastUpdated.data
+
+        if product.image_url.data:
+            image_url = form.image_url.data
+            filename = secure_filename(image_url.filename)
+            product.image_url = image_url.read()
+       
+        print(f"Updating product: {product.__dict__}")
+        db.session.commit()
+        print("Product updated and committed to the database")
+        flash('Product updated successfully!', 'success')
+        return redirect(url_for('main.sellerDashboard'))
+
+    if request.method == 'POST' and not form.validate_on_submit():
+        print("Form validation failed")
+        print(form.errors)
+
+    return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
+
+
+@main.route('/deleteProduct/<int:product_id>', methods=['POST'])
+@login_required
+def delete_product(product_id):
+    product = Product.get(product_id)
+    if product:
+        db.session.delete(product)
+        db.session.commit()
+        flash('Product deleted successfully!', 'success')
+    else:
+        flash('Product not found', 'danger')
+    return redirect(url_for('main.sellerDashboard'))
+
+
+@main.route('/session-info')
+def session_info():
+    user_id = session.get('user_id')
+    if user_id:
+        return f"Session active for user_id: {user_id}"
+    else:
+        return "No active session"
+

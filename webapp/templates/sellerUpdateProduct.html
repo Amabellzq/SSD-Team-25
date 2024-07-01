@@ -20,45 +20,49 @@
 
 <div class="container">
     <h3>Update Product</h3>
-    <form id="addProductForm" method="POST" action="/addProduct" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('main.updateProduct', product_id=product_id) }}">
+        {{ form.hidden_tag() }}        
         <div class="form-group">
-            <label for="productId">Product ID</label>
-            <input type="text" class="form-control" id="productId" name="productId" readonly>
+            {{ form.productID.label(class="form-label") }}
+            {{ form.productID(class="form-control") }}
+        </div>
+        
+        <div class="form-group">
+            {{ form.productName.label(class="form-label") }}
+            {{ form.productName(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="productImage">Product Image</label>
-            <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" required>
+            {{ form.productDescription.label(class="form-label") }}
+            {{ form.productDescription(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="description">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+            {{ form.productCategoryID.label(class="form-label") }}
+            {{ form.productCategoryID(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="categoryId">Category ID</label>
-            <input type="text" class="form-control" id="categoryId" name="categoryId" required>
+            {{ form.productPrice.label(class="form-label") }}
+            {{ form.productPrice(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+            {{ form.productQuantity.label(class="form-label") }}
+            {{ form.productQuantity(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" required>
+            {{ form.productCreatedDate.label(class="form-label") }}
+            {{ form.productCreatedDate(class="form-control") }}
         </div>
         <div class="form-group">
-            <label for="dateCreated">Date Created</label>
-            <input type="date" class="form-control" id="dateCreated" name="dateCreated" required>
+            {{ form.productLastUpdated.label(class="form-label") }}
+            {{ form.productLastUpdated(class="form-control") }}
         </div>
-        <div class="form-group">
-            <label for="dateLastUpdated">Date Last Updated</label>
-            <input type="date" class="form-control" id="dateLastUpdated" name="dateLastUpdated" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Confirm</button>
+        <div class="text-center">
+            <button type="submit" style="background-color: #09054a; border-color: #09054a;" class="btn btn-primary">
+                {{ form.submit.label.text }}
+            </button>
+        </div>  
         <a style="background-color: #09054a;" href="/sellerDashboard" class="primary-btn">Back</a>      
     </form>
 </div>
-
-
 <!-- Section End -->
 
 

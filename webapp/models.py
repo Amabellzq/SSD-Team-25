@@ -15,7 +15,6 @@ class User(UserMixin, db.Model):
     account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
-    sessions = db.relationship('Session', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
 
@@ -129,46 +128,6 @@ class Merchant(db.Model):
             return merchant
         return None
 
-class Session(db.Model):
-    __tablename__ = 'Session'
-    session_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
-    session_token = db.Column(db.String(255))
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
-    expiry_date = db.Column(db.DateTime)
-    last_activity_date = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
-
-    @staticmethod
-    def get(session_id):
-        return Session.query.get(session_id)
-
-    @staticmethod
-    def create(user_id, session_token, expiry_date, is_active=True):
-        new_session = Session(user_id=user_id, session_token=session_token, expiry_date=expiry_date, is_active=is_active)
-        db.session.add(new_session)
-        db.session.commit()
-        return new_session
-
-    @staticmethod
-    def delete(session_id):
-        session = Session.get(session_id)
-        if session:
-            db.session.delete(session)
-            db.session.commit()
-            return True
-        return False
-
-    @staticmethod
-    def update(session_id, **kwargs):
-        session = Session.get(session_id)
-        if session:
-            for key, value in kwargs.items():
-                setattr(session, key, value)
-            db.session.commit()
-            return session
-        return None
-
 class ShoppingCart(db.Model):
     __tablename__ = 'ShoppingCart'
     cart_id = db.Column(db.Integer, primary_key=True)
@@ -254,7 +213,7 @@ class Product(db.Model):
     price = db.Column(db.Numeric(10, 2))
     quantity = db.Column(db.Integer)
     availability = db.Column(db.Enum('In Stock', 'Out of Stock'))
-    image_url = db.Column(db.LargeBinary, nullable=True) 
+    image_url = db.Column(db.LargeBinary, nullable=True)  # Ensure this column is defined as LargeBinary
     merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
