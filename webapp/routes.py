@@ -1,3 +1,4 @@
+import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
@@ -6,12 +7,24 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import base64
 from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+from functools import wraps
+from flask import request
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
 
+def session_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = current_user
+        if user.is_authenticated:
+            if user.active_session_token != request.cookies.get('session_token'):
+                logout_user()
+                return redirect(url_for('main.login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -44,6 +57,7 @@ def productDetails():
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
+@session_required
 def myaccount():
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
@@ -76,19 +90,21 @@ def myaccount():
             return redirect(url_for('main.sellerDashboard'))
         else:
             flash('User not found', 'danger')
-
     return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url,
                            user=user)
+    pass
 
 
 @main.route('/cart')
 @login_required
+@session_required
 def cart():
     return render_template('cart.html', user=current_user)
 
 
 @main.route('/checkoutpage', methods=['GET', 'POST'])
 @login_required
+@session_required
 def checkout():
     form = CheckoutForm()
     if form.validate_on_submit():
@@ -107,7 +123,6 @@ def login():
         username = form.username.data
         password = form.password.data
         print(f'Attempting to log in user: {username}')  # Debug statement
-
         user = User.get_by_username(username)
         if user:
             print(f'User found: {user.username}')  # Debug statement
@@ -115,11 +130,18 @@ def login():
             print(f'User not found: {username}')  # Debug statement
 
         if user and check_password_hash(user.password, password):
+            # Generate a new session token
+            new_session_token = secrets.token_urlsafe()
+            # Invalidate previous session
+            user.active_session_token = new_session_token
+            db.session.commit()
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            return redirect(url_for('main.home'))
+            response = redirect(url_for('main.home'))
+            response.set_cookie('session_token', new_session_token)
+            return response
             # # Redirect based on role
             # if user.role == 'Admin':
             #     print('Redirecting to admin dashboard')  # Debug statement
@@ -144,8 +166,13 @@ def login():
 
 @main.route('/logout')
 def logout():
+    user = current_user
+    if user.is_authenticated:
+        user.active_session_token = None
+        db.session.commit()
     logout_user()
     return redirect(url_for('main.home'))
+
 
 
 @main.route('/register', methods=['GET', 'POST'])
