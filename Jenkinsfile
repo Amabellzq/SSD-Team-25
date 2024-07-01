@@ -46,6 +46,7 @@ pipeline {
                     string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
                     string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
                     string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST')
+                     string(credentialsId: 'MYSQL_PORT', variable: 'MYSQL_PORT')
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
@@ -61,6 +62,7 @@ pipeline {
                         envContent += "MYSQL_READONLY_USER=${MYSQL_READONLY_USER}\n"
                         envContent += "MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}\n"
                         envContent += "MYSQL_HOST=${MYSQL_HOST}\n"
+                         envContent += "MYSQL_PORT=${MYSQL_PORT}\n"
 
                         writeFile file: '.env', text: envContent
                     }
@@ -79,16 +81,16 @@ pipeline {
 //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
 //             }
 //         }
-//         stage('Deploy for Testing') {
-//             steps {
-//                 script {
-//                     // Ensure a clean state by stopping and removing any existing containers
-//                     sh 'docker-compose down --remove-orphans'
-//                     // Start the Docker containers in detached mode
-//                     sh 'docker-compose up --build -d'
-//                 }
-//             }
-//         }
+        stage('Deploy for Testing') {
+            steps {
+                script {
+                    // Ensure a clean state by stopping and removing any existing containers
+                    sh 'docker-compose down --remove-orphans'
+                    // Start the Docker containers in detached mode
+                    sh 'docker-compose up --build -d'
+                }
+            }
+        }
 
 
         stage('Code Analysis with Flake8') {
@@ -155,14 +157,14 @@ pipeline {
                 }
     	    }
         }
-                stage('Clean Up Test Deployment') {
-            steps {
-                script {
-                    // Stop and remove the Docker containers after testing
-                    sh 'docker-compose down --remove-orphans'
-                }
-            }
-        }
+//                 stage('Clean Up Test Deployment') {
+//             steps {
+//                 script {
+//                     // Stop and remove the Docker containers after testing
+//                     sh 'docker-compose down --remove-orphans'
+//                 }
+//             }
+//         }
 
 
         stage('Build and Deploy') {
