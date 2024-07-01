@@ -21,13 +21,22 @@ def load_user(user_id):
 @main.route('/')
 def home():
     categories = Category.query.all()
-   
+    products = Product.query.all()  # Query all products
+
     unique_categories = {}
+    categorized_products = {}
     for category in categories:
         if category.name not in unique_categories:
             unique_categories[category.name] = category
+            categorized_products[category.name] = []
 
-    return render_template('index.html', categories = unique_categories.values()) #, products=products
+    for product in products:
+        if product.category.name in categorized_products:
+            categorized_products[product.category.name].append(product)
+        else:
+            categorized_products[product.category.name] = [product]
+
+    return render_template('index.html', categories = unique_categories.values(), categorized_products=categorized_products) #, products=products
 
 
 @main.route('/shop')
@@ -607,13 +616,19 @@ def update_business():
 def orderDetails():
     return render_template('sellerOrderDetails.html', user=current_user)
 
-@main.route('/newProduct')
+@main.route('/newProduct', methods=['POST'])
 @login_required
 def newProduct():
     print("Initializing CreateProductForm")
     form = CreateProductForm()
-    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
-    print(f"Product categories loaded: {form.productCategoryID.choices}")
+
+    # Load unique categories
+    categories = Category.query.all()
+    unique_categories = {}
+    for c in categories:
+        if c.name not in unique_categories:
+            unique_categories[c.name] = c.category_id
+    form.productCategoryID.choices = [(category_id, name) for name, category_id in unique_categories.items()]
 
     # Retrieve the merchant_id for the current user
     merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
