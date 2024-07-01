@@ -20,6 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 #Command to install bootstrap for flask
 RUN pip install Flask-Bootstrap
 
+RUN pip install Flask-Session
+
 #Command to install flask-login
 RUN pip install flask-login
 
