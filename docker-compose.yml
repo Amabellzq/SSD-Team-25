@@ -21,8 +21,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf.d/:ro
       - ${WORKSPACE}/flask/static:/usr/share/nginx/html/static:ro
-      - ./nginx/nginx-selfsigned.crt:/etc/ssl/certs/nginx-selfsigned.crt:ro
-      - ./nginx/nginx-selfsigned.key:/etc/ssl/private/nginx-selfsigned.key:ro
+      - ./nginx-selfsigned.crt:/etc/ssl/certs/nginx-selfsigned.crt:ro
+      - ./nginx-selfsigned.key:/etc/ssl/private/nginx-selfsigned.key:ro
 
   db:
     image: mysql:5.7
