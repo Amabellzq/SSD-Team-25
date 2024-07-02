@@ -1,34 +1,34 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, \
-    EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
 from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+import pyotp
+import qrcode
+from io import BytesIO
+from PIL import Image
 from functools import wraps
-from flask import request
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
 
-
 def session_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = current_user
         if user.is_authenticated:
-            if user.active_session_token != request.cookies.get('session_token'):
+            if user.active_session_token != session.sid:
                 logout_user()
+                session.clear()
                 return redirect(url_for('main.login'))
         return f(*args, **kwargs)
-
     return decorated_function
-
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -53,8 +53,7 @@ def home():
         else:
             categorized_products[product.category.name] = [product]
 
-    return render_template('index.html', categories=unique_categories.values(),
-                           categorized_products=categorized_products)  # , products=products
+    return render_template('index.html', categories = unique_categories.values(), categorized_products=categorized_products) #, products=products
 
 
 # @main.route('/shop')
@@ -75,7 +74,7 @@ def home():
 #         category_name = product.category.name
 #         if category_name in unique_categories:
 #             unique_categories[category_name]['products'].append(product)
-
+    
 #     return render_template('shop.html', categories = unique_categories)
 
 # @main.route('/shop')
@@ -95,7 +94,7 @@ def home():
 #             categorized_products[product.category.name].append(product)
 #         else:
 #             categorized_products[product.category.name] = [product]
-
+    
 #     return render_template('shop.html', categories = unique_categories.values(), categorized_products=categorized_products)
 
 @main.route('/shop')
@@ -116,8 +115,7 @@ def shop():
         else:
             categorized_products[product.category.name] = [product]
 
-    return render_template('shop.html', categories=unique_categories.values(),
-                           categorized_products=categorized_products)
+    return render_template('shop.html', categories=unique_categories.values(), categorized_products=categorized_products)
 
 
 @main.route('/contact')
@@ -128,7 +126,6 @@ def contact():
 @main.route('/productDetails')
 def productDetails():
     return render_template('product-details.html')
-
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
@@ -189,7 +186,6 @@ def checkout():
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
 
-
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -199,24 +195,86 @@ def login():
         print('Form validated successfully')  # Debug statement
         username = form.username.data
         password = form.password.data
-        print(f'Attempting to log in user: {username}')  # Debug statement
         user = User.get_by_username(username)
+        print(f'Attempting to log in user: {username}')  # Debug statement
+        
         if user:
             print(f'User found: {user.username}')  # Debug statement
         else:
             print(f'User not found: {username}')  # Debug statement
-
         if user and check_password_hash(user.password, password):
-            # Generate a new session token
-            new_session_token = secrets.token_urlsafe()
-            # Invalidate previous session
-            user.active_session_token = new_session_token
-            db.session.commit()
+            session['user_id'] = user.get_id()
+            return redirect(url_for('main.totp'))
+        else:
+            flash('Invalid username or password', 'danger')
+    return render_template('login.html', login_form=form)
+            
+            # totp = pyotp.TOTP(user.totp_secret)
+            # if totp.verify(totp_code):
+            #     login_user(user)  # Log the user in if TOTP is verified
+            #     print(f'Login successful for user: {user.username}')  # Debug statement
+            #     session['user_id'] = user.get_id()  # Store user ID in session
+            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+            #     return redirect(url_for('main.home'))
+            # else:
+            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
+            #     print('Invalid TOTP code')  # Debug statement
+                
+            # # Redirect based on role
+            # if user.role == 'Admin':
+            #     print('Redirecting to admin dashboard')  # Debug statement
+            #     return redirect(url_for('main.adminDashboard'))
+            # elif user.role == 'Merchant':
+            #     print('Redirecting to seller dashboard')  # Debug statement
+            #     return redirect(url_for('main.sellerDashboard'))
+            # else:
+            #     print('Redirecting to home page')  # Debug statement
+            #     return redirect(url_for('main.home'))
+    #     else:
+    #         flash('Invalid username or password', 'danger')
+    #         print('Invalid username or password')  # Debug statement
+    # else:
+    #     if request.method == 'POST':
+    #         print('Form validation failed')  # Debug statement
+    #     else:
+    #         print('GET request')  # Debug statement
+
+    # return render_template('login.html', login_form=form)
+    
+    
+    # Route to generate TOTP QR code and verify TOTP code
+@main.route('/totp', methods=['GET', 'POST'])
+def totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = User.get(user_id)
+    if not user.totp_secret:
+        user.totp_secret = pyotp.random_base32()
+        db.session.commit()
+
+    otp_uri = pyotp.totp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    img = qrcode.make(otp_uri,box_size=8,border=3)
+    buf = BytesIO()
+    img.save(buf)
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+
+    if request.method == 'POST':
+        totp_code = request.form['totp']
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            return redirect(url_for('main.home'))
+            # Invalidate previous session by setting a new session token
+            session.clear()  # Clear any existing session data
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
-            print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            db.session.commit()
+            print(f"Session started with user_id: {session.get('user_id')} and session ID: {session.sid}")  # Debug statement
             # Check user role and merchant ID
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
@@ -226,9 +284,7 @@ def login():
                 else:
                     print('No merchant found for the current user.')  # Debug statement
                     return redirect(url_for('main.register_business'))
-
             return redirect(url_for('main.home'))
-
         else:
             flash('Invalid username or password', 'danger')
             print('Invalid username or password')  # Debug statement
@@ -236,9 +292,9 @@ def login():
         if request.method == 'POST':
             print('Form validation failed')  # Debug statement
         else:
-            print('GET request')  # Debug statement
+            flash('Invalid TOTP code', 'danger')
 
-    return render_template('login.html', login_form=form)
+    return render_template('totp.html', img_b64=img_b64)
 
 
 @main.route('/logout')
@@ -248,7 +304,9 @@ def logout():
         user.active_session_token = None
         db.session.commit()
     logout_user()
+    session.clear()  # Clear the session
     return redirect(url_for('main.home'))
+
 
 
 @main.route('/register', methods=['GET', 'POST'])
@@ -304,9 +362,8 @@ def forgetPass():
         return redirect(url_for('main.login'))
     return render_template('forgetPW.html', resetpass_form=form)
 
-
 #############################
-# Admin #
+    # Admin #
 #############################
 
 @main.route('/adminDashboard', methods=['GET', 'POST'])
@@ -316,11 +373,12 @@ def adminDashboard():
     users = User.query.all()
     merchants = Merchant.query.all()
     categories = Category.query.all()
-    accountDetails = AccountDetailsForm()
+    accountDetails = AccountDetailsForm() 
     profile_pic_url = None
 
     user = User.get(user_id)
     if not user:
+
         return redirect(url_for('main.adminDashboard'))
 
     accountDetails.username.data = user.username
@@ -374,7 +432,7 @@ def registerAdmin():
             hashed_password = generate_password_hash(password)
             try:
                 # Create the new user
-                new_user = User(username=username, email=email, password=hashed_password, role=role)
+                new_user = User(username=username, email = email, password=hashed_password, role=role)
 
                 if profile_picture:
                     filename = secure_filename(profile_picture.filename)
@@ -526,14 +584,14 @@ def edit_category(category_id):
 
     return render_template('adminEditCategory.html', form=form, category_id=category_id)
 
-
 #############################
-# Merchant #
+    # Merchant #
 #############################
 
 @main.route('/sellerDashboard', methods=['GET'])
 @login_required
 def sellerDashboard():
+    
     # retrieve account details
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
@@ -561,19 +619,16 @@ def sellerDashboard():
 
         update_business_form.user_id.data = user_id
 
-    # retrieve orders
+     # retrieve orders
     orders = Order.query.all()
 
     # Retrieve products
-    products = Product.query.filter_by(merchant_id=merchant.merchant_id).all()
+    products = Product.query.filter_by(merchant_id=merchant.merchant_id).all()    
     for product in products:
         if product.image_url:
             product.image_url = base64.b64encode(product.image_url).decode('utf-8')
 
-    return render_template('sellerDashboard.html', accountDetails=account_details_form,
-                           updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user,
-                           orders=orders, products=products)
-
+    return render_template('sellerDashboard.html', accountDetails=account_details_form, updateBusiness=update_business_form, profile_pic_url=profile_pic_url, user=user, orders=orders, products=products)
 
 @main.route('/update_account', methods=['POST'])
 @login_required
@@ -687,7 +742,6 @@ def update_business():
 def orderDetails():
     return render_template('sellerOrderDetails.html', user=current_user)
 
-
 # @main.route('/newProduct', methods=['GET', 'POST'])
 # @login_required
 # def newProduct():
@@ -697,15 +751,15 @@ def orderDetails():
 
 #         if form.validate_on_submit():
 #             product_name = form.productName.data
-#             product_description = form.productDescription.data
+#             product_description = form.productDescription.data 
 #             product_category_id = form.productCategoryID.data
-#             product_price = form.productPrice.data
-#             product_quantity = form.productQuantity.data
-#             product_created_date = form.productCreatedDate.data
-#             product_last_updated_date = form.productLastUpdated.data
+#             product_price = form.productPrice.data 
+#             product_quantity = form.productQuantity.data 
+#             product_created_date = form.productCreatedDate.data 
+#             product_last_updated_date = form.productLastUpdated.data 
 #             image_data = form.image_url.data.read()
-#             create_product = Product(name=product_name, description=product_description, category_id=product_category_id,
-#                                  price=product_price, quantity=product_quantity, created_date=product_created_date,
+#             create_product = Product(name=product_name, description=product_description, category_id=product_category_id, 
+#                                  price=product_price, quantity=product_quantity, created_date=product_created_date, 
 #                                  last_updated=product_last_updated_date, image=image_data)
 #             db.session.add(create_product)
 #             db.session.commit()
@@ -722,11 +776,11 @@ def orderDetails():
 #         # Log the exception
 #         print(f'Error: {e}')
 #         flash('An error occurred. Please try again later.', 'danger')
-#         return redirect(url_for('main.sellerDashboard'))
+#         return redirect(url_for('main.sellerDashboard'))          
 
 #     return render_template('sellerNewProduct.html', form=form)
 
-@main.route('/newProduct', methods=['GET', 'POST'])
+@main.route('/newProduct', methods=['GET','POST'])
 @login_required
 def newProduct():
     print("Initializing CreateProductForm")
@@ -745,7 +799,7 @@ def newProduct():
     if not merchant:
         flash('No merchant found for the current user.', 'danger')
         return redirect(url_for('main.sellerDashboard'))
-
+        
     # Prepopulate the merchant_id field
     form.merchant_id.data = merchant.merchant_id
 
@@ -769,7 +823,7 @@ def newProduct():
             last_updated_date = singapore_time
 
             print(f"Creating product with name: {product_name}, description: {product_description}, "
-                  f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {product_availability}")
+                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {product_availability}")
 
             create_product = Product.create(
                 name=product_name,
@@ -780,7 +834,7 @@ def newProduct():
                 availability=product_availability,
                 image_url=image_data,
                 merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
-                created_date=created_date,
+                created_date = created_date,
                 last_updated_date=last_updated_date
             )
 
@@ -797,7 +851,6 @@ def newProduct():
 
     print("Rendering new product form")
     return render_template('sellerNewProduct.html', form=form)
-
 
 @main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -816,7 +869,7 @@ def updateProduct(product_id):
     if not merchant:
         flash('No merchant found for the current user.', 'danger')
         return redirect(url_for('main.sellerDashboard'))
-
+        
     # Prepopulate the merchant_id field
     form.merchant_id.data = merchant.merchant_id
     if request.method == 'GET':
@@ -848,7 +901,7 @@ def updateProduct(product_id):
             image_url = form.image_url.data
             filename = secure_filename(image_url.filename)
             product.image_url = image_url.read()
-
+       
         print(f"Updating product: {product.__dict__}")
         db.session.commit()
         print("Product updated and committed to the database")
@@ -860,7 +913,6 @@ def updateProduct(product_id):
         print(form.errors)
 
     return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
-
 
 @main.route('/deleteProduct/<int:product_id>', methods=['POST'])
 @login_required
@@ -882,3 +934,4 @@ def session_info():
         return f"Session active for user_id: {user_id}"
     else:
         return "No active session"
+

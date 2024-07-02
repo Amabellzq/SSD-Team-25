@@ -1,6 +1,3 @@
-import socket
-import time
-
 from flask import Flask
 from config import Config
 from .routes import main
@@ -15,24 +12,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key-if-none-found')
 app.config['DEBUG'] = True  # Enable debug mode
-def wait_for_db(host, port):
-    retries = 5
-    while retries > 0:
-        try:
-            # Attempt to create a socket connection to the database
-            sock = socket.create_connection((host, port), timeout=5)
-            sock.close()
-            print("Database is up and running.")
-            break
-        except (socket.timeout, socket.error) as e:
-            print(f"Database not ready yet. Retrying... ({retries} attempts left)")
-            retries -= 1
-            time.sleep(5)
-    if retries == 0:
-        raise Exception("Database is not reachable. Exiting.")
 
-# Wait for the database to be ready
-wait_for_db('db', 3306)  # 'db' is the service name defined in docker-compose.yml
 # Initialize SQLAlchemy
 db.init_app(app)
 

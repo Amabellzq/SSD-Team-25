@@ -1,11 +1,10 @@
-Flask==3.0.3
+Flask~=3.0.3
 python-dotenv~=1.0.1
 PyMySQL
-gunicorn== 22.0.0
+gunicorn ~= 22.0.0
 SQLAlchemy
 Flask-SQLAlchemy
-Flask-Login
-Flask-Principal
-Flask-Session
-bcrypt
 Flask-Bootstrap==3.3.7.1
+Flask-Session ~= 0.8.0
+pyotp
+qrcode[pil]
