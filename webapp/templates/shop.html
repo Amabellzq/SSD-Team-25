@@ -59,7 +59,7 @@
                                                 </ul>
                                             </div>
                                             <div class="product__item__text">
-                                                <h6><a href="#">{{ product.name }}</a></h6>
+                                                <h6><a href="url_for('main.productDetails', product_id=product['product_id'])">{{ product.name }}</a></h6>
                                                 <div class="product__price">${{ product.price }}</div>
                                             </div>
                                         </div>

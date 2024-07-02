@@ -121,7 +121,11 @@ def contact():
 
 @main.route('/productDetails')
 def productDetails():
-    return render_template('product-details.html')
+    product_id = request.args.get('product_id', type=int)
+    if not product_id:
+        return "Product ID not provided", 400
+    product = Product.query.get_or_404(product_id)
+    return render_template('product-details.html', product=product)
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
