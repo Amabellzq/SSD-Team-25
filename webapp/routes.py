@@ -204,9 +204,10 @@ def login():
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
-            print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-
-             # Check user role and merchant ID
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            db.session.commit()
+            print(f"Session started with user_id: {session.get('user_id')} and session ID: {session.sid}")  # Debug statement
+            # Check user role and merchant ID
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
@@ -215,9 +216,7 @@ def login():
                 else:
                     print('No merchant found for the current user.')  # Debug statement
                     return redirect(url_for('main.register_business'))
-                
             return redirect(url_for('main.home'))
-
         else:
             flash('Invalid username or password', 'danger')
             print('Invalid username or password')  # Debug statement
