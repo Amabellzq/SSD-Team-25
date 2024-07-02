@@ -203,6 +203,7 @@ def login():
         else:
             print(f'User not found: {username}')  # Debug statement
         if user and check_password_hash(user.password, password):
+            session['user_id'] = user.get_id()
             return redirect(url_for('main.totp'))
         else:
             flash('Invalid username or password', 'danger')
