@@ -68,11 +68,11 @@
             </div>
             <div class="field">
                 {{ register_form.password(class="form-control", required=True) }}
-                {% if register_form.password.errors %}
+                <!-- {% if register_form.password.errors %}
                     {% for error in register_form.password.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
-                {% endif %}
+                {% endif %} -->
                 <label>{{ register_form.password.label.text }}</label>
                 <!-- {{ register_form.password.label(class="form-label") }} -->
             </div>

@@ -28,6 +28,7 @@ RUN pip install flask-login
 # Command to install WTF forms
 RUN pip install Flask-WTF
 
+RUN pip install requests
 
 # Copy the rest of the application code into the image
 COPY . .
