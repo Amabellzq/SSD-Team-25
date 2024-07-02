@@ -5,10 +5,12 @@ from flask_login import LoginManager
 from .models import db, User  # Import your user model
 from flask_session import Session
 from datetime import timedelta
+import base64
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config['SECRET_KEY'] = 'ssdT25'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key-if-none-found')
 app.config['DEBUG'] = True  # Enable debug mode
 
 # Initialize SQLAlchemy
@@ -36,6 +38,13 @@ app.register_blueprint(main)
 # Create database tables
 # with app.app_context():
 #    db.create_all()
+
+# Define the base64 encode filter
+def b64encode(value):
+    return base64.b64encode(value).decode('utf-8')
+
+# Register the filter
+app.jinja_env.filters['b64encode'] = b64encode
 
 # To ensure no circular import issues
 from .routes import main
