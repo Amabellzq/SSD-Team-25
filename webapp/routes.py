@@ -265,7 +265,6 @@ def totp():
         totp_code = request.form['totp']
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
-            login_user(user)
             # Invalidate previous session by setting a new session token
             session.clear()  # Clear any existing session data
             login_user(user)
