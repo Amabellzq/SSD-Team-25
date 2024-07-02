@@ -7,8 +7,6 @@ pipeline {
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
-        CRT_FILE = credentials('CRT_CERT')
-        KEY_FILE = credentials('SSL_KEY')
 
     }
 
@@ -138,22 +136,26 @@ pipeline {
     	    }
         }
 
-                stage('Prepare SSL Certificates') {
+        stage('Prepare SSL Certificates') {
             steps {
-                script {
-                 dir(REPO_DIR) {
-                    // Ensure the nginx directory exists
-                    sh 'mkdir -p nginx'
+                withCredentials([
+                    file(credentialsId: 'CRT_CERT', variable: 'CRT_FILE'),
+                    file(credentialsId: 'SSL_KEY', variable: 'KEY_FILE')
+                ]) {
+                    script {
+                        dir(REPO_DIR) {
+                            // Ensure the nginx directory exists
+                            sh 'mkdir -p nginx'
 
-                    // Write the secret files to the nginx directory
-                    writeFile file: 'nginx/nginx-selfsigned.crt', text: env.CRT_FILE
-                    writeFile file: 'nginx/nginx-selfsigned.key', text: env.KEY_FILE
+                            // Copy the secret files to the nginx directory
+                            sh "cp ${CRT_FILE} nginx/nginx-selfsigned.crt"
+                            sh "cp ${KEY_FILE} nginx/nginx-selfsigned.key"
 
-                    // Ensure proper file permissions
-                    sh 'chmod 600 nginx/nginx-selfsigned.crt nginx/nginx-selfsigned.key'
+                            // Ensure proper file permissions
+                            sh 'chmod 600 nginx/nginx-selfsigned.crt nginx/nginx-selfsigned.key'
+                        }
                     }
                 }
-
             }
         }
 
