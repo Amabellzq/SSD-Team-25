@@ -9,7 +9,7 @@ COPY nginx-selfsigned.crt /etc/ssl/certs/nginx-selfsigned.crt
 COPY nginx-selfsigned.key /etc/ssl/private/nginx-selfsigned.key
 
 # Expose port 80 to the outside world
-EXPOSE 80
+EXPOSE 80 443
 
 # Start Nginx when the container launches
 CMD ["nginx", "-g", "daemon off;"]
