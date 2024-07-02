@@ -1,19 +1,20 @@
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from flask_mail import Mail, Message
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
 from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+import pyotp
+import qrcode
+from io import BytesIO
+from PIL import Image
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
-
-mail = Mail()
 
 
 @login_manager.user_loader
@@ -99,7 +100,6 @@ def checkout():
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
 
-
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -109,25 +109,32 @@ def login():
         print('Form validated successfully')  # Debug statement
         username = form.username.data
         password = form.password.data
-        print(f'Attempting to log in user: {username}')  # Debug statement
-
         user = User.get_by_username(username)
+        print(f'Attempting to log in user: {username}')  # Debug statement
+        
         if user:
             print(f'User found: {user.username}')  # Debug statement
         else:
             print(f'User not found: {username}')  # Debug statement
 
         if user and check_password_hash(user.password, password):
-             if user.is_verified:
-                verification_code = user.generate_verification_code()
+            session['user_id'] = user.get_id()
+            return redirect(url_for('main.totp'))
+        else:
+            flash('Invalid username or password', 'danger')
+    return render_template('login.html', login_form=form)
+            
+            # totp = pyotp.TOTP(user.totp_secret)
+            # if totp.verify(totp_code):
+            #     login_user(user)  # Log the user in if TOTP is verified
+            #     print(f'Login successful for user: {user.username}')  # Debug statement
+            #     session['user_id'] = user.get_id()  # Store user ID in session
+            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+            #     return redirect(url_for('main.home'))
+            # else:
+            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
+            #     print('Invalid TOTP code')  # Debug statement
                 
-                # Send verification email
-                msg = Message('Your Login Verification Code', sender=current_app.config['MAIL_USERNAME'], recipients=[user.email])
-                msg.body = f'Your verification code is {verification_code}'
-                mail.send(msg)
-
-                session['email'] = user.email
-                return redirect(url_for('login_verify.html'))
             # # Redirect based on role
             # if user.role == 'Admin':
             #     print('Redirecting to admin dashboard')  # Debug statement
@@ -138,16 +145,47 @@ def login():
             # else:
             #     print('Redirecting to home page')  # Debug statement
             #     return redirect(url_for('main.home'))
-        else:
-            flash('Invalid username or password', 'danger')
-            print('Invalid username or password')  # Debug statement
-    else:
-        if request.method == 'POST':
-            print('Form validation failed')  # Debug statement
-        else:
-            print('GET request')  # Debug statement
+    #     else:
+    #         flash('Invalid username or password', 'danger')
+    #         print('Invalid username or password')  # Debug statement
+    # else:
+    #     if request.method == 'POST':
+    #         print('Form validation failed')  # Debug statement
+    #     else:
+    #         print('GET request')  # Debug statement
 
-    return render_template('login.html', login_form=form)
+    # return render_template('login.html', login_form=form)
+    
+    
+    # Route to generate TOTP QR code and verify TOTP code
+@main.route('/totp', methods=['GET', 'POST'])
+def totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = User.get(user_id)
+    if not user.totp_secret:
+        user.totp_secret = pyotp.random_base32()
+        db.session.commit()
+
+    otp_uri = pyotp.totp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    img = qrcode.make(otp_uri,box_size=8,border=3)
+    buf = BytesIO()
+    img.save(buf)
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+
+    if request.method == 'POST':
+        totp_code = request.form['totp']
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            return redirect(url_for('main.home'))
+        else:
+            flash('Invalid TOTP code', 'danger')
+
+    return render_template('totp.html', img_b64=img_b64)
 
 
 @main.route('/logout')
@@ -181,17 +219,6 @@ def register():
                 try:
                     # Create the new user
                     new_user = User.create(username=username, email=email, password=hashed_password, role=role)
-                    
-                    verification_code = new_user.generate_verification_code()
-
-                    # Send verification email
-
-                    msg = Message('Your Verification Code', sender=current_app.config['MAIL_USERNAME'], recipients=[email])
-                    msg.body = f'Your verification code is {verification_code}'
-                    mail.send(msg)
-                    
-                    session['email'] = email
-                    flash('Registration successful! Check your email for the verification code.', 'success')
 
                     registration_successful = True
                     flash('Registeration Successful', 'success')
@@ -210,49 +237,6 @@ def register():
                     flash(f'{field.label.text}: {error}', 'danger')
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
-
-
-@main.route('/verify', methods=['GET', 'POST'])
-def verify():
-    if 'email' not in session:
-        return redirect(url_for('main.register'))
-
-    if request.method == 'POST':
-        code = request.form['code']
-        user = User.query.filter_by(email=session['email']).first()
-
-        if user and user.verify_code(code):
-            user.is_verified = True
-            user.verification_code = None
-            user.verification_expiry = None
-            db.session.commit()
-            flash('Your account is verified!', 'success')
-            return redirect(url_for('main.login'))
-        else:
-            flash('Invalid verification code', 'danger')
-
-    return render_template('verify.html')
-
-@main.route('/login_verify', methods=['GET', 'POST'])
-def login_verify():
-    if 'email' not in session:
-        return redirect(url_for('main.login'))
-
-    if request.method == 'POST':
-        code = request.form['code']
-        user = User.query.filter_by(email=session['email']).first()
-
-        if user and user.verify_code(code):
-            login_user(user)
-            user.verification_code = None
-            user.verification_expiry = None
-            db.session.commit()
-            flash('You are logged in!', 'success')
-            return redirect(url_for('main.home'))
-        else:
-            flash('Invalid verification code', 'danger')
-
-    return render_template('login_verify.html')
 
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
@@ -590,7 +574,7 @@ def sellerDashboard():
     orders = Order.query.all()
 
     # Retrieve products
-    products = Product.query.all()
+    products = Product.query.filter_by(merchant_id=merchant.merchant_id).all()    
     for product in products:
         if product.image_url:
             product.image_url = base64.b64encode(product.image_url).decode('utf-8')
@@ -749,7 +733,7 @@ def orderDetails():
 
 #     return render_template('sellerNewProduct.html', form=form)
 
-@main.route('/newProduct')
+@main.route('/newProduct', methods=['GET','POST'])
 @login_required
 def newProduct():
     print("Initializing CreateProductForm")
@@ -776,7 +760,7 @@ def newProduct():
             product_category_id = form.productCategoryID.data
             product_price = form.productPrice.data
             product_quantity = form.productQuantity.data
-            availability = form.Availability.data
+            product_availability = form.availability.data
             image_data = form.image_url.data.read()  # Read image file as binary data
 
             # Calculate Singapore time (UTC+8)
@@ -786,7 +770,7 @@ def newProduct():
             last_updated_date = singapore_time
 
             print(f"Creating product with name: {product_name}, description: {product_description}, "
-                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {availability}")
+                f"category_id: {product_category_id}, price: {product_price}, quantity: {product_quantity}, availability: {product_availability}")
 
             create_product = Product.create(
                 name=product_name,
@@ -794,7 +778,7 @@ def newProduct():
                 category_id=product_category_id,
                 price=product_price,
                 quantity=product_quantity,
-                availability=availability,
+                availability=product_availability,
                 image_url=image_data,
                 merchant_id=merchant.merchant_id,  # Use merchant_id from the Merchant table
                 created_date = created_date,
@@ -815,24 +799,31 @@ def newProduct():
     print("Rendering new product form")
     return render_template('sellerNewProduct.html', form=form)
 
-@main.route('/updateProduct/<int:product_id>', methods=['GET','POST'])
+@main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def updateProduct(product_id):
     form = UpdateProductForm()
     product = Product.query.get(product_id)
+    form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
+    image_url = None
 
     if not product:
         flash('Product not found', 'danger')
         return redirect(url_for('main.sellerDashboard'))
 
-    image_url = None
+    # Retrieve the merchant_id for the current user
+    merchant = Merchant.query.filter_by(user_id=current_user.user_id).first()
+    if not merchant:
+        flash('No merchant found for the current user.', 'danger')
+        return redirect(url_for('main.sellerDashboard'))
+        
+    # Prepopulate the merchant_id field
+    form.merchant_id.data = merchant.merchant_id
     if request.method == 'GET':
-        form.productID.data = product.product_id
         if product.image_url:
             image_url = base64.b64encode(product.image_url).decode('utf-8')
         form.productName.data = product.name
         form.productDescription.data = product.description
-        form.productCategoryID.choices = [(c.category_id, c.name) for c in Category.query.all()]
         form.productCategoryID.data = product.category_id
         form.productPrice.data = product.price
         form.productQuantity.data = product.quantity
@@ -846,10 +837,14 @@ def updateProduct(product_id):
         product.category_id = form.productCategoryID.data
         product.price = form.productPrice.data
         product.quantity = form.productQuantity.data
-        product.created_date = form.productCreatedDate.data
-        product.last_updated_date = form.productLastUpdated.data
+        product.availability = form.availability.data
 
-        if product.image_url.data:
+        # Calculate Singapore time (UTC+8)
+        utc_now = datetime.utcnow()
+        singapore_time = utc_now + timedelta(hours=8)
+        product.last_updated_date = singapore_time
+
+        if form.image_url.data:
             image_url = form.image_url.data
             filename = secure_filename(image_url.filename)
             product.image_url = image_url.read()
@@ -865,7 +860,6 @@ def updateProduct(product_id):
         print(form.errors)
 
     return render_template('sellerUpdateProduct.html', form=form, image_url=image_url, product_id=product_id)
-
 
 @main.route('/deleteProduct/<int:product_id>', methods=['POST'])
 @login_required

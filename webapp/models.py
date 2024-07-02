@@ -17,9 +17,7 @@ class User(UserMixin, db.Model):
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
-    is_verified = db.Column(db.Boolean, default=False)
-    verification_code = db.Column(db.String(6), nullable=True)
-    verification_expiry = db.Column(db.DateTime, nullable=True)
+    totp_secret = db.Column(db.String(64), nullable=True)  # Added field for TOTP secret
 
     def get_id(self):
         return str(self.user_id)
@@ -57,13 +55,6 @@ class User(UserMixin, db.Model):
             db.session.commit()
             return user
         return None
-    
-    
-    def generate_verification_code(self):
-        self.verification_code = str(random.randint(100000, 999999))
-        self.verification_expiry = datetime.utcnow() + timedelta(minutes=10)
-        db.session.commit()
-        return self.verification_code
 
 class Administrator(db.Model):
     __tablename__ = 'Administrator'
