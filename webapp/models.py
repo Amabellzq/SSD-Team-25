@@ -4,6 +4,7 @@ from flask_login import UserMixin
 
 db = SQLAlchemy()
 
+
 class User(UserMixin, db.Model):
     __tablename__ = 'User'
     user_id = db.Column(db.Integer, primary_key=True)
@@ -13,6 +14,7 @@ class User(UserMixin, db.Model):
     profile_pic_url = db.Column(db.LargeBinary)
     role = db.Column(db.Enum('Admin', 'Merchant', 'Customer'), nullable=False)
     account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
+    active_session_token = db.Column(db.String(255), nullable=True)  # Add this line
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
@@ -20,7 +22,7 @@ class User(UserMixin, db.Model):
 
     def get_id(self):
         return str(self.user_id)
-    
+
     @staticmethod
     def get(user_id):
         return User.query.get(user_id)
@@ -30,7 +32,7 @@ class User(UserMixin, db.Model):
         return User.query.filter_by(username=username).first()
 
     @staticmethod
-    def create(username,email, password, role):
+    def create(username, email, password, role):
         new_user = User(username=username, email=email, password=password, role=role, account_status='Active')
         db.session.add(new_user)
         db.session.commit()
@@ -54,6 +56,7 @@ class User(UserMixin, db.Model):
             db.session.commit()
             return user
         return None
+
 
 class Administrator(db.Model):
     __tablename__ = 'Administrator'
@@ -80,6 +83,7 @@ class Administrator(db.Model):
             return True
         return False
 
+
 class Merchant(db.Model):
     __tablename__ = 'Merchant'
     merchant_id = db.Column(db.Integer, primary_key=True)
@@ -99,16 +103,16 @@ class Merchant(db.Model):
         # Calculate the current time in UTC+8
         current_time_utc_plus_8 = datetime.utcnow() + timedelta(hours=8)
         new_merchant = Merchant(
-            user_id=user_id, 
-            business_name=business_name, 
-            business_address=business_address, 
+            user_id=user_id,
+            business_name=business_name,
+            business_address=business_address,
             account_status=account_status,
             approved_date=current_time_utc_plus_8
         )
         db.session.add(new_merchant)
         db.session.commit()
         return new_merchant
-    
+
     @staticmethod
     def delete(merchant_id):
         merchant = Merchant.get(merchant_id)
@@ -127,6 +131,7 @@ class Merchant(db.Model):
             db.session.commit()
             return merchant
         return None
+
 
 class ShoppingCart(db.Model):
     __tablename__ = 'ShoppingCart'
@@ -166,6 +171,7 @@ class ShoppingCart(db.Model):
             return cart
         return None
 
+
 class CartItem(db.Model):
     __tablename__ = 'CartItem'
     cart_item_id = db.Column(db.Integer, primary_key=True)
@@ -204,6 +210,7 @@ class CartItem(db.Model):
             return cart_item
         return None
 
+
 class Product(db.Model):
     __tablename__ = 'Product'
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -223,7 +230,8 @@ class Product(db.Model):
         return Product.query.get(product_id)
 
     @staticmethod
-    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id, created_date, last_updated_date):
+    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id, created_date,
+               last_updated_date):
         new_product = Product(
             name=name,
             description=description,
@@ -258,6 +266,7 @@ class Product(db.Model):
             db.session.commit()
             return product
         return None
+
 
 class Category(db.Model):
     __tablename__ = 'Category'
@@ -296,6 +305,7 @@ class Category(db.Model):
             return category
         return None
 
+
 class Order(db.Model):
     __tablename__ = 'Order'
     order_id = db.Column(db.Integer, primary_key=True)
@@ -314,7 +324,8 @@ class Order(db.Model):
 
     @staticmethod
     def create(user_id, merchant_id, total_price, collection_status):
-        new_order = Order(user_id=user_id, merchant_id=merchant_id, total_price=total_price, collection_status=collection_status)
+        new_order = Order(user_id=user_id, merchant_id=merchant_id, total_price=total_price,
+                          collection_status=collection_status)
         db.session.add(new_order)
         db.session.commit()
         return new_order
@@ -328,6 +339,7 @@ class Order(db.Model):
             db.session.commit()
             return order
         return None
+
 
 class OrderItem(db.Model):
     __tablename__ = 'OrderItem'
@@ -358,6 +370,7 @@ class OrderItem(db.Model):
             return order_item
         return None
 
+
 class Payment(db.Model):
     __tablename__ = 'Payment'
     payment_id = db.Column(db.Integer, primary_key=True)
@@ -373,7 +386,8 @@ class Payment(db.Model):
 
     @staticmethod
     def create(order_id, payment_method, amount, payment_status):
-        new_payment = Payment(order_id=order_id, payment_method=payment_method, amount=amount, payment_status=payment_status)
+        new_payment = Payment(order_id=order_id, payment_method=payment_method, amount=amount,
+                              payment_status=payment_status)
         db.session.add(new_payment)
         db.session.commit()
         return new_payment

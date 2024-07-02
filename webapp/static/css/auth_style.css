@@ -154,3 +154,17 @@ form .signup-link a:hover{
 .wrapper form .field select:valid {
   border-color: #4158d0;
 }
+
+/* REGISTERATION FILE INPUT */
+.center-align {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.field input[type="file"] {
+  display: block;
+  margin: 0 auto;
+}

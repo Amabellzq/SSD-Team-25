@@ -47,6 +47,15 @@
                                 {% endif %}
                             </div>
                             <div class="form-group">
+                                {{ accountDetails.email.label(class="form-label") }}
+                                {{ accountDetails.email(class="form-control") }}
+                                {% if accountDetails.email.errors %}
+                                    {% for error in accountDetails.email.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
                                 {{ accountDetails.role.label(class="form-label") }}
                                 {{ accountDetails.role(class="form-control", readonly=True) }}
                             </div>
@@ -74,8 +83,6 @@
                     <div class="col-lg-12 mix businessDetails" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
                             <h3>Business Details</h3>
-                            <button class="btn btn-primary" onclick="location.href='/register_business';"
-                            style="background-color: #09054a; border-color: #09054a;">Register Business Details</button>
                         </div>
                         
                         <form method="POST" action="{{ url_for('main.update_business') }}">
@@ -103,6 +110,7 @@
                     </div>
                 
                     <div class="col-lg-12 mix Orders"  style="display: none;"> <!-- Ensure this is initially hidden -->
+                        
                         <h3>Orders</h3>
                         <table class="table">
                             <thead>
@@ -129,8 +137,13 @@
                     </div>
 
                     <div class="col-lg-12 mix Products"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h3>Products Listed</h3>
-                        <button class="btn btn-primary" onclick="location.href='/newProduct';">Add</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>Products Listed</h3>
+                            <button class="btn btn-primary" onclick="location.href='/newProduct';"
+                             style="background-color: #09054a; border-color: #09054a;">Add</button>
+                        </div>
+
+                        
                         <table class="table">
                             <thead>
                                 <tr>
@@ -144,7 +157,7 @@
                                     <th>Availability</th>
                                     <th>Date Created</th>
                                     <th>Last Updated</th>
-                                    <th>Actions</th>
+                                    <th colspan="2">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
