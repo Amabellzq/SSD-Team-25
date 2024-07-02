@@ -7,6 +7,9 @@ pipeline {
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
+        CRT_FILE = credentials('CRT_CERT')
+        KEY_FILE = credentials('SSL_KEY')
+
     }
 
       stages {
@@ -79,7 +82,7 @@ pipeline {
 //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
 //             }
 //         }
- 
+
 
         stage('Code Analysis with Flake8') {
             steps {
@@ -134,7 +137,26 @@ pipeline {
                 }
     	    }
         }
-              
+
+                stage('Prepare SSL Certificates') {
+            steps {
+                script {
+                 dir(REPO_DIR) {
+                    // Ensure the nginx directory exists
+                    sh 'mkdir -p nginx'
+
+                    // Write the secret files to the nginx directory
+                    writeFile file: 'nginx/nginx-selfsigned.crt', text: env.CRT_FILE
+                    writeFile file: 'nginx/nginx-selfsigned.key', text: env.KEY_FILE
+
+                    // Ensure proper file permissions
+                    sh 'chmod 600 nginx/nginx-selfsigned.crt nginx/nginx-selfsigned.key'
+                    }
+                }
+
+            }
+        }
+
 
         stage('Build and Deploy') {
             steps {
