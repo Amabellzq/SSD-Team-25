@@ -7,6 +7,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import base64
 from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+import pyotp
+import qrcode
+from io import BytesIO
+from PIL import Image
 from functools import wraps
 
 main = Blueprint('main', __name__)
@@ -182,7 +186,6 @@ def checkout():
         return redirect(url_for('main.order_confirmation'))
     return render_template('checkout.html', checkout_form=form)
 
-
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -192,13 +195,78 @@ def login():
         print('Form validated successfully')  # Debug statement
         username = form.username.data
         password = form.password.data
-        print(f'Attempting to log in user: {username}')  # Debug statement
         user = User.get_by_username(username)
+        print(f'Attempting to log in user: {username}')  # Debug statement
+        
         if user:
             print(f'User found: {user.username}')  # Debug statement
         else:
             print(f'User not found: {username}')  # Debug statement
         if user and check_password_hash(user.password, password):
+            session['user_id'] = user.get_id()
+            return redirect(url_for('main.totp'))
+        else:
+            flash('Invalid username or password', 'danger')
+    return render_template('login.html', login_form=form)
+            
+            # totp = pyotp.TOTP(user.totp_secret)
+            # if totp.verify(totp_code):
+            #     login_user(user)  # Log the user in if TOTP is verified
+            #     print(f'Login successful for user: {user.username}')  # Debug statement
+            #     session['user_id'] = user.get_id()  # Store user ID in session
+            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+            #     return redirect(url_for('main.home'))
+            # else:
+            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
+            #     print('Invalid TOTP code')  # Debug statement
+                
+            # # Redirect based on role
+            # if user.role == 'Admin':
+            #     print('Redirecting to admin dashboard')  # Debug statement
+            #     return redirect(url_for('main.adminDashboard'))
+            # elif user.role == 'Merchant':
+            #     print('Redirecting to seller dashboard')  # Debug statement
+            #     return redirect(url_for('main.sellerDashboard'))
+            # else:
+            #     print('Redirecting to home page')  # Debug statement
+            #     return redirect(url_for('main.home'))
+    #     else:
+    #         flash('Invalid username or password', 'danger')
+    #         print('Invalid username or password')  # Debug statement
+    # else:
+    #     if request.method == 'POST':
+    #         print('Form validation failed')  # Debug statement
+    #     else:
+    #         print('GET request')  # Debug statement
+
+    # return render_template('login.html', login_form=form)
+    
+    
+    # Route to generate TOTP QR code and verify TOTP code
+@main.route('/totp', methods=['GET', 'POST'])
+def totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = User.get(user_id)
+    if not user.totp_secret:
+        user.totp_secret = pyotp.random_base32()
+        db.session.commit()
+
+    otp_uri = pyotp.totp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    img = qrcode.make(otp_uri,box_size=8,border=3)
+    buf = BytesIO()
+    img.save(buf)
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+
+    if request.method == 'POST':
+        totp_code = request.form['totp']
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            return redirect(url_for('main.home'))
             # Invalidate previous session by setting a new session token
             session.clear()  # Clear any existing session data
             login_user(user)
@@ -224,8 +292,9 @@ def login():
         if request.method == 'POST':
             print('Form validation failed')  # Debug statement
         else:
-            print('GET request')  # Debug statement
-    return render_template('login.html', login_form=form)
+            flash('Invalid TOTP code', 'danger')
+
+    return render_template('totp.html', img_b64=img_b64)
 
 
 @main.route('/logout')
