@@ -8,7 +8,6 @@ import base64
 from datetime import datetime, timedelta
 from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
 from functools import wraps
-from flask import request
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -20,8 +19,9 @@ def session_required(f):
     def decorated_function(*args, **kwargs):
         user = current_user
         if user.is_authenticated:
-            if user.active_session_token != request.cookies.get('session_token'):
+            if user.active_session_token != session.sid:
                 logout_user()
+                session.clear()
                 return redirect(url_for('main.login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -128,20 +128,16 @@ def login():
             print(f'User found: {user.username}')  # Debug statement
         else:
             print(f'User not found: {username}')  # Debug statement
-
         if user and check_password_hash(user.password, password):
-            # Generate a new session token
-            new_session_token = secrets.token_urlsafe()
-            # Invalidate previous session
-            user.active_session_token = new_session_token
-            db.session.commit()
+            # Invalidate previous session by setting a new session token
+            session.clear()  # Clear any existing session data
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            response = redirect(url_for('main.home'))
-            response.set_cookie('session_token', new_session_token)
-            return response
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            db.session.commit()
+            return redirect(url_for('main.home'))
             # # Redirect based on role
             # if user.role == 'Admin':
             #     print('Redirecting to admin dashboard')  # Debug statement
@@ -160,7 +156,6 @@ def login():
             print('Form validation failed')  # Debug statement
         else:
             print('GET request')  # Debug statement
-
     return render_template('login.html', login_form=form)
 
 
@@ -171,6 +166,7 @@ def logout():
         user.active_session_token = None
         db.session.commit()
     logout_user()
+    session.clear()  # Clear the session
     return redirect(url_for('main.home'))
 
 
