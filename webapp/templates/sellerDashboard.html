@@ -47,6 +47,15 @@
                                 {% endif %}
                             </div>
                             <div class="form-group">
+                                {{ accountDetails.email.label(class="form-label") }}
+                                {{ accountDetails.email(class="form-control") }}
+                                {% if accountDetails.email.errors %}
+                                    {% for error in accountDetails.email.errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
                                 {{ accountDetails.role.label(class="form-label") }}
                                 {{ accountDetails.role(class="form-control", readonly=True) }}
                             </div>
@@ -74,8 +83,6 @@
                     <div class="col-lg-12 mix businessDetails" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
                             <h3>Business Details</h3>
-                            <button class="btn btn-primary" onclick="location.href='/register_business';"
-                            style="background-color: #09054a; border-color: #09054a;">Register Business Details</button>
                         </div>
                         
                         <form method="POST" action="{{ url_for('main.update_business') }}">
@@ -103,33 +110,40 @@
                     </div>
                 
                     <div class="col-lg-12 mix Orders"  style="display: none;"> <!-- Ensure this is initially hidden -->
+                        
                         <h3>Orders</h3>
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Created Date</th>
+                                    <th>Order Date</th>
                                     <th>Total Paid</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#001</td>
-                                    <td>2023-06-01</td>
-                                    <td>$59.0</td>
-                                    <td>Shipped</td>
+                                {% for order in orders %}
+                                <tr id="order-row-{{ order['order_id'] }}">
+                                    <td>{{ order['order_id'] }}</td>
+                                    <td>{{ order['created_date'] }}</td>
+                                    <td>{{ order['total_price'] }}</td>
+                                    <td>{{ order['collection_status'] }}</td>
                                     <td><button class="btn btn-primary" onclick="location.href='/orderDetails';">Manage</button></td>
                                 </tr>
-                                <!-- Additional rows can be added here -->
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
                     <div class="col-lg-12 mix Products"  style="display: none;"> <!-- Ensure this is initially hidden -->
-                        <h3>Products Listed</h3>
-                        <button class="btn btn-primary" onclick="location.href='/newProduct';">Add</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>Products Listed</h3>
+                            <button class="btn btn-primary" onclick="location.href='/newProduct';"
+                             style="background-color: #09054a; border-color: #09054a;">Add</button>
+                        </div>
+
+                        
                         <table class="table">
                             <thead>
                                 <tr>
@@ -143,28 +157,43 @@
                                     <th>Availability</th>
                                     <th>Date Created</th>
                                     <th>Last Updated</th>
+                                    <th colspan="2">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#001</td>
-                                    <td>Sponge</td>
-                                    <td><img src="https://m.media-amazon.com/images/I/81diqTAjKBL._AC_UF894,1000_QL80_.jpg"></td>
-                                    <td>Its a sponge.</td>
-                                    <td>#1</td>
-                                    <td>$4</td>
-                                    <td>20</td>
-                                    <td>In Stock</td>
-                                    <td>4/7/23</td>
-                                    <td>24/6/24</td>
-                                    <td><button class="btn btn-primary" onclick="location.href='/updateProduct';">Update</button></td>
-                                    <td><button class="btn btn-primary">Remove</button></td>
+                                {% for product in products %}
+                                <tr id="product-row-{{ product['product_id'] }}">
+                                    <td>{{ product['product_id'] }}</td>
+                                    <td>{{ product['name'] }}</td>
+                                    <td>
+                                        {% if product['image_url'] %}
+                                            <img src="data:image/jpeg;base64,{{ product['image_url'] }}" alt="Product Image" style="width: 100px; height: 100px;"/>
+                                        {% else %}
+                                            No Image
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product['description'] }}</td>
+                                    <td>{{ product['category_id'] }}</td>
+                                    <td>{{ product['price'] }}</td>
+                                    <td>{{ product['quantity'] }}</td>
+                                    <td>{{ product['availability'] }}</td>
+                                    <td>{{ product['created_date'] }}</td>
+                                    <td>{{ product['last_updated_date'] }}</td>
+                                    <td>
+                                        <form action="{{ url_for('main.updateProduct', product_id=product['product_id']) }}" method="GET" style="display:inline;">
+                                            <button class="btn btn-primary">Edit</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('main.delete_product', product_id=product['product_id']) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                            <button class="btn btn-primary">Remove</button>
+                                        </form>
+                                    </td>
                                 </tr>
-                                <!-- Additional rows can be added here -->
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <!-- INSERT MORE ITEMS FROM HERE ONWARDS -->
                 </div>
             </div>
         </div>

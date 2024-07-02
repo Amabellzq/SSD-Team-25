@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     profile_pic_url = db.Column(db.LargeBinary)
     role = db.Column(db.Enum('Admin', 'Merchant', 'Customer'), nullable=False)
     account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
+    active_session_token = db.Column(db.String(255), nullable=True)
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
@@ -206,27 +207,36 @@ class CartItem(db.Model):
 
 class Product(db.Model):
     __tablename__ = 'Product'
-    product_id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255))
     description = db.Column(db.String(255))
     category_id = db.Column(db.Integer, db.ForeignKey('Category.category_id'))
     price = db.Column(db.Numeric(10, 2))
     quantity = db.Column(db.Integer)
     availability = db.Column(db.Enum('In Stock', 'Out of Stock'))
-    image = db.Column(db.LargeBinary, nullable=True)  # Ensure this column is defined as LargeBinary
+    image_url = db.Column(db.LargeBinary, nullable=True)  # Ensure this column is defined as LargeBinary
     merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated_date = db.Column(db.DateTime)
-    order_items = db.relationship('OrderItem', backref='product')
-    cart_items = db.relationship('CartItem', backref='product')
 
     @staticmethod
     def get(product_id):
         return Product.query.get(product_id)
 
     @staticmethod
-    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id):
-        new_product = Product(name=name, description=description, category_id=category_id, price=price, quantity=quantity, availability=availability, image_url=image_url, merchant_id=merchant_id)
+    def create(name, description, category_id, price, quantity, availability, image_url, merchant_id, created_date, last_updated_date):
+        new_product = Product(
+            name=name,
+            description=description,
+            category_id=category_id,
+            price=price,
+            quantity=quantity,
+            availability=availability,
+            image_url=image_url,
+            merchant_id=merchant_id,
+            created_date=created_date,
+            last_updated_date=last_updated_date
+        )
         db.session.add(new_product)
         db.session.commit()
         return new_product

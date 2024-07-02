@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
 import re
 import requests, hashlib
@@ -105,6 +105,7 @@ class CheckoutForm(FlaskForm):
 class AccountDetailsForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     profile_picture = FileField('Profile Picture', validators=[ FileAllowed(['jpg', 'png'], 'Images only!')])
+    email = StringField('Email', validators=[DataRequired(), Regexp(r'^\S+@\S+\.\S+$', message="Invalid Email")])    
     role = SelectField('Role', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
     account_status = SelectField('Account Status', choices=[('Active', 'Active'), ('Inactive', 'Inactive'), ('Suspended', 'Suspended')], validators=[DataRequired()])
     password = PasswordField('New Password', validators=[Length(min=0, max=40)])
@@ -117,7 +118,7 @@ class EditUserForm(FlaskForm):
     submit = SubmitField('Save')
 
 #############################
-    # ADMIN #
+    # Admin #
 #############################
 
 class CreateCategory(FlaskForm):
@@ -126,7 +127,7 @@ class CreateCategory(FlaskForm):
     saveCategory = SubmitField('Save Category')
 
 #############################
-    # MERCHANT #
+    # Merchant #
 #############################
 
 class RegisterBusinessForm(FlaskForm):
@@ -134,3 +135,29 @@ class RegisterBusinessForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired(), Length(min=4, max=100)])
     business_address = StringField('Business Address', validators=[DataRequired(), Length(min=10, max=255)])
     submit = SubmitField('Submit Details')
+
+class CreateProductForm(FlaskForm):
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    availability = SelectField('Availability', choices=[ ('In Stock', 'In Stock')], validators=[DataRequired()])
+    image_url = FileField('Product Image', validators=[FileRequired(), FileAllowed(['jpg', 'png'], 'Images only!')])
+    merchant_id = IntegerField('Merchant ID', validators=[DataRequired(), NumberRange(min=1)])
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Create')
+
+class UpdateProductForm(FlaskForm):
+    productName = StringField('Product Name', validators=[DataRequired()])
+    productDescription = StringField('Product Description', validators=[DataRequired()])
+    productCategoryID = SelectField('Category', coerce=int, validators=[DataRequired()])
+    productPrice = DecimalField('Price', validators=[DataRequired()])
+    productQuantity = IntegerField('Quantity', validators=[DataRequired()])
+    availability = SelectField('Availability', choices=[ ('In Stock', 'In Stock'), ('Out of Stock', 'Out of Stock')], validators=[DataRequired()])
+    image_url = FileField('Product Image', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
+    merchant_id = IntegerField('Merchant ID', validators=[DataRequired(), NumberRange(min=1)], render_kw={'readonly': True})
+    productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
+    productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
+    submit = SubmitField('Update Product')

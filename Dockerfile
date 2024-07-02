@@ -39,3 +39,4 @@ ENV GUNICORN_CMD_ARGS="--reload"
 # Command to run the application
 CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8000", "webapp:app"]
 
+ENV SECRET_KEY='ssdT25'

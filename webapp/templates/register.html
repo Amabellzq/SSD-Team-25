@@ -13,7 +13,7 @@
                 padding: 10px; /* Optional: add some padding */
             }
             .alert-danger {
-                
+
                 background-color: #ff0000; /* Red background for error messages */
                 border-color: #ff0000; /* Red border for error messages */
             }
@@ -85,7 +85,6 @@
                 {% endif %}
                 <label>{{ register_form.confirm_password.label.text }}</label>
             </div>
-
             <!-- Flash Messages Section -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -98,7 +97,6 @@
                     </div>
                 {% endif %}
             {% endwith %}
-
             <div class="field">
                 {{ register_form.submit(class="btn btn-primary", style="background-color: #09054a; border-color: #09054a;") }}
             </div>
