@@ -203,7 +203,6 @@ def login():
         else:
             print(f'User not found: {username}')  # Debug statement
         if user and check_password_hash(user.password, password):
-            session['user_id'] = user.get_id()
             return redirect(url_for('main.totp'))
         else:
             flash('Invalid username or password', 'danger')
@@ -266,7 +265,6 @@ def totp():
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
-            return redirect(url_for('main.home'))
             # Invalidate previous session by setting a new session token
             session.clear()  # Clear any existing session data
             login_user(user)
