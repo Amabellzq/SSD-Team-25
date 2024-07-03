@@ -148,11 +148,11 @@ pipeline {
                             sh 'mkdir -p nginx'
 
                             // Copy the secret files to the nginx directory
-                            sh "cp ${CRT_FILE} nginx/nginx-selfsigned.crt"
-                            sh "cp ${KEY_FILE} nginx/nginx-selfsigned.key"
+                            sh "cp ${CRT_FILE} nginx/fullchain.crt"
+                            sh "cp ${KEY_FILE} nginx/shoppp.me.key"
 
                             // Ensure proper file permissions
-                            sh 'chmod 600 nginx/nginx-selfsigned.crt nginx/nginx-selfsigned.key'
+                            sh 'chmod 600 nginx/fullchain.crt nginx/shoppp.me.key'
                         }
                     }
                 }
