@@ -3,68 +3,10 @@ from wtforms import StringField, PasswordField, EmailField, SubmitField, Boolean
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
 import re
-import requests, hashlib
 
 #############################
     #Authentication#
 #############################
-
-class NISTPasswordPolicy:
-    def __init__(self, min_length=8, max_length=64, message=None):
-        self.min_length = min_length
-        self.max_length = max_length
-        if not message:
-            self.message = f"Password must be between {min_length} and {max_length} characters."
-        else:
-            self.message = message
-    
-    def __call__(self, form, field):
-        password = field.data
-        errors = []
-        
-        if not (self.min_length <= len(password) <= self.max_length):
-            errors.append(self.message)
-
-        # Prohibit sequences of the same character
-        if self.has_successive_chars(password):
-            errors.append('Password cannot contain successive identical characters.')
-        
-        if self.has_consecutive_chars(password):
-            errors.append('Password cannot contain consecutive characters.')
-        
-        if self.is_breached_password(password):
-            errors.append('This password has been exposed in a data breach, Please choose a different password.')
-
-        if errors:
-            raise ValidationError(" ".join(errors))
-
-    def has_successive_chars(self, password):
-        for i in range(len(password) - 1):
-            if password[i] == password[i + 1]:
-                return True
-        return False
-    
-    def has_consecutive_chars(self, password):
-        for i in range(len(password) - 3):
-            if (ord(password[i]) == ord(password[i + 1]) - 1 == ord(password[i + 2]) - 2 == ord(password[i + 3]) - 3 or
-                ord(password[i]) == ord(password[i + 1]) + 1 == ord(password[i + 2]) + 2 == ord(password[i + 3]) + 3):
-                return True
-        return False
-    
-    def is_breached_password(self, password):
-        sha1_password = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
-        prefix = sha1_password[:5]
-        suffix = sha1_password[5:]
-        url = f"https://api.pwnedpasswords.com/range/{prefix}"
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise ValidationError('Error checking password breach status.')
-        
-        hashes = (line.split(':') for line in response.text.splitlines())
-        for h, count in hashes:
-            if suffix == h:
-                return True
-        return False
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
