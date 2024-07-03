@@ -215,7 +215,7 @@ def login():
     # return render_template('login.html', login_form=form)
     
     
-    # Route to generate TOTP QR code and verify TOTP code
+# Route to generate TOTP QR code and verify TOTP code
 @main.route('/totp', methods=['GET', 'POST'])
 def totp():
     user_id = session.get('user_id')
