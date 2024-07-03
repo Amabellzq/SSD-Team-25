@@ -4,9 +4,9 @@ FROM nginx:latest
 # Copy the custom nginx.conf to the container's /etc/nginx/ directory
 COPY nginx.conf /etc/nginx/nginx.conf
 
-COPY nginx-selfsigned.crt /etc/ssl/certs/nginx-selfsigned.crt
+COPY fullchain.crt /etc/ssl/certs/fullchain.crt
 
-COPY nginx-selfsigned.key /etc/ssl/private/nginx-selfsigned.key
+COPY shoppp.me.key /etc/ssl/private/shoppp.me.key
 
 # Expose port 80 to the outside world
 EXPOSE 80 443
