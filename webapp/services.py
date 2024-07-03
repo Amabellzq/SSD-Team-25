@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from .model import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
 
 class UserService:
+    
     @staticmethod
     def get(user_id):
         return User.query.get(user_id)

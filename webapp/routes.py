@@ -8,11 +8,28 @@ import base64
 from datetime import datetime, timedelta
 from .model import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
 from .services import UserService, CategoryService, MerchantService, OrderService, ProductService, ShoppingCartService, CartItemService, PaymentService, AdministratorService
+import pyotp
+import qrcode
+from io import BytesIO
+from PIL import Image
+from functools import wraps
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+
+def session_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = current_user
+        if user.is_authenticated:
+            if user.active_session_token != session.sid:
+                logout_user()
+                session.clear()
+                return redirect(url_for('main.login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -149,20 +166,21 @@ def login():
         print('Form validated successfully')  # Debug statement
         username = form.username.data
         password = form.password.data
-        user = User.get_by_username(username)
         print(f'Attempting to log in user: {username}')  # Debug statement
 
         user = UserService.get_by_username(username)
+        
         if user:
             print(f'User found: {user.username}')  # Debug statement
         else:
             print(f'User not found: {username}')  # Debug statement
+
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
             return redirect(url_for('main.totp'))
         else:
             flash('Invalid username or password', 'danger')
-    return render_template('login.html', login_form=form)
+    return render_template('login.html', form=form)
             
             # totp = pyotp.TOTP(user.totp_secret)
             # if totp.verify(totp_code):
@@ -204,7 +222,7 @@ def totp():
     if not user_id:
         return redirect(url_for('main.login'))
 
-    user = User.get(user_id)
+    user = UserService.get(user_id)
     if not user.totp_secret:
         user.totp_secret = pyotp.random_base32()
         db.session.commit()
@@ -225,18 +243,18 @@ def totp():
             login_user(user)
             print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
-            print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            db.session.commit()
+            print(f"Session started with user_id: {session.get('user_id')} and session ID: {session.sid}")  # Debug statement
             # Check user role and merchant ID
             if user.role == 'Merchant':
-                merchant = MerchantService.get_by_user_id(user.user_id)
+                merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
                     print(f'Merchant found: {merchant.merchant_id}')  # Debug statement
                     return redirect(url_for('main.sellerDashboard'))
                 else:
                     print('No merchant found for the current user.')  # Debug statement
                     return redirect(url_for('main.register_business'))
-
             return redirect(url_for('main.home'))
         else:
             flash('Invalid username or password', 'danger')
@@ -247,7 +265,8 @@ def totp():
         else:
             flash('Invalid TOTP code', 'danger')
 
-    return render_template('login.html', login_form=form)
+    return render_template('totp.html', img_b64=img_b64)
+
 
 @main.route('/logout')
 def logout():

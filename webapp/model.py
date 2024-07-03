@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
+    totp_secret = db.Column(db.String(64), nullable=True)  # Added field for TOTP secret
 
     def get_id(self):
         return str(self.user_id)

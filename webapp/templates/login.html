@@ -46,18 +46,18 @@
             Log me in
         </div>
         <form method="POST" action="{{ url_for('main.login') }}">
-            {{ login_form.hidden_tag() }}
+            {{ form.hidden_tag() }}
             <div class="field">
-                {{ login_form.username(class="form-control", required=True) }}
-                <label>{{ login_form.username.label.text }}</label>
+                {{ form.username(class="form-control", required=True) }}
+                <label>{{ form.username.label.text }}</label>
             </div>
             <div class="field">
-                {{ login_form.password(class="form-control", required=True) }}
-                <label>{{ login_form.password.label.text }}</label>
+                {{ form.password(class="form-control", required=True) }}
+                <label>{{ form.password.label.text }}</label>
             </div>
 
             <!-- Static error message displayed if there are any form errors -->
-            {% if login_form.username.errors or login_form.password.errors %}
+            {% if form.username.errors or form.password.errors %}
             <div class="field">
                 <small class="text-danger">Please check your username or password.</small>
             </div>
@@ -82,7 +82,7 @@
                 </div>
             </div>
             <div class="field">
-                {{ login_form.submit(class="btn btn-primary") }}
+                {{ form.submit(class="btn btn-primary") }}
             </div>
             <div class="signup-link">
                 Don't have an account? <a href="{{ url_for('main.register') }}">Sign up</a>
