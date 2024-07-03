@@ -3,6 +3,7 @@ from config import Config
 from .routes import main
 from flask_login import LoginManager
 from .model import db, User  # Import your user model
+from .services import UserService
 from flask_session import Session
 import base64
 import os
@@ -26,7 +27,7 @@ login_manager.login_view = 'main.login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    return UserService.get(user_id)
 
 # Register Blueprint
 app.register_blueprint(main)
