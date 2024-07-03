@@ -76,7 +76,7 @@ class RegistrationForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Regexp(r'^\S+@\S+\.\S+$', message="Invalid Email")])    
     role = SelectField('I am a', choices=[ ('Customer', 'Customer'), ('Merchant', 'Merchant'), ('Admin', 'Admin')], validators=[DataRequired()])
     profile_picture = FileField('Set Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8, max=40)])
+    password = PasswordField('Password', validators=[DataRequired(), NISTPasswordPolicy()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
     submit = SubmitField('Register')
 
