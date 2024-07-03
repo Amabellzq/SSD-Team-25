@@ -4,7 +4,8 @@ from flask import Flask
 from config import Config
 from .routes import main
 from flask_login import LoginManager
-from .models import db, User  # Import your user model
+from .model import db, User  # Import your user model
+from .services import UserService 
 from flask_session import Session
 from datetime import timedelta
 import base64
@@ -50,7 +51,7 @@ login_manager.login_view = 'main.login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    return UserService.get(user_id)
 
 # Register Blueprint
 app.register_blueprint(main)
