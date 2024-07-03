@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from .models import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+from .model import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
 
 class UserService:
     @staticmethod
@@ -227,6 +227,10 @@ class ProductService:
             db.session.commit()
             return product
         return None
+
+    @staticmethod
+    def get_related_products(category_id, product_id):
+        return Product.query.filter(Product.category_id == category_id, Product.product_id != product_id).all()
 
 class CategoryService:
     @staticmethod
