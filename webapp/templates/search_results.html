@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - ShopMe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h2 class="search-results-heading">Search Results for "{{ query }}"</h2>
+            {% if products or categories %}
+                <div class="search-results">
+                    {% if products %}
+                        <h3 class="products-heading">Products</h3>
+                        <div class="row">
+                            {% for product in products %}
+                                <div class="col-lg-4 col-md-6 mix">
+                                    <div class="product__item">
+                                        <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
+                                            <ul class="product__hover">
+                                                <li><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="product__item__text">
+                                            <h6><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}">{{ product.name }}</a></h6>
+                                            <div class="product__price">${{ product.price }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if categories %}
+                        <h3 class="categories-heading">Categories</h3>
+                        {% for category in categories %}
+                            <div class="category-section">
+                                <h4 class="products-heading">{{ category.name }}</h4>
+                                <div class="row">
+                                    {% for product in category.products %}
+                                        <div class="col-lg-4 col-md-6 mix">
+                                            <div class="product__item">
+                                                <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
+                                                    <ul class="product__hover">
+                                                        <li><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                                    </ul>
+                                                </div>
+                                                <div class="product__item__text">
+                                                    <h6><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}">{{ product.name }}</a></h6>
+                                                    <div class="product__price">${{ product.price }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>No results found for "{{ query }}"</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,7 @@ RUN pip install flask-login
 # Command to install WTF forms
 RUN pip install Flask-WTF
 
+RUN pip install requests
 
 # Copy the rest of the application code into the image
 COPY . .
@@ -38,3 +39,4 @@ ENV GUNICORN_CMD_ARGS="--reload"
 # Command to run the application
 CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:8000", "webapp:app"]
 
+ENV SECRET_KEY='ssdT25'

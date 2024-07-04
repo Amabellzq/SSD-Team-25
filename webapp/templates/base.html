@@ -24,7 +24,8 @@
     <link rel="stylesheet" type="text/css" href="../static/css/slicknav.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
+    <!-- Include Magnific Popup CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
 </head>
 
 <body>
@@ -43,8 +44,21 @@
         </div>
         <div id="mobile-menu-wrap"></div>
         <div class="offcanvas__auth">
-            <a href="#">Login</a>
-            <a href="#">Register</a>
+            <!-- <a href="/login">Login</a>
+            <a href="/register">Register</a> -->
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'Merchant' %}
+                    <a href="/sellerDashboard">Seller Dashboard</a>
+                {% elif current_user.role == 'Admin' %}
+                    <a href="/adminDashboard">Admin Dashboard</a>
+                {% else %}
+                    <a href="/myprofile"><i class="fas fa-user" style="font-size: 20px;"></i></a>
+                {% endif %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
         </div>
     </div>
     <!-- Offcanvas Menu End -->
@@ -170,8 +184,8 @@
     <div class="search-model">
         <div class="h-100 d-flex align-items-center justify-content-center">
             <div class="search-close-switch">+</div>
-            <form class="search-model-form">
-                <input type="text" id="search-input" placeholder="Search here.....">
+            <form class="search-model-form"  action="{{ url_for('main.search') }}" method="GET">
+                <input type="text" name="query" id="search-input" placeholder="Search here.....">
             </form>
         </div>
     </div>
