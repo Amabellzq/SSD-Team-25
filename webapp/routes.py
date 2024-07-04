@@ -37,6 +37,18 @@ def home():
 
     return render_template('index.html', categories=unique_categories.values(), categorized_products=categorized_products)
 
+@main.route('/search', methods=['GET', 'POST'])
+def search():
+    query = request.args.get('query')
+    if not query:
+        return redirect(url_for('main.home'))
+
+    # Perform search in Product and Category tables
+    products = Product.query.filter(Product.name.ilike(f'%{query}%')).all()
+    categories = Category.query.filter(Category.name.ilike(f'%{query}%')).all()
+
+    return render_template('search_results.html', query=query, products=products, categories=categories)
+
 @main.route('/shop', methods=['GET'])
 def shop():
     page = request.args.get('page', 1, type=int)
