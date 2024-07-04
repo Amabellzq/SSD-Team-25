@@ -1,123 +1,79 @@
 {% extends "base.html" %}
 
-{% block title %}{{ product.name }} - ShopMe{% endblock %}
+{% block title %}Shop Me | {{ product.name }}{% endblock %}
   
 {% block content %}
 
-<!-- Breadcrumb Begin -->
-<div class="breadcrumb-option">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="breadcrumb__links">
-                    <a href="./index.html"><i class="fa fa-home"></i> Home</a>
-                    <a href="#">{{ product.category }}</a>
-                    <span>{{ product.name }}</span>
+    <div class="breadcrumb-option">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb__links">
+                        <a href="/"><i class="fa fa-home"></i> Home</a>
+                        <a href="/shop"><i class="fa fa-store"></i> Shop</a>
+                        <span>{{ product.name }}</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<!-- Breadcrumb End -->
 
-<!-- Product Details Section Begin -->
-<section class="product-details spad">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="product__details__pic">
-                    <div class="product__details__pic__left product__thumb nice-scroll">
-                        {% for image in product.images %}
-                        <a class="pt {% if loop.first %}active{% endif %}" href="#product-{{ loop.index }}">
-                            <img src="{{ image.thumb }}" alt="">
-                        </a>
-                        {% endfor %}
-                    </div>
-                    <div class="product__details__slider__content">
-                        <div class="product__details__pic__slider owl-carousel">
-                            {% for image in product.images %}
-                            <img data-hash="product-{{ loop.index }}" class="product__big__img" src="{{ image.big }}" alt="">
-                            {% endfor %}
+    <!-- Product Details Section -->
+    <section class="product-details spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <img src="data:image/png;base64,{{ product.image_url | b64encode }}" alt="{{ product.name }}" class="img-fluid">
+                </div>
+                <div class="col-lg-6">
+                    <div class="product__details__text">
+                        <h3>{{ product.name }}</h3>
+                        <div class="product__details__price">${{ product.price }}</div>
+                        <p>{{ product.description }}</p>
+                        <div class="product__details__button">
+                            <div class="quantity">
+                                <span>Quantity:</span>
+                                <div class="pro-qty">
+                                    <input type="text" value="1">
+                                </div>
+                            </div>
+                            <a href="/cart" class="cart-btn"><span class="icon_bag_alt"></span> Add to cart</a>
+                        </div>
+                        <div class="product__details__widget">
+                            <ul>
+                                <li>
+                                    <span>Availability:</span>
+                                    <p>{{ product.availability }}</p>
+                                </li>
+                                <li>
+                                    <span>Promotions:</span>
+                                    <p>Free shipping</p>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="product__details__text">
-                    <h3>{{ product.name }} <span>Brand: {{ product.brand }}</span></h3>
-                    <div class="product__details__price">${{ product.price }} <span>${{ product.old_price }}</span></div>
-                    <p>{{ product.description }}</p>
-                    <div class="product__details__button">
-                        <div class="quantity">
-                            <span>Quantity:</span>
-                            <div class="pro-qty">
-                                <input type="text" value="1">
+                <div class="col-lg-12 text-center">
+                    <div class="product__details__tab">
+                        <div class="related__title">
+                            <h5>RELATED PRODUCTS</h5>
+                        </div>
+                    </div>
+                    {% for related_product in related_products %}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product__item">
+                            <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ related_product.image_url | b64encode }}">
+                                <ul class="product__hover">
+                                    <li><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                </ul>
+                            </div>
+                            <div class="product__item__text">
+                                <h6><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}">{{ related_product.name }}</a></h6>
+                                <div class="product__price">${{ related_product.price }}</div>
                             </div>
                         </div>
-                        <a href="/cart" class="cart-btn"><span class="icon_bag_alt"></span> Add to cart</a>
                     </div>
-                    <div class="product__details__widget">
-                        <ul>
-                            <li>
-                                <span>Availability:</span>
-                                <div class="stock__checkbox">
-                                    <label for="stockin">
-                                        {{ product.availability }}
-                                        <input type="radio" name="color__radio" id="stockin">
-                                        <span class="checkmark green-bg"></span>
-                                    </label>
-                                </div>
-                            </li>
-                            <li>
-                                <span>Promotions:</span>
-                                <p>{{ product.promotions }}</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12">
-                <div class="product__details__tab">
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-toggle="tab" href="#tabs-1" role="tab">Description</a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="tabs-1" role="tabpanel">
-                            <h6>Description</h6>
-                            <p>{{ product.long_description }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <div class="related__title">
-                    <h5>RELATED PRODUCTS</h5>
-                </div>
-            </div>
-            {% for related_product in related_products %}
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="product__item">
-                    <div class="product__item__pic set-bg" data-setbg="{{ related_product.image }}">
-                        <div class="label {{ related_product.label_class }}">{{ related_product.label }}</div>
-                        <ul class="product__hover">
-                            <li><a href="{{ related_product.image }}" class="image-popup"><span class="arrow_expand"></span></a></li>
-                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
-                            <li><a href="#"><span class="icon_bag_alt"></span></a></li>
-                        </ul>
-                    </div>
-                    <div class="product__item__text">
-                        <h6><a href="product-details.html?id={{ related_product.id }}">{{ related_product.name }}</a></h6>
-                        <div class="rating">
-                            {% for _ in range(related_product.rating) %}
-                            <i class="fa fa-star"></i>
-                            {% endfor %}
-                        </div>
-                        <div class="product__price">${{ related_product.price }}</div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}

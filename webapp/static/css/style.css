@@ -572,6 +572,33 @@ ol {
 }
 
 /*---------------------
+  SEARCH
+-----------------------*/
+
+/* Add space between the search results heading and the subheadings */
+.search-results-heading {
+	margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Add space between the subheadings and the products/categories */
+.products-heading,
+.categories-heading {
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+/* Add space between individual product items */
+.product__item {
+    margin-bottom: 30px;
+}
+
+/*---------------------
+  END SEARCH
+-----------------------*/
+
+
+/*---------------------
   Trend
 -----------------------*/
 
@@ -633,215 +660,6 @@ ol {
 	color: #b1b0b0;
 	text-decoration: line-through;
 	margin-left: 4px;
-}
-
-/*---------------------
-  Discount
------------------------*/
-
-.discount__pic img {
-	min-width: 100%;
-	height: 100%;
-}
-
-.discount__text {
-	background: #f4f4f4;
-	height: 390px;
-	padding: 75px 90px 50px;
-	text-align: center;
-}
-
-.discount__text a {
-	font-size: 14px;
-	color: #111111;
-	text-transform: uppercase;
-	font-weight: 700;
-	position: relative;
-	padding: 0 0 3px;
-	display: inline-block;
-}
-
-.discount__text a:after {
-	position: absolute;
-	left: 0;
-	bottom: 0;
-	height: 2px;
-	width: 100%;
-	background: #ca1515;
-	content: "";
-}
-
-.discount__text__title {
-	text-align: center;
-	position: relative;
-	z-index: 1;
-	margin-bottom: 60px;
-}
-
-.discount__text__title:after {
-	position: absolute;
-	left: 50%;
-	top: -38px;
-	height: 183px;
-	width: 183px;
-	background: #ffffff;
-	content: "";
-	border-radius: 50%;
-	z-index: -1;
-	margin-left: -91.5px;
-}
-
-.discount__text__title span {
-	font-size: 12px;
-	color: #111111;
-	font-weight: 500;
-	text-transform: uppercase;
-}
-
-.discount__text__title h2 {
-	font-size: 60px;
-	color: #ca1515;
-	font-family: "Cookie", cursive;
-	line-height: 46px;
-	margin-bottom: 10px;
-}
-
-.discount__text__title h5 {
-	color: #ca1515;
-	font-weight: 700;
-}
-
-.discount__text__title h5 span {
-	font-size: 14px;
-	color: #111111;
-	margin-right: 4px;
-}
-
-.discount__countdown {
-	text-align: center;
-	margin-bottom: 10px;
-}
-
-.countdown__item {
-	margin-bottom: 15px;
-	float: left;
-	width: 25%;
-}
-
-.countdown__item:last-child {
-	margin-right: 0;
-}
-
-.countdown__item span {
-	font-size: 30px;
-	font-weight: 600;
-	color: #111111;
-	display: inline-block;
-}
-
-.countdown__item p {
-	color: #111111;
-	margin-bottom: 0;
-	display: inline-block;
-	font-weight: 500;
-}
-
-/*---------------------
-  Services
------------------------*/
-
-.services {
-	padding-top: 80px;
-	padding-bottom: 50px;
-}
-
-.services__item {
-	padding-left: 65px;
-	position: relative;
-	margin-bottom: 20px;
-}
-
-.services__item i {
-	font-size: 36px;
-	color: #ca1515;
-	position: absolute;
-	left: 0;
-	top: 4px;
-}
-
-.services__item h6 {
-	color: #111111;
-	font-weight: 600;
-	margin-bottom: 5px;
-}
-
-.services__item p {
-	margin-bottom: 0;
-}
-
-/*---------------------
-  Instagram
------------------------*/
-
-.instagram__item {
-	height: 320px;
-	display: -webkit-box;
-	display: -ms-flexbox;
-	display: flex;
-	-webkit-box-align: center;
-	-ms-flex-align: center;
-	align-items: center;
-	-webkit-box-pack: center;
-	-ms-flex-pack: center;
-	justify-content: center;
-	position: relative;
-	z-index: 1;
-}
-
-.instagram__item:hover:after {
-	opacity: 1;
-}
-
-.instagram__item:hover .instagram__text {
-	opacity: 1;
-	visibility: visible;
-}
-
-.instagram__item:after {
-	position: absolute;
-	left: 0;
-	top: 0;
-	height: 100%;
-	width: 100%;
-	background: rgba(255, 255, 255, 0.9);
-	content: "";
-	opacity: 0;
-	z-index: -1;
-	-webkit-transition: all, 0.3s;
-	-o-transition: all, 0.3s;
-	transition: all, 0.3s;
-}
-
-.instagram__text {
-	text-align: center;
-	opacity: 0;
-	visibility: hidden;
-	-webkit-transition: all, 0.3s;
-	-o-transition: all, 0.3s;
-	transition: all, 0.3s;
-}
-
-.instagram__text i {
-	font-size: 30px;
-	color: #0d0d0d;
-}
-
-.instagram__text a {
-	font-size: 16px;
-	color: #0d0d0d;
-	font-weight: 500;
-	display: block;
-	margin-top: 10px;
 }
 
 /*---------------------
@@ -1117,7 +935,7 @@ ol {
 	list-style: none;
 	display: inline-block;
 	color: #111111;
-	margin-right: 35px;
+	margin-right: 20px;
 	position: relative;
 	cursor: pointer;
 }
