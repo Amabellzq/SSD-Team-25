@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - ShopMe{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb Begin -->
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/"><i class="fa fa-home"></i> Home</a>
+                    <span>Order Confirmation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+
+<!-- Order Confirmation Section Begin -->
+<section class="order-confirmation spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h2 class="text-center">Thank you for your order!</h2>
+                <h3 class="text-center">Your order ID is: {{ order.order_id }}</h3>
+                <br>
+                <h4>Order Details:</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.order_items %}
+                            <tr>
+                                <td class="cart__product__item">
+                                    <img src="data:image/png;base64,{{ item.product.image_url | b64encode }}" alt="{{ item.product.name }}" style="max-width: 150px; max-height: 150px;">
+                                </td>
+                                <td class="cart__product__item__title">{{ item.product.name }}</td>
+                                <td class="cart__price">${{ item.product.price }}</td>
+                                <td class="cart__quantity">{{ item.quantity }}</td>
+                                <td class="cart__total">${{ item.price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="orderDate">Order Date</label>
+                            <input type="text" class="form-control" id="orderDate" value="{{ order.created_date.strftime('%Y-%m-%d') }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <input type="text" class="form-control" id="status" value="{{ order.collection_status }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conditional message based on order status -->
+                {% if order.collection_status == 'Not Collected' %}
+                <div>
+                    <h2 class="text-center">Please head to the collection site to collect your order!</h2>
+                </div>
+                {% endif %}
+
+                <!-- Buttons for Continue Shopping and Back to Home -->
+                <div class="text-center mt-4">
+                    <a href="/" class="btn btn-primary mr-2">Back to Home</a>
+                    <a href="/shop" class="btn btn-success">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Order Confirmation Section End -->
+{% endblock %}

@@ -241,16 +241,70 @@ def update_cart(cart_item_id):
     return redirect(url_for('main.cart'))
 
 
-
-@main.route('/checkoutpage', methods=['GET', 'POST'])
+@main.route('/checkout', methods=['GET', 'POST'])
 @login_required
 @session_required
 def checkout():
     form = CheckoutForm()
+    user_id = current_user.user_id
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
+    total = sum(item.price for item in cart_items)
+
     if form.validate_on_submit():
-        # Process the order here
-        return redirect(url_for('main.order_confirmation'))
-    return render_template('checkout.html', checkout_form=form)
+        # Create Order
+        order = Order(
+            user_id=user_id,
+            total_price=total,
+            collection_status='Not Collected',
+            created_date=datetime.utcnow() + timedelta(hours=8),
+            last_updated_date=datetime.utcnow() + timedelta(hours=8)
+        )
+        db.session.add(order)
+        db.session.flush()  # Flush to get the order ID
+
+        # Create Order Items
+        for item in cart_items:
+            order_item = OrderItem(
+                order_id=order.order_id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.price
+            )
+            db.session.add(order_item)
+
+        # Remove items from the cart
+        for item in cart_items:
+            db.session.delete(item)
+        
+        # Process Payment
+        payment_method = form.payment_method.data
+        payment = Payment(
+            order_id=order.order_id,
+            payment_method=payment_method,
+            amount=order.total_price,
+            payment_status='Completed',
+            transaction_date=datetime.utcnow()
+        )
+        db.session.add(payment)
+
+        db.session.commit()
+        flash('Order placed successfully!', 'success')
+        return redirect(url_for('main.orderConfirmation', order_id=order.order_id))
+
+    return render_template('checkout.html', user=current_user, form=form, cart_items=cart_items, total=total)
+
+@main.route('/orderConfirmation/<int:order_id>')
+@login_required
+@session_required
+def orderConfirmation(order_id):
+    order = Order.query.get_or_404(order_id)
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('order-confirmation.html', order=order)
+
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():

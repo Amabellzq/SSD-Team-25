@@ -92,11 +92,12 @@ class CheckoutForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
     address = StringField('Address', validators=[DataRequired()])
-    address2 = StringField('Apartment, suite, etc. (optional)')
+    address2 = StringField('Address 2')
     postcode = StringField('Postcode/Zip', validators=[DataRequired()])
-    phone = StringField('Phone', validators=[DataRequired(), Length(min=10, max=10, message="Please enter a valid phone number.")])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Place Order')
+    phone = StringField('Phone', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])  # Removed Email() validator
+    payment_method = SelectField('Payment Method', choices=[('Credit Card', 'Credit Card'), ('Debit Card', 'Debit Card')], validators=[DataRequired()])
+    submit = SubmitField('Place order')
 
 #############################
     # Account #

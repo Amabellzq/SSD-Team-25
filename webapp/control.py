@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from .model import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment
+from .model import db, User, Category, Merchant, Order, Product, ShoppingCart, CartItem, OrderItem, Payment, Administrator
 
 class UserService:
     @staticmethod
