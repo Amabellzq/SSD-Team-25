@@ -1,5 +1,5 @@
 import secrets
-from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
+from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
@@ -153,11 +153,94 @@ def myaccount():
 
     return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
 
+@main.route('/add_to_cart', methods=['POST'])
+@login_required
+@session_required
+def add_to_cart():
+    product_id = request.form.get('product_id')
+    quantity = int(request.form.get('quantity', 1))
+    user_id = current_user.user_id
+
+    # Get the user's current shopping cart
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        cart = ShoppingCart(user_id=user_id)
+        db.session.add(cart)
+        db.session.commit()
+
+    # Check if the product is already in the cart
+    cart_item = CartItem.query.filter_by(cart_id=cart.cart_id, product_id=product_id).first()
+    if cart_item:
+        # Update the quantity if the product is already in the cart
+        cart_item.quantity += quantity
+        cart_item.price = Product.query.get(product_id).price * cart_item.quantity
+    else:
+        # Add a new product to the cart
+        product = Product.query.get(product_id)
+        if not product:
+            abort(404, description="Product not found")
+        cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
+        db.session.add(cart_item)
+
+    cart.last_updated_date = datetime.utcnow() + timedelta(hours=8)
+    db.session.commit()
+    flash('Product added to cart successfully!', 'success')
+    return redirect(url_for('main.cart'))
+
 @main.route('/cart')
 @login_required
 @session_required
 def cart():
-    return render_template('cart.html', user=current_user)
+    user_id = current_user.user_id
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    if not cart or not cart.cart_items:
+        return render_template('cart.html', cart_items=[], total=0)
+
+    cart_items = cart.cart_items
+    total = sum(item.price for item in cart_items)
+    return render_template('cart.html', cart_items=cart_items, total=total)
+
+
+@main.route('/remove_from_cart/<int:cart_item_id>')
+@login_required
+@session_required
+def remove_from_cart(cart_item_id):
+    try:
+        cart_item = CartItem.query.get_or_404(cart_item_id)
+        if cart_item.shoppingcart.user_id != current_user.id:
+            abort(403)
+        db.session.delete(cart_item)
+        db.session.commit()
+        flash('Item removed from cart', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {e}', 'danger')
+    return redirect(url_for('main.cart'))
+
+@main.route('/update_cart/<int:cart_item_id>', methods=['POST'])
+@login_required
+@session_required
+def update_cart(cart_item_id):
+    try:
+        new_quantity = int(request.form.get('quantity', 1))
+        cart_item = CartItem.query.get_or_404(cart_item_id)
+        
+        if cart_item.shoppingcart.user_id != current_user.user_id:
+            abort(403)
+        
+        product_price = cart_item.product.price
+        cart_item.quantity = new_quantity
+        cart_item.price = product_price * new_quantity
+        
+        db.session.commit()
+        flash('Cart updated successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {e}', 'danger')
+    
+    return redirect(url_for('main.cart'))
+
+
 
 @main.route('/checkoutpage', methods=['GET', 'POST'])
 @login_required

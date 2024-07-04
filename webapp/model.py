@@ -53,6 +53,7 @@ class CartItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
+    product = db.relationship('Product', backref=db.backref('cart_items', lazy=True))
 
 class Product(db.Model):
     __tablename__ = 'Product'
