@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Shop Me | TOTP Verification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_style.css') }}">
+    <style>
+        .field-center {
+            text-align: center;
+        }
+        .field-center .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .field-center .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="title">
+            TOTP Verification
+        </div>
+        <form method="POST" action="{{ url_for('main.verify_totp') }}">
+            <div class="field">
+                <input type="text" name="totp" class="form-control" required>
+                <label for="totp">TOTP Code</label>
+            </div>
+
+            <!-- Flash Messages Section -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="custom-alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="field field-center">
+                <button type="submit" class="btn btn-primary">Verify</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
