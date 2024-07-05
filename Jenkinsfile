@@ -211,5 +211,11 @@ post {
 
 
     }
+      success {
+            echo 'All stages completed successfully.'
+        }
+        failure {
+            echo 'One or more stages failed.'
+        }
     }
 }

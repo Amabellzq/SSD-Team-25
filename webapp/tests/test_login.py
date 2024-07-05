@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
 from werkzeug.security import generate_password_hash
-from webapp.models import User
+from webapp.model import User
 
 
 def test_login_success(test_client, init_database, mocker):

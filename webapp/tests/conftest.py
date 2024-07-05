@@ -1,16 +1,19 @@
 import pytest
-from webapp import create_app, db
-from webapp.config import TestConfig
-from webapp.models import User
+from flask import Flask
+
+from webapp import db
+from config import TestConfig
+from webapp.model import User
 
 
 @pytest.fixture(scope='module')
 def test_client():
-    flask_app = create_app(TestConfig)
+    app = Flask(__name__)
+    app.config.from_object(TestConfig)
 
     # Create a test client using the Flask application configured for testing
-    with flask_app.test_client() as testing_client:
-        with flask_app.app_context():
+    with app.test_client() as testing_client:
+        with app.app_context():
             # Create all tables
             db.create_all()
             yield testing_client  # this is where the testing happens

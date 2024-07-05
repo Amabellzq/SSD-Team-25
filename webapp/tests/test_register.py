@@ -1,6 +1,6 @@
 import pytest
 from flask import url_for
-from webapp.models import User
+from webapp.model import User
 
 
 def test_register_success(test_client, mocker):

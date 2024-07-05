@@ -1,6 +1,6 @@
 import pytest
 from flask import url_for
-from webapp.models import Product, CartItem
+from webapp.model import Product, CartItem
 
 
 def test_add_to_cart_success(test_client, init_database, mocker):
