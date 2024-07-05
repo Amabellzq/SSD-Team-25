@@ -341,7 +341,9 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
-            return redirect(url_for('main.totp'))
+            if not user.totp_secret:
+                return redirect(url_for('main.totp'))
+            return redirect(url_for('main.verify_totp'))
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
@@ -387,49 +389,59 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-    if not user.totp_secret:
-        user.totp_secret = pyotp.random_base32()
-        db.session.commit()
-
-    otp_uri = pyotp.totp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
-    img = qrcode.make(otp_uri,box_size=8,border=3)
-    buf = BytesIO()
-    img.save(buf)
-    buf.seek(0)
-    img_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
+        return redirect(url_for('main.home'))
 
     if request.method == 'POST':
         totp_code = request.form['totp']
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
-            # Invalidate previous session by setting a new session token
-            session.clear()  # Clear any existing session data
             login_user(user)
-            print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             user.active_session_token = session.sid  # Use Flask-Session's session ID
             db.session.commit()
-            print(f"Session started with user_id: {session.get('user_id')} and session ID: {session.sid}")  # Debug statement
-            # Check user role and merchant ID
+            return redirect(url_for('main.home'))  # Redirect to home page
+        else:
+            flash('Invalid TOTP code. Please try again.')
+
+    user.totp_secret = pyotp.random_base32()  # Generate TOTP secret
+    db.session.commit()
+    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    img = qrcode.make(totp_uri, box_size=8, border=3)
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    return render_template('totp.html', img_b64=img_b64)
+
+@main.route('/verify_totp', methods=['GET', 'POST'])
+def verify_totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = UserService.get(user_id)
+
+    if request.method == 'POST':
+        totp_code = request.form['totp']
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            session['user_id'] = user.get_id()
+            user.active_session_token = session.sid
+            db.session.commit()
+
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
-                    print(f'Merchant found: {merchant.merchant_id}')  # Debug statement
                     return redirect(url_for('main.sellerDashboard'))
                 else:
-                    print('No merchant found for the current user.')  # Debug statement
                     return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))
         else:
-            flash('Invalid username or password', 'danger')
-            print('Invalid username or password')  # Debug statement
-    else:
-        if request.method == 'POST':
-            print('Form validation failed')  # Debug statement
-        else:
             flash('Invalid TOTP code', 'danger')
 
-    return render_template('totp.html', img_b64=img_b64)
+    return render_template('verify_totp.html')
 
 
 @main.route('/logout')
