@@ -8,6 +8,10 @@ def test_client():
     # Configure the app for testing
     app.config.from_object(TestConfig)
 
+    # Ensure the db is only initialized once
+    if not hasattr(db, 'app'):
+        db.init_app(app)
+
     # Create a test client using the Flask application configured in your `__init__.py`
     with app.test_client() as testing_client:
         with app.app_context():

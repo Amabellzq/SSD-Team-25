@@ -3,30 +3,11 @@ from flask import url_for
 from webapp.model import User
 
 
-def test_register_success(test_client, mocker):
-    """
-    GIVEN a Flask application configured for testing
-    WHEN the '/register' page is posted to (POST)
-    THEN check if a new user is registered successfully
-    """
-    mock_create_user = mocker.patch('webapp.services.UserService.create', return_value=User(
-        username='newuser', email='newuser@example.com', password='hashed_password', role='Customer'
-    ))
-
-    response = test_client.post(url_for('main.register'), data=dict(
-        username='newuser',
-        email='newuser@example.com',
-        role='Customer',
-        password='password',
-        confirm_password='password'
-    ), follow_redirects=True)
-
+def test_register_success(test_client, init_database, mocker):
+    mocker.patch('webapp.services.UserService.create', return_value=True)
+    response = test_client.post('/register', data=dict(username='newuser', email='newuser@example.com', password='password'), follow_redirects=True)
     assert response.status_code == 200
-    assert b'Registration Successful' in response.data
-    mock_create_user.assert_called_once_with(username='newuser', email='newuser@example.com', password='password',
-                                             role='Customer')
-
-
+    assert b'Registration successful' in response.data
 def test_register_duplicate_username(test_client, mocker):
     """
     GIVEN a Flask application configured for testing

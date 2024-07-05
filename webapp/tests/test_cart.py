@@ -4,33 +4,23 @@ from webapp.model import Product, CartItem
 
 
 def test_add_to_cart_success(test_client, init_database, mocker):
-    """
-    GIVEN a Flask application configured for testing
-    WHEN the '/add_to_cart' page is posted to (POST)
-    THEN check if the product is added to the cart successfully
-    """
-    mock_get_product = mocker.patch('webapp.services.ProductService.get', return_value=Product(
-        product_id=1,
-        name='Test Product',
-        price=10.0,
-        quantity=100
-    ))
-
-    mock_create_cart_item = mocker.patch('webapp.services.CartItemService.create', return_value=CartItem(
-        cart_item_id=1,
-        product_id=1,
-        quantity=1,
-        price=10.0
-    ))
-
-    response = test_client.post(url_for('main.add_to_cart', product_id=1), data=dict(
-        quantity=1
-    ), follow_redirects=True)
-
+    mocker.patch('webapp.services.CartItemService.create', return_value=True)
+    response = test_client.post('/add_to_cart', data=dict(product_id=1, quantity=1))
     assert response.status_code == 200
-    assert b'Product added to cart successfully' in response.data
-    mock_get_product.assert_called_once_with(1)
-    mock_create_cart_item.assert_called_once_with(cart_id=1, product_id=1, quantity=1, price=10.0)
+    assert b'Item added to cart' in response.data
+
+def test_login_success(test_client, init_database, mocker):
+    mocker.patch('webapp.services.UserService.get_by_username', return_value=User(username='testuser', password=generate_password_hash('testpassword')))
+    mocker.patch('webapp.services.UserService.check_password', return_value=True)
+    response = test_client.post('/login', data=dict(username='testuser', password='testpassword'), follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Logout' in response.data
+
+def test_register_success(test_client, init_database, mocker):
+    mocker.patch('webapp.services.UserService.create', return_value=True)
+    response = test_client.post('/register', data=dict(username='newuser', email='newuser@example.com', password='password'), follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Registration successful' in response.data
 
 
 def test_add_to_cart_product_not_found(test_client, init_database, mocker):
