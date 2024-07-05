@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
+    totp_secret = db.Column(db.String(64), nullable=True)  # Added field for TOTP secret
 
     def get_id(self):
         return str(self.user_id)
@@ -52,6 +53,7 @@ class CartItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
+    product = db.relationship('Product', backref=db.backref('cart_items', lazy=True))
 
 class Product(db.Model):
     __tablename__ = 'Product'

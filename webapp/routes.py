@@ -1,5 +1,5 @@
 import secrets
-from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
+from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
 from werkzeug.utils import secure_filename
@@ -151,23 +151,175 @@ def myaccount():
         else:
             flash('User not found', 'danger')
 
-    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
+    # orders made by user section
+    user_id = current_user.user_id
+    orders = Order.query.filter_by(user_id=user_id).all()
+
+    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user, orders=orders)
+
+@main.route('/order-history/<int:order_id>')
+@login_required
+@session_required
+def order_history(order_id):
+    # Fetch the order details
+    order = Order.query.filter_by(order_id=order_id).first_or_404()
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('order-history.html', order=order)
+
+@main.route('/add_to_cart', methods=['POST'])
+@login_required
+@session_required
+def add_to_cart():
+    product_id = request.form.get('product_id')
+    quantity = int(request.form.get('quantity', 1))
+    user_id = current_user.user_id
+
+    # Get the user's current shopping cart
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        cart = ShoppingCart(user_id=user_id)
+        db.session.add(cart)
+        db.session.commit()
+
+    # Check if the product is already in the cart
+    cart_item = CartItem.query.filter_by(cart_id=cart.cart_id, product_id=product_id).first()
+    if cart_item:
+        # Update the quantity if the product is already in the cart
+        cart_item.quantity += quantity
+        cart_item.price = Product.query.get(product_id).price * cart_item.quantity
+    else:
+        # Add a new product to the cart
+        product = Product.query.get(product_id)
+        if not product:
+            abort(404, description="Product not found")
+        cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
+        db.session.add(cart_item)
+
+    cart.last_updated_date = datetime.utcnow() + timedelta(hours=8)
+    db.session.commit()
+    flash('Product added to cart successfully!', 'success')
+    return redirect(url_for('main.cart'))
 
 @main.route('/cart')
 @login_required
 @session_required
 def cart():
-    return render_template('cart.html', user=current_user)
+    user_id = current_user.user_id
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    if not cart or not cart.cart_items:
+        return render_template('cart.html', cart_items=[], total=0)
 
-@main.route('/checkoutpage', methods=['GET', 'POST'])
+    cart_items = cart.cart_items
+    total = sum(item.price for item in cart_items)
+    return render_template('cart.html', cart_items=cart_items, total=total)
+
+
+@main.route('/remove_from_cart/<int:cart_item_id>')
+@login_required
+@session_required
+def remove_from_cart(cart_item_id):
+    try:
+        cart_item = CartItem.query.get_or_404(cart_item_id)
+        if cart_item.shoppingcart.user_id != current_user.id:
+            abort(403)
+        db.session.delete(cart_item)
+        db.session.commit()
+        flash('Item removed from cart', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {e}', 'danger')
+    return redirect(url_for('main.cart'))
+
+@main.route('/update_cart/<int:cart_item_id>', methods=['POST'])
+@login_required
+@session_required
+def update_cart(cart_item_id):
+    try:
+        new_quantity = int(request.form.get('quantity', 1))
+        cart_item = CartItem.query.get_or_404(cart_item_id)
+        
+        if cart_item.shoppingcart.user_id != current_user.user_id:
+            abort(403)
+        
+        product_price = cart_item.product.price
+        cart_item.quantity = new_quantity
+        cart_item.price = product_price * new_quantity
+        
+        db.session.commit()
+        flash('Cart updated successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {e}', 'danger')
+    
+    return redirect(url_for('main.cart'))
+
+
+@main.route('/checkout', methods=['GET', 'POST'])
 @login_required
 @session_required
 def checkout():
     form = CheckoutForm()
+    user_id = current_user.user_id
+    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+    cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
+    total = sum(item.price for item in cart_items)
+
     if form.validate_on_submit():
-        # Process the order here
-        return redirect(url_for('main.order_confirmation'))
-    return render_template('checkout.html', checkout_form=form)
+        # Create Order
+        order = Order(
+            user_id=user_id,
+            total_price=total,
+            collection_status='Not Collected',
+            created_date=datetime.utcnow() + timedelta(hours=8),
+            last_updated_date=datetime.utcnow() + timedelta(hours=8)
+        )
+        db.session.add(order)
+        db.session.flush()  # Flush to get the order ID
+
+        # Create Order Items
+        for item in cart_items:
+            order_item = OrderItem(
+                order_id=order.order_id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.price
+            )
+            db.session.add(order_item)
+
+        # Remove items from the cart
+        for item in cart_items:
+            db.session.delete(item)
+        
+        # Process Payment
+        payment_method = form.payment_method.data
+        payment = Payment(
+            order_id=order.order_id,
+            payment_method=payment_method,
+            amount=order.total_price,
+            payment_status='Completed',
+            transaction_date=datetime.utcnow()
+        )
+        db.session.add(payment)
+
+        db.session.commit()
+        flash('Order placed successfully!', 'success')
+        return redirect(url_for('main.orderConfirmation', order_id=order.order_id))
+
+    return render_template('checkout.html', user=current_user, form=form, cart_items=cart_items, total=total)
+
+@main.route('/orderConfirmation/<int:order_id>')
+@login_required
+@session_required
+def orderConfirmation(order_id):
+    order = Order.query.get_or_404(order_id)
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('order-confirmation.html', order=order)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -189,7 +341,9 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
-            return redirect(url_for('main.totp'))
+            if not user.totp_secret:
+                return redirect(url_for('main.totp'))
+            return redirect(url_for('main.verify_totp'))
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
@@ -235,49 +389,59 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-    if not user.totp_secret:
-        user.totp_secret = pyotp.random_base32()
-        db.session.commit()
-
-    otp_uri = pyotp.totp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
-    img = qrcode.make(otp_uri,box_size=8,border=3)
-    buf = BytesIO()
-    img.save(buf)
-    buf.seek(0)
-    img_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+    if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
+        return redirect(url_for('main.home'))
 
     if request.method == 'POST':
         totp_code = request.form['totp']
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
-            # Invalidate previous session by setting a new session token
-            session.clear()  # Clear any existing session data
             login_user(user)
-            print(f'Login successful for user: {user.username}')  # Debug statement
             session['user_id'] = user.get_id()  # Store user ID in session
             user.active_session_token = session.sid  # Use Flask-Session's session ID
             db.session.commit()
-            print(f"Session started with user_id: {session.get('user_id')} and session ID: {session.sid}")  # Debug statement
-            # Check user role and merchant ID
+            return redirect(url_for('main.home'))  # Redirect to home page
+        else:
+            flash('Invalid TOTP code. Please try again.')
+
+    user.totp_secret = pyotp.random_base32()  # Generate TOTP secret
+    db.session.commit()
+    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    img = qrcode.make(totp_uri, box_size=8, border=3)
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    return render_template('totp.html', img_b64=img_b64)
+
+@main.route('/verify_totp', methods=['GET', 'POST'])
+def verify_totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = UserService.get(user_id)
+
+    if request.method == 'POST':
+        totp_code = request.form['totp']
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            session['user_id'] = user.get_id()
+            user.active_session_token = session.sid
+            db.session.commit()
+
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
-                    print(f'Merchant found: {merchant.merchant_id}')  # Debug statement
                     return redirect(url_for('main.sellerDashboard'))
                 else:
-                    print('No merchant found for the current user.')  # Debug statement
                     return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))
         else:
-            flash('Invalid username or password', 'danger')
-            print('Invalid username or password')  # Debug statement
-    else:
-        if request.method == 'POST':
-            print('Form validation failed')  # Debug statement
-        else:
             flash('Invalid TOTP code', 'danger')
 
-    return render_template('totp.html', img_b64=img_b64)
+    return render_template('verify_totp.html')
 
 
 @main.route('/logout')
@@ -641,10 +805,24 @@ def update_business():
 
     return render_template('sellerDashboard.html', updateBusiness=update_business_form)
 
-@main.route('/orderDetails')
+@main.route('/sellerOrderDetails/<int:order_id>', methods=['GET'])
 @login_required
-def orderDetails():
-    return render_template('sellerOrderDetails.html', user=current_user)
+def sellerOrderDetails(order_id):
+    order = Order.query.filter_by(order_id=order_id).first_or_404()
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('sellerOrderDetails.html', order=order)
+
+@main.route('/mark-as-completed/<int:order_id>', methods=['POST'])
+@login_required
+def mark_as_completed(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.collection_status = 'Collected'  # Update the collection status
+
+    db.session.commit()
+    return redirect(url_for('main.sellerOrderDetails', order_id=order.order_id))
 
 @main.route('/newProduct', methods=['GET', 'POST'])
 @login_required
