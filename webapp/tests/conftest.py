@@ -8,8 +8,9 @@ def test_client():
     # Configure the app for testing
     app.config.from_object(TestConfig)
 
-    # Initialize the SQLAlchemy instance with the app
-    db.init_app(app)
+    # Initialize the SQLAlchemy instance with the app if not already initialized
+    if not hasattr(db, 'app'):
+        db.init_app(app)
 
     # Create a test client using the Flask application configured in your `__init__.py`
     with app.test_client() as testing_client:

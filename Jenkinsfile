@@ -32,6 +32,27 @@ pipeline {
                 }
             }
         }
+                stage('Pytest') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Create virtual environment and install dependencies
+                        sh """
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                        """
+
+                        // Run pytest and generate a JUnit XML report
+                        sh """
+                        . venv/bin/activate
+                        pytest --junitxml=report.xml
+                        """
+                    }
+                }
+            }
+        }
 
         stage('Load Credentials') {
             steps {
