@@ -12,3 +12,5 @@ requests==2.26.0
 pytest
 pytest-mock
 Flask-Testing
+Flask-Login
+Flask-WTF
