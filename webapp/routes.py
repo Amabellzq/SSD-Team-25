@@ -151,7 +151,23 @@ def myaccount():
         else:
             flash('User not found', 'danger')
 
-    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user)
+    # orders made by user section
+    user_id = current_user.user_id
+    orders = Order.query.filter_by(user_id=user_id).all()
+
+    return render_template('account.html', accountDetails=account_details_form, profile_pic_url=profile_pic_url, user=user, orders=orders)
+
+@main.route('/order-history/<int:order_id>')
+@login_required
+@session_required
+def order_history(order_id):
+    # Fetch the order details
+    order = Order.query.filter_by(order_id=order_id).first_or_404()
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('order-history.html', order=order)
 
 @main.route('/add_to_cart', methods=['POST'])
 @login_required
@@ -304,7 +320,6 @@ def orderConfirmation(order_id):
         item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
 
     return render_template('order-confirmation.html', order=order)
-
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -778,10 +793,24 @@ def update_business():
 
     return render_template('sellerDashboard.html', updateBusiness=update_business_form)
 
-@main.route('/orderDetails')
+@main.route('/sellerOrderDetails/<int:order_id>', methods=['GET'])
 @login_required
-def orderDetails():
-    return render_template('sellerOrderDetails.html', user=current_user)
+def sellerOrderDetails(order_id):
+    order = Order.query.filter_by(order_id=order_id).first_or_404()
+    order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    for item in order_items:
+        item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
+
+    return render_template('sellerOrderDetails.html', order=order)
+
+@main.route('/mark-as-completed/<int:order_id>', methods=['POST'])
+@login_required
+def mark_as_completed(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.collection_status = 'Collected'  # Update the collection status
+
+    db.session.commit()
+    return redirect(url_for('main.sellerOrderDetails', order_id=order.order_id))
 
 @main.route('/newProduct', methods=['GET', 'POST'])
 @login_required
