@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - ShopMe{% endblock %}
+  
+{% block content %} 
+<!-- Breadcrumb Begin -->
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/"><i class="fa fa-home"></i> Home</a>
+                    <a href="/contact">Account</a>
+                    <span>Order Details</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb End -->
+
+<!-- Order Details Section Begin -->
+<section class="order-details spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="order__details__title">
+                    <h2>Order Details</h2>
+                    <h4>Order ID: #{{ order.order_id }}</h4>
+                </div>
+                <div class="order__details__table">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.order_items %}
+                            <tr>
+                                <td class="cart__product__item">
+                                    <img src="data:image/png;base64,{{ item.product.image_url | b64encode }}" alt="{{ item.product.name }}" style="width: 100px; height: 100px;">
+                                </td>
+                                <td class="cart__product__item__title">{{ item.product.name }}</td>
+                                <td class="cart__price">${{ item.price }}</td>
+                                <td class="cart__quantity">{{ item.quantity }}</td>
+                                <td class="cart__total">${{ item.price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3"><strong>Total:</strong></td>
+                                <td><strong>${{ order.total_price }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="order__details__info">
+                    <div class="row mt-4">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="orderDate">Order Date</label>
+                                <input type="text" class="form-control" id="orderDate" value="{{ order.created_date.strftime('%Y-%m-%d') }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <input type="text" class="form-control" id="status" value="{{ order.collection_status }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                        
+                    {% if order.collection_status == 'Not Collected' %}
+                    <div>
+                        <h2 class="text-center">Please head to the collection site to collect your order!</h2>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        <a href="/myprofile" class="btn btn-primary mr-2">Back</a>
+                        <a href="/shop" class="btn btn-success">Continue Shopping</a>
+                    </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Order Details Section End -->
+{% endblock %}

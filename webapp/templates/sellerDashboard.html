@@ -129,7 +129,7 @@
                                     <td>{{ order['created_date'] }}</td>
                                     <td>{{ order['total_price'] }}</td>
                                     <td>{{ order['collection_status'] }}</td>
-                                    <td><button class="btn btn-primary" onclick="location.href='/orderDetails';">Manage</button></td>
+                                    <td><a href="{{ url_for('main.sellerOrderDetails', order_id=order.order_id) }}" class="btn btn-primary">Manage</button></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

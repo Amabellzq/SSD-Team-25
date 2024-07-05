@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     profile_pic_url = db.Column(db.LargeBinary)
     role = db.Column(db.Enum('Admin', 'Merchant', 'Customer'), nullable=False)
     account_status = db.Column(db.Enum('Active', 'Inactive', 'Suspended'), nullable=False, default='Active')
+    active_session_token = db.Column(db.String(255), nullable=True)
     shopping_cart = db.relationship('ShoppingCart', backref='user', uselist=False)
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
@@ -52,6 +53,7 @@ class CartItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
+    product = db.relationship('Product', backref=db.backref('cart_items', lazy=True))
 
 class Product(db.Model):
     __tablename__ = 'Product'
