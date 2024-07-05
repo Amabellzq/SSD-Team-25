@@ -30,3 +30,6 @@ class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use an in-memory SQLite database for testing
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SERVER_NAME = 'localhost.localdomain'  # Required for URL generation
+    APPLICATION_ROOT = '/'  # Optional
+    PREFERRED_URL_SCHEME = 'https'  # Optional
