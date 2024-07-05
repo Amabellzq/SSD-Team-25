@@ -10,6 +10,8 @@ from webapp.model import User
 def test_client():
     app = Flask(__name__)
     app.config.from_object(TestConfig)
+    # Ensure the SQLAlchemy instance is properly initialized
+    db.init_app(app)
 
     # Create a test client using the Flask application configured for testing
     with app.test_client() as testing_client:
