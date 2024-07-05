@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 # is to to avoid circular imports
 from webapp import routes
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -22,4 +23,10 @@ class Config:
         f"mysql+pymysql://{MYSQL_ADMIN_USER_ENCODED}:{MYSQL_ADMIN_PASSWORD_ENCODED}"
         f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
     )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use an in-memory SQLite database for testing
     SQLALCHEMY_TRACK_MODIFICATIONS = False
