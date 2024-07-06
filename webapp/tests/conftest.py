@@ -8,19 +8,21 @@ from config import TestConfig
 @pytest.fixture(scope='module')
 def test_client():
     # Configure the app for testing
-
     app.config.from_object(TestConfig)
+    # Ensure the db is only initialized once
+    with app.app_context():
+        db.init_app(app)
+        db.create_all()
 
     # Create a test client using the Flask application configured in your `__init__.py`
     with app.test_client() as testing_client:
         with app.app_context():
-            # Create all tables
-
-            db.create_all()
             yield testing_client  # this is where the testing happens
-            # Drop all tables
-            db.session.remove()
-            db.drop_all()
+
+    # Teardown phase
+    with app.app_context():
+        db.drop_all()
+        db.session.remove()
 
 
 @pytest.fixture(scope='module')
@@ -30,5 +32,6 @@ def init_database():
     with app.app_context():
         db.create_all()
         yield db  # this is where the testing happens
-        db.session.remove()
+
         db.drop_all()
+        db.session.remove()
