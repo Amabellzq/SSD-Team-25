@@ -10,6 +10,11 @@ def test_client():
     # Configure the app for testing
 
     app.config.from_object(TestConfig)
+    # Reinitialize the SQLAlchemy instance to avoid any conflicts
+    if 'sqlalchemy' in app.extensions:
+        del app.extensions['sqlalchemy']
+    db.init_app(app)
+
     with app.app_context():
         db.create_all()
 
