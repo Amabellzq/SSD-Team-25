@@ -8,6 +8,7 @@ def test_register_success(test_client, init_database, mocker):
     response = test_client.post('/register', data=dict(username='newuser', email='newuser@example.com', password='password'), follow_redirects=True)
     assert response.status_code == 200
     assert b'Registration successful' in response.data
+
 def test_register_duplicate_username(test_client, mocker):
     """
     GIVEN a Flask application configured for testing

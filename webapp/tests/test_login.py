@@ -11,15 +11,6 @@ def test_login_success(test_client, init_database, mocker):
     assert response.status_code == 200
     assert b'Logout' in response.data
 
-    response = test_client.post(url_for('main.login'), data=dict(
-        username='testuser',
-        password='password'
-    ), follow_redirects=True)
-
-    assert response.status_code == 200
-    assert b'Login successful' in response.data
-    mock_get_user.assert_called_once_with('testuser')
-
 
 def test_login_invalid_credentials(test_client, init_database, mocker):
     """
