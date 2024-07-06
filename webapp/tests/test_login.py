@@ -10,13 +10,17 @@ def test_register_success(test_client, mocker):
     mocker.patch('webapp.services.UserService.get_by_email', return_value=None)
     mocker.patch('webapp.services.UserService.create', return_value=True)
 
-    # Simulate form submission
+    # Simulate GET request to load the registration page
+    response = test_client.get('/register')
+    assert response.status_code == 200
+
+    # Simulate form submission via POST request
     response = test_client.post('/register', data=dict(
         username='testuser',
         email='newuser@example.com',
         role='Customer',
         password='testpassword',
-        confirm_password='testpassword',  # Include confirm_password
+        profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
 
     # Assert the response status code
@@ -24,7 +28,6 @@ def test_register_success(test_client, mocker):
 
     # Assert that the success message is in the response data
     assert b'Registration Successful' in response.data
-
 def test_login_success(test_client, mocker):
     # Mock UserService.get_by_username to return a user
     mock_user = User(username='testuser', password=generate_password_hash('testpassword'))
