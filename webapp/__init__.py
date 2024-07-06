@@ -4,7 +4,8 @@ from flask import Flask
 from config import Config
 from .routes import main
 from flask_login import LoginManager
-from .model import db, User  # Import your user model
+from .model import db, User
+from flask_wtf.csrf import CSRFProtect
 from .services import UserService 
 from flask_session import Session
 from datetime import timedelta
@@ -44,6 +45,9 @@ app.config["SESSION_TYPE"] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session expires in 1 hour
 Session(app)
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

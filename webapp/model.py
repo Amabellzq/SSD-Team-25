@@ -80,7 +80,6 @@ class Order(db.Model):
     __tablename__ = 'Order'
     order_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
-    merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     total_price = db.Column(db.Numeric(10, 2))
     collection_status = db.Column(db.Enum('Not Collected', 'Collected'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -95,6 +94,11 @@ class OrderItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('Product.product_id'))
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10, 2))
+    merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))  # Add this line
+
+    product = db.relationship('Product', backref=db.backref('order_items', lazy=True))
+    merchant = db.relationship('Merchant', backref=db.backref('order_items', lazy=True))
+    
 
 class Payment(db.Model):
     __tablename__ = 'Payment'

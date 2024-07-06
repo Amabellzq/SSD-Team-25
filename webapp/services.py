@@ -295,6 +295,11 @@ class OrderService:
             db.session.commit()
             return order
         return None
+    
+    @staticmethod
+    def get_by_merchant_id(merchant_id):
+        return Order.query.filter(Order.order_items.any(OrderItem.merchant_id == merchant_id)).all()
+
 
 class OrderItemService:
     @staticmethod
