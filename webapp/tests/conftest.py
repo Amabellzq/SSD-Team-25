@@ -26,6 +26,7 @@ def test_client():
 @pytest.fixture(scope='module')
 def init_database():
     app = Flask(__name__)
+    app.config.from_object(TestConfig)
     # Create the database and the database table(s)
     with app.app_context():
         if not hasattr(db, 'app'):

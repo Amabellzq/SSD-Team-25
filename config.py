@@ -28,7 +28,7 @@ class Config:
 
 class TestConfig():
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite://:memory:'  # Use an in-memory SQLite database for testing
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use an in-memory SQLite database for testing
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SERVER_NAME = 'localhost'  # Required for URL generation
     WTF_CSRF_ENABLED = False  # Disable CSRF for testing purposes
