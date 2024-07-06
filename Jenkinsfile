@@ -69,6 +69,15 @@ pipeline {
                 }
             }
         }
+                stage('Build and Deploy') {
+            steps {
+                // Ensure a clean deployment by bringing down any existing containers
+                sh 'docker-compose down --remove-orphans'
+                // Use Docker Compose to build and start the services, using the .env file for configuration
+                sh 'docker-compose up --build -d'
+            }
+        }
+    }
          stage('Pytest') {
             steps {
                 dir(REPO_DIR) {
@@ -183,15 +192,7 @@ pipeline {
         }
 
 
-        stage('Build and Deploy') {
-            steps {
-                // Ensure a clean deployment by bringing down any existing containers
-                sh 'docker-compose down --remove-orphans'
-                // Use Docker Compose to build and start the services, using the .env file for configuration
-                sh 'docker-compose up --build -d'
-            }
-        }
-    }
+
 
 post {
     always {
