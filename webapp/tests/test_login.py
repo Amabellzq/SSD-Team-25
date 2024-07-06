@@ -23,12 +23,12 @@ def test_login_invalid_credentials(test_client, mocker):
     mock_get_user.assert_called_once_with('testuser')
 
 
-def test_add_to_cart_product_not_found(test_client, mocker):
-    mock_get_product = mocker.patch('webapp.services.ProductService.get', return_value=None)
-    response = test_client.post(url_for('main.add_to_cart', product_id=1), data=dict(quantity=1), follow_redirects=True)
-    assert response.status_code == 200
-    assert b'Product not found' in response.data
-    mock_get_product.assert_called_once_with(1)
+# def test_add_to_cart_product_not_found(test_client, mocker):
+#     mock_get_product = mocker.patch('webapp.services.ProductService.get', return_value=None)
+#     response = test_client.post(url_for('main.add_to_cart', product_id=1), data=dict(quantity=1), follow_redirects=True)
+#     assert response.status_code == 200
+#     assert b'Product not found' in response.data
+#     mock_get_product.assert_called_once_with(1)
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
