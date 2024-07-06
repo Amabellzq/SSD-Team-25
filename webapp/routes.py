@@ -445,9 +445,7 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-    if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
-        return redirect(url_for('main.home'))
-    
+
     form = TOTPForm()
 
     if request.method == 'POST' and form.validate_on_submit():
