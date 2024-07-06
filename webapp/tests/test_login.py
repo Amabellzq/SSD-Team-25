@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
 from werkzeug.security import generate_password_hash
-from webapp.model import User
+from webapp.model import User ,db
 def test_register_success(test_client, mocker):
     mocker.patch('webapp.services.UserService.create', return_value=True)
     response = test_client.post('/register', data=dict(username='testuser', email='newuser@example.com', password='testpassword'), follow_redirects=True)
