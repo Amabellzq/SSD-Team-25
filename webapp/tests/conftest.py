@@ -20,9 +20,8 @@ def test_client():
             db.create_all()
             yield testing_client
 
-        # Teardown: drop all tables
-            db.session.remove()
-            db.drop_all()
+    db.session.remove()
+    db.drop_all()
 
 
 @pytest.fixture(scope='module')
