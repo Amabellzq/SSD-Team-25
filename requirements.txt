@@ -17,3 +17,5 @@ Flask-WTF
 selenium
 webdriver-manager
 Flask-WTF == 1.2.1
+pytz
+Flask-Mail==0.10.0

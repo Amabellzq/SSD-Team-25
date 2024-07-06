@@ -32,6 +32,7 @@
         </div>
         <img src="data:image/png;base64,{{ img_b64 }}" alt="TOTP QR Code">
         <form method="POST" action="{{ url_for('main.totp') }}">
+            {{ form.hidden_tag() }}
             <div class="field">
                 <input type="text" name="totp" class="form-control" required>
                 <label for="totp">TOTP Code</label>

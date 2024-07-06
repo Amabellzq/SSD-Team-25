@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
-    <title>Shop Me | TOTP Verification</title>
+    <title>Shop Me | OTP Verification</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_style.css') }}">
     <style>
         .field-center {
@@ -23,18 +23,42 @@
         .field-center .btn:hover {
             background-color: #0056b3;
         }
+        .alert-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .custom-alert {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .alert-danger {
+            background-color: #dc3545;
+        }
+        .alert-success {
+            background-color: #28a745;
+        }
+        .alert-warning {
+            background-color: #ffc107;
+        }
+        .alert-info {
+            background-color: #17a2b8;
+        }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="title">
-            TOTP Verification
+            OTP Verification
         </div>
-        <form method="POST" action="{{ url_for('main.verify_totp') }}">
+        <form method="POST" action="{{ url_for('main.verify_otp', user_id=user_id) }}">
             {{ form.hidden_tag() }}
             <div class="field">
-                <input type="text" name="totp" class="form-control" required>
-                <label for="totp">TOTP Code</label>
+                <input type="text" name="otp" class="form-control" required>
+                <label for="otp">OTP Code</label>
             </div>
 
             <!-- Flash Messages Section -->

@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -13,11 +13,43 @@ import qrcode
 from io import BytesIO
 from PIL import Image
 from functools import wraps
+from random import randint
+import smtplib
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+
+def send_email(recipient_email, subject, body):
+    load_dotenv()
+    OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
+    OUTLOOK_PASSWORD= os.getenv('OUTLOOK_PASSWORD')
+    smtp_server = 'smtp.outlook.com'
+    smtp_port = 587
+    smtp_username = OUTLOOK_EMAIL
+    smtp_password = OUTLOOK_PASSWORD
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            message = f"Subject: {subject}\n\n{body}"
+            server.sendmail(smtp_username, recipient_email, message)
+
+    except smtplib.SMTPAuthenticationError as auth_error:
+        print(f"SMTP Authentication Error: {auth_error}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        
+def get_singapore_time():
+    # Get the current time in UTC
+    utc_time = datetime.utcnow()
+    # Add 8 hours to get Singapore time
+    singapore_time = utc_time + timedelta(hours=8)
+    return singapore_time
 
 def session_required(f):
     @wraps(f)
@@ -238,23 +270,39 @@ def remove_from_cart(cart_item_id):
 @session_required
 def update_cart(cart_item_id):
     try:
+        data = request.get_json()
         new_quantity = int(request.form.get('quantity', 1))
         cart_item = CartItem.query.get_or_404(cart_item_id)
         
         if cart_item.shoppingcart.user_id != current_user.user_id:
             abort(403)
-        
+
         product_price = cart_item.product.price
         cart_item.quantity = new_quantity
         cart_item.price = product_price * new_quantity
         
         db.session.commit()
+
+        # Calculate new cart total
+        cart = ShoppingCart.query.filter_by(user_id=current_user.user_id).first()
+        cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
+        cart_total = sum(item.price for item in cart_items)
+
+        return jsonify({
+            'success': True,
+            'item_total': float(cart_item.price),
+            'cart_total': float(cart_total)
+        })
+
         flash('Cart updated successfully!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'An error occurred: {e}', 'danger')
-    
-    return redirect(url_for('main.cart'))
+        return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 500
+    # return redirect(url_for('main.cart'))
 
 
 @main.route('/checkout', methods=['GET', 'POST'])
@@ -281,11 +329,14 @@ def checkout():
 
         # Create Order Items
         for item in cart_items:
+            product = Product.query.get(item.product_id)
             order_item = OrderItem(
                 order_id=order.order_id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                price=item.price
+                price=item.price, 
+                merchant_id=product.merchant_id  # Add this line
+
             )
             db.session.add(order_item)
 
@@ -341,6 +392,11 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
+            if not user.is_verified:
+                flash('Please verify your email before logging in.', 'danger')
+                return redirect(url_for('main.verify_otp', user_id=user.user_id))
+            
+            session['user_id'] = user.get_id()
             if not user.totp_secret:
                 return redirect(url_for('main.totp'))
             return redirect(url_for('main.verify_totp'))
@@ -391,9 +447,12 @@ def totp():
     user = UserService.get(user_id)
     if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
         return redirect(url_for('main.home'))
+    
+    form = TOTPForm()
 
-    if request.method == 'POST':
-        totp_code = request.form['totp']
+    if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
+        totp_code = form.totp.data
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
@@ -412,7 +471,7 @@ def totp():
     img.save(buf, format='PNG')
     img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
-    return render_template('totp.html', img_b64=img_b64)
+    return render_template('totp.html', img_b64=img_b64, form=form)
 
 @main.route('/verify_totp', methods=['GET', 'POST'])
 def verify_totp():
@@ -421,9 +480,11 @@ def verify_totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
+    form = TOTPForm()
 
-    if request.method == 'POST':
-        totp_code = request.form['totp']
+    if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
+        totp_code = form.totp.data
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
@@ -441,7 +502,7 @@ def verify_totp():
         else:
             flash('Invalid TOTP code', 'danger')
 
-    return render_template('verify_totp.html')
+    return render_template('verify_totp.html', form=form)
 
 
 @main.route('/logout')
@@ -465,23 +526,35 @@ def register():
         password = form.password.data
         profile_picture = form.profile_picture.data
 
-        # Check for duplicate username
-        existing_user = UserService.get_by_username(username)
+        existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already exists. Please choose a different username.', 'danger')
         else:
-            # Check for duplicate email
-            existing_email = UserService.get_by_email(email)
+            existing_email = User.query.filter_by(email=email).first()
             if existing_email:
                 flash('Email already exists.', 'danger')
             else:
                 hashed_password = generate_password_hash(password)
                 try:
-                    # Create the new user
-                    new_user = UserService.create(username=username, email=email, password=hashed_password, role=role)
-                    registration_successful = True
-                    flash('Registration Successful', 'success')
-                    return redirect(url_for('main.login'))
+                    new_user = User(username=username, email=email, password=hashed_password, role=role, is_verified=False)
+                    if profile_picture:
+                        new_user.profile_pic_url = profile_picture.read()
+
+                    otp = randint(100000, 999999)
+                    otp_expiry_minutes = 5
+                    new_user.otp_expiry = get_singapore_time() + timedelta(minutes=otp_expiry_minutes)
+                    new_user.otp = otp
+                    db.session.add(new_user)
+                    db.session.commit()
+
+                    # msg = Message('Email Verification', sender='shopppme2024@outlook.com', recipients=[email])
+                    # msg.body = f"Thank you {username} for registering. Your OTP is: {otp}"
+                    # mail.send(msg)
+                    send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
+                    print('successful')
+                    flash('Registration Successful. Please check your email for the OTP.', 'success')
+                    
+                    return redirect(url_for('main.verify_otp', user_id=new_user.user_id))
                 except Exception as e:
                     db.session.rollback()
                     current_app.logger.error(f'Error while registering user: {str(e)}')
@@ -495,6 +568,41 @@ def register():
                     flash(f'{field.label.text}: {error}', 'danger')
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
+
+@main.route('/verify_otp/<int:user_id>', methods=['GET', 'POST'])
+def verify_otp(user_id):
+    user = UserService.get(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('main.register'))
+    
+    
+    form = OTPForm()
+
+    if request.method == 'POST' and form.validate_on_submit():
+        otp = form.otp.data
+        if user.otp_expiry and get_singapore_time() > user.otp_expiry:
+            # OTP expired, generate a new one
+            new_otp = randint(100000, 999999)
+            user.otp = new_otp
+            user.otp_expiry = get_singapore_time() + timedelta(minutes=5)
+            db.session.commit()
+
+            # Send new OTP to user's email
+            send_email(user.email, "Your New OTP for Login", f"Your OTP has expired. Please use the following new One-Time Password: {new_otp}. It will expire in 5 minutes.")
+            flash('Your OTP has expired. A new OTP has been sent to your email.', 'warning')
+            
+        elif user.otp == otp and user.otp_expiry > get_singapore_time():
+            user.is_verified = True
+            user.otp = None
+            user.otp_expiry = None
+            db.session.commit()
+            flash('OTP verified successfully. You can now login.', 'success')
+            return redirect(url_for('main.login'))
+        else:
+            flash('Invalid OTP. Please try again.', 'danger')
+
+    return render_template('verify_otp.html', user_id=user_id, form=form)
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
 def forgetPass():
@@ -707,7 +815,13 @@ def sellerDashboard():
         update_business_form.business_address.data = merchant.business_address
         update_business_form.user_id.data = user_id
 
-    orders = OrderService.get_all()
+    # orders = OrderService.get_all()
+    # products = ProductService.get_by_merchant_id(merchant.merchant_id)
+    # for product in products:
+    #     if product.image_url:
+    #         product.image_url = base64.b64encode(product.image_url).decode('utf-8')
+
+    orders = OrderService.get_by_merchant_id(merchant.merchant_id)
     products = ProductService.get_by_merchant_id(merchant.merchant_id)
     for product in products:
         if product.image_url:
