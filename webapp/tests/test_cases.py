@@ -33,6 +33,28 @@ def test_register_success(test_client, mocker):
     # Assert that the success message is in the response data
     assert b'Registration Successful' in response.data
 
+def test_register_mismatched_passwords(test_client, mocker):
+    # Mock the UserService methods
+    mocker.patch('webapp.services.UserService.get_by_username', return_value=None)
+    mocker.patch('webapp.services.UserService.get_by_email', return_value=None)
+    mocker.patch('webapp.services.UserService.create', return_value=True)
+
+    # Simulate form submission via POST request
+    response = test_client.post('/register', data=dict(
+        username='testuser',
+        email='newuser@example.com',
+        role='Customer',
+        password='TestingPas1w@rd',
+        confirm_password='MismatchedTestingPas1w@rd',
+        profile_picture=(None, '')  # Mock profile picture as empty
+    ), follow_redirects=True)
+
+    # Assert the response status code
+    assert response.status_code == 200
+
+    # Assert that the error message is in the response data
+    assert b'Confirm Password: Password must match' in response.data
+
 def test_login_invalid_credentials(test_client, mocker):
     # Mock UserService.get_by_username to return None (user not found)
     mocker.patch('webapp.services.UserService.get_by_username', return_value=None)
