@@ -16,11 +16,11 @@ def test_client():
         with app.app_context():
             # Create all tables
 
-            db.session.create_all()
+            db.create_all()
             yield testing_client  # this is where the testing happens
             # Drop all tables
             db.session.remove()
-            db.session.drop_all()
+            db.drop_all()
 
 
 @pytest.fixture(scope='module')
@@ -28,7 +28,7 @@ def init_database():
     app.config.from_object(TestConfig)
     # Create the database and the database table(s)
     with app.app_context():
-        db.session.create_all()
+        db.create_all()
         yield db  # this is where the testing happens
         db.session.remove()
-        db.session.drop_all()
+        db.drop_all()
