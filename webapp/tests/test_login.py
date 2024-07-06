@@ -15,6 +15,7 @@ def test_register_success(test_client, mocker):
         username='testuser',
         email='newuser@example.com',
         password='testpassword',
+        confirm_password='testpassword',  # Include confirm_password
         role='Customer',
         profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
@@ -24,7 +25,6 @@ def test_register_success(test_client, mocker):
 
     # Assert that the success message is in the response data
     assert b'Registration Successful' in response.data
-
 
 def test_login_success(test_client, mocker):
     # Mock UserService.get_by_username to return a user
