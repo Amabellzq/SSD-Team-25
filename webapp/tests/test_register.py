@@ -5,13 +5,8 @@ from flask import url_for
 from webapp.model import User, db
 
 
-@pytest.fixture(autouse=True)
-def run_around_tests():
-    # Setup before each test
-    yield
-    # Teardown after each test
-    db.session.remove()
-def test_register_success(test_client, init_database, mocker):
+
+def test_register_success(test_client, mocker):
     mocker.patch('webapp.services.UserService.create', return_value=True)
     response = test_client.post('/register', data=dict(username='newuser', email='newuser@example.com', password='password'), follow_redirects=True)
     assert response.status_code == 200
@@ -38,3 +33,10 @@ def test_register_success(test_client, init_database, mocker):
 #     assert response.status_code == 200
 #     assert b'Username already exists. Please choose a different username.' in response.data
 #     mock_get_by_username.assert_called_once_with('newuser')
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # Setup before each test
+    yield
+    # Teardown after each test
+    db.session.remove()
