@@ -27,7 +27,13 @@
             .field {
                 margin-bottom: 10px; /* Ensure there is space between fields */
             }
+            .captcha {
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: center;
+            }
         </style>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <script>
             // Function to hide flash messages after a few seconds
             document.addEventListener('DOMContentLoaded', function() {
@@ -39,15 +45,18 @@
                 }, 3000); // Adjust the time (3000 ms = 3 seconds) as needed
             });
     
-            // Function to redirect after registration success
+            // Function to reset reCAPTCHA when the page loads
+            function resetRecaptcha() {
+                grecaptcha.ready(function() {
+                    grecaptcha.reset();
+                });
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
-                const successAlert = document.querySelector('.custom-alert.alert-success');
-                if (successAlert) {
-                    setTimeout(function() {
-                        window.location.href = "{{ url_for('main.login') }}";
-                    }, 3000); // Redirect after 3 seconds
-                }
+                resetRecaptcha();
             });
+
+            
         </script>
    </head>
    <body>
@@ -85,6 +94,10 @@
                 {% endif %}
                 <label>{{ register_form.confirm_password.label.text }}</label>
             </div>
+            <!-- <div class="captcha" data-sitekey="{{ RECAPTCHA_PUBLIC_KEY }}"></div> -->
+            <div class="captcha">
+                {{ register_form.recaptcha }}
+            </div>
             <!-- Flash Messages Section -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -106,4 +119,5 @@
          </form>
       </div>
    </body>
+
 </html>

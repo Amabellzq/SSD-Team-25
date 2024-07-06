@@ -1,4 +1,4 @@
-import secrets
+import secrets, requests
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
@@ -13,6 +13,19 @@ main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+
+def validate_recaptcha(recaptcha_response):
+    data = {
+        'secret': current_app.config['RECAPTCHA_PRIVATE_KEY'],
+        'response': recaptcha_response
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+    result = r.json()
+    print(f"reCAPTCHA API result: {result}")  # Debug statement
+    if not result.get('success'):
+        error_codes = result.get('error-codes', [])
+        print(f"reCAPTCHA error codes: {error_codes}")  # Print error codes if validation fails
+    return result.get('success')
 
 def session_required(f):
     @wraps(f)
@@ -244,12 +257,22 @@ def logout():
 def register():
     form = RegistrationForm()
     registration_successful = False
+    recaptcha_public_key = current_app.config['RECAPTCHA_PUBLIC_KEY']
+    
     if form.validate_on_submit():
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        print(f"g-recaptcha-response: {recaptcha_response}")  # Debug statement
+        if not validate_recaptcha(recaptcha_response):
+            flash('Invalid reCAPTCHA. Please try again.', 'danger')
+            print('Invalid reCAPTCHA')  # Debug statement
+            return render_template('register.html', register_form=form, recaptcha_public_key=recaptcha_public_key)
+
+    
+
         username = form.username.data
         email = form.email.data
         role = form.role.data
         password = form.password.data
-        profile_picture = form.profile_picture.data
 
         # Check for duplicate username
         existing_user = User.query.filter_by(username=username).first()
@@ -265,24 +288,66 @@ def register():
                 try:
                     # Create the new user
                     new_user = User.create(username=username, email=email, password=hashed_password, role=role)
-
                     registration_successful = True
-                    flash('Registeration Successful', 'success')
+                    flash('Registration Successful', 'success')
                     return redirect(url_for('main.login'))
-
                 except Exception as e:
                     db.session.rollback()
                     current_app.logger.error(f'Error while registering user: {str(e)}')
                     flash(f'An error occurred: {str(e)}', 'danger')
     else:
         if request.method == 'POST':
-            current_app.logger.debug('Form validation failed')
+            print('Form validation failed')  # Debug statement
             for field_name, errors in form.errors.items():
                 field = getattr(form, field_name)
                 for error in errors:
                     flash(f'{field.label.text}: {error}', 'danger')
 
-    return render_template('register.html', register_form=form, registration_successful=registration_successful)
+    return render_template('register.html', register_form=form, recaptcha_public_key=recaptcha_public_key, registration_successful=registration_successful)
+
+# def register():
+#     form = RegistrationForm()
+#     registration_successful = False
+#     if form.validate_on_submit():
+#         username = form.username.data
+#         email = form.email.data
+#         role = form.role.data
+#         password = form.password.data
+            
+
+
+#         # Check for duplicate username
+#         existing_user = User.query.filter_by(username=username).first()
+#         if existing_user:
+#             flash('Username already exists. Please choose a different username.', 'danger')
+#         else:
+#             # Check for duplicate email
+#             existing_email = User.query.filter_by(email=email).first()
+#             if (existing_email):
+#                 flash('Email already exists.', 'danger')
+#             else:
+#                 hashed_password = generate_password_hash(password)
+#                 try:
+#                     # Create the new user
+#                     new_user = User.create(username=username, email=email, password=hashed_password, role=role)
+
+#                     registration_successful = True
+#                     flash('Registration Successful', 'success')
+#                     return redirect(url_for('main.login'))
+
+#                 except Exception as e:
+#                     db.session.rollback()
+#                     current_app.logger.error(f'Error while registering user: {str(e)}')
+#                     flash(f'An error occurred: {str(e)}', 'danger')
+#     else:
+#         if request.method == 'POST':
+#             current_app.logger.debug('Form validation failed')
+#             for field_name, errors in form.errors.items():
+#                 field = getattr(form, field_name)
+#                 for error in errors:
+#                     flash(f'{field.label.text}: {error}', 'danger')
+
+#     return render_template('register.html', register_form=form, registration_successful=registration_successful)
 
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
