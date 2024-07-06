@@ -1,8 +1,7 @@
 import pytest
 from flask import Flask
 
-from webapp import app
-from sqlalchemy.testing import db
+from webapp import app , db
 from config import TestConfig
 
 
