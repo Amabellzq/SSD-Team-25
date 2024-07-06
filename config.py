@@ -26,7 +26,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
-class TestConfig(Config):
+class TestConfig():
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use an in-memory SQLite database for testing
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -34,3 +34,4 @@ class TestConfig(Config):
     WTF_CSRF_ENABLED = False  # Disable CSRF for testing purposes
     APPLICATION_ROOT = '/'  # Optional
     PREFERRED_URL_SCHEME = 'https'  # Optional
+
