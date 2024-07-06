@@ -88,6 +88,10 @@ class TOTPForm(FlaskForm):
     totp = StringField('TOTP Code', validators=[DataRequired()])
     submit = SubmitField('Verify')
 
+class OTPForm(FlaskForm):
+    otp = StringField('OTP Code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
+
 #############################
     # Purchase #
 #############################

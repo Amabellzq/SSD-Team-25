@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -575,9 +575,12 @@ def verify_otp(user_id):
     if not user:
         flash('User not found', 'danger')
         return redirect(url_for('main.register'))
+    
+    
+    form = OTPForm()
 
-    if request.method == 'POST':
-        otp = request.form.get('otp')
+    if request.method == 'POST' and form.validate_on_submit():
+        otp = form.otp.data
         if user.otp_expiry and get_singapore_time() > user.otp_expiry:
             # OTP expired, generate a new one
             new_otp = randint(100000, 999999)
@@ -599,7 +602,7 @@ def verify_otp(user_id):
         else:
             flash('Invalid OTP. Please try again.', 'danger')
 
-    return render_template('verify_otp.html', user_id=user_id)
+    return render_template('verify_otp.html', user_id=user_id, form=form)
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
 def forgetPass():

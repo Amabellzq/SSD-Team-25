@@ -55,6 +55,7 @@
             OTP Verification
         </div>
         <form method="POST" action="{{ url_for('main.verify_otp', user_id=user_id) }}">
+            {{ form.hidden_tag() }}
             <div class="field">
                 <input type="text" name="otp" class="form-control" required>
                 <label for="otp">OTP Code</label>
