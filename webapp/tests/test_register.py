@@ -1,8 +1,9 @@
 import pytest
 from flask import url_for
-from sqlalchemy.testing import db
 
-from webapp.model import User
+
+from webapp.model import User, db
+
 
 @pytest.fixture(autouse=True)
 def run_around_tests():

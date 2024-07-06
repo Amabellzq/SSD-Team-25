@@ -1,7 +1,9 @@
 import pytest
 from flask import url_for
 from werkzeug.security import generate_password_hash
-from webapp.model import User
+from webapp.model import User, db
+
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     # Setup before each test
