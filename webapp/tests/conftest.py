@@ -15,6 +15,8 @@ def test_client():
     with app.test_client() as testing_client:
         with app.app_context():
             # Create all tables
+            if not hasattr(db, 'app'):
+                db.init_app(app)
             db.create_all()
             yield testing_client  # this is where the testing happens
             # Drop all tables
