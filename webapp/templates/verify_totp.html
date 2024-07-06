@@ -31,6 +31,7 @@
             TOTP Verification
         </div>
         <form method="POST" action="{{ url_for('main.verify_totp') }}">
+            {{ form.hidden_tag() }}
             <div class="field">
                 <input type="text" name="totp" class="form-control" required>
                 <label for="totp">TOTP Code</label>

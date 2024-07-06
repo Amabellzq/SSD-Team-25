@@ -84,6 +84,10 @@ class ResetPasswordForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Reset Password')
 
+class TOTPForm(FlaskForm):
+    totp = StringField('TOTP Code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
+
 #############################
     # Purchase #
 #############################

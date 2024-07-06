@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -238,23 +238,39 @@ def remove_from_cart(cart_item_id):
 @session_required
 def update_cart(cart_item_id):
     try:
+        data = request.get_json()
         new_quantity = int(request.form.get('quantity', 1))
         cart_item = CartItem.query.get_or_404(cart_item_id)
         
         if cart_item.shoppingcart.user_id != current_user.user_id:
             abort(403)
-        
+
         product_price = cart_item.product.price
         cart_item.quantity = new_quantity
         cart_item.price = product_price * new_quantity
         
         db.session.commit()
+
+        # Calculate new cart total
+        cart = ShoppingCart.query.filter_by(user_id=current_user.user_id).first()
+        cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
+        cart_total = sum(item.price for item in cart_items)
+
+        return jsonify({
+            'success': True,
+            'item_total': float(cart_item.price),
+            'cart_total': float(cart_total)
+        })
+
         flash('Cart updated successfully!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'An error occurred: {e}', 'danger')
-    
-    return redirect(url_for('main.cart'))
+        return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 500
+    # return redirect(url_for('main.cart'))
 
 
 @main.route('/checkout', methods=['GET', 'POST'])
@@ -281,11 +297,14 @@ def checkout():
 
         # Create Order Items
         for item in cart_items:
+            product = Product.query.get(item.product_id)
             order_item = OrderItem(
                 order_id=order.order_id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                price=item.price
+                price=item.price, 
+                merchant_id=product.merchant_id  # Add this line
+
             )
             db.session.add(order_item)
 
@@ -391,9 +410,12 @@ def totp():
     user = UserService.get(user_id)
     if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
         return redirect(url_for('main.home'))
+    
+    form = TOTPForm()
 
-    if request.method == 'POST':
-        totp_code = request.form['totp']
+    if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
+        totp_code = form.totp.data
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
@@ -412,7 +434,7 @@ def totp():
     img.save(buf, format='PNG')
     img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
-    return render_template('totp.html', img_b64=img_b64)
+    return render_template('totp.html', img_b64=img_b64, form=form)
 
 @main.route('/verify_totp', methods=['GET', 'POST'])
 def verify_totp():
@@ -421,9 +443,11 @@ def verify_totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
+    form = TOTPForm()
 
-    if request.method == 'POST':
-        totp_code = request.form['totp']
+    if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
+        totp_code = form.totp.data
         totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
@@ -441,7 +465,7 @@ def verify_totp():
         else:
             flash('Invalid TOTP code', 'danger')
 
-    return render_template('verify_totp.html')
+    return render_template('verify_totp.html', form=form)
 
 
 @main.route('/logout')
@@ -707,7 +731,13 @@ def sellerDashboard():
         update_business_form.business_address.data = merchant.business_address
         update_business_form.user_id.data = user_id
 
-    orders = OrderService.get_all()
+    # orders = OrderService.get_all()
+    # products = ProductService.get_by_merchant_id(merchant.merchant_id)
+    # for product in products:
+    #     if product.image_url:
+    #         product.image_url = base64.b64encode(product.image_url).decode('utf-8')
+
+    orders = OrderService.get_by_merchant_id(merchant.merchant_id)
     products = ProductService.get_by_merchant_id(merchant.merchant_id)
     for product in products:
         if product.image_url:
