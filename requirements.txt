@@ -16,3 +16,4 @@ Flask-Login
 Flask-WTF
 selenium
 webdriver-manager
+Flask-WTF == 1.2.1
