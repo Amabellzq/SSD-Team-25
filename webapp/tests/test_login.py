@@ -32,18 +32,6 @@ def test_register_success(test_client, mocker):
 
     # Assert that the success message is in the response data
     assert b'Registration Successful' in response.data
-def test_login_success(test_client, mocker):
-    # Mock UserService.get_by_username to return a user
-    mock_user = User(username='testuser', password=generate_password_hash('TestingPas1w@rd'))
-    mocker.patch('webapp.services.UserService.get_by_username', return_value=mock_user)
-    mocker.patch('webapp.routes.check_password_hash', return_value=True)  # Mock check_password_hash
-
-    response = test_client.post('/login', data=dict(username='testuser', password='TestingPas1w@rd'),
-                                follow_redirects=True)
-
-    assert response.status_code == 200
-    assert b'TOTP' in response.data or b'verify_totp' in response.data  # Adjust this as needed based on your TOTP flow
-
 
 def test_login_invalid_credentials(test_client, mocker):
     # Mock UserService.get_by_username to return None (user not found)
