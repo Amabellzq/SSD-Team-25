@@ -19,8 +19,8 @@ def test_register_success(test_client, mocker):
         username='testuser',
         email='newuser@example.com',
         role='Customer',
-        password='testpassword',
-        confirm_password='testpassword',  # Ensure confirm_password matches
+        password='!TestingPassw@rd',
+        confirm_password='!TestingPassw@rd',  # Ensure confirm_password matches
         profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
 
@@ -34,11 +34,11 @@ def test_register_success(test_client, mocker):
     assert b'Registration Successful' in response.data
 def test_login_success(test_client, mocker):
     # Mock UserService.get_by_username to return a user
-    mock_user = User(username='testuser', password=generate_password_hash('testpassword'))
+    mock_user = User(username='testuser', password=generate_password_hash('TestingPassw@rd'))
     mocker.patch('webapp.services.UserService.get_by_username', return_value=mock_user)
     mocker.patch('webapp.routes.check_password_hash', return_value=True)  # Mock check_password_hash
 
-    response = test_client.post('/login', data=dict(username='testuser', password='testpassword'),
+    response = test_client.post('/login', data=dict(username='testuser', password='TestingPassw@rd'),
                                 follow_redirects=True)
 
     assert response.status_code == 200
