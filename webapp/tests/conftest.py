@@ -1,15 +1,18 @@
 import pytest
-from webapp import app, db
+from flask import Flask
+
+from webapp import db
 from config import TestConfig
 
 
 @pytest.fixture(scope='module')
 def test_client():
     # Configure the app for testing
+    app = Flask(__name__)
     app.config.from_object(TestConfig)
 
     # Ensure the db is only initialized once
-    if not hasattr(db, 'app'):
+    if not hasattr(db, 'webapp'):
         db.init_app(app)
 
     # Create a test client using the Flask application configured in your `__init__.py`
@@ -24,6 +27,7 @@ def test_client():
 
 @pytest.fixture(scope='module')
 def init_database():
+    app = Flask(__name__)
     # Create the database and the database table(s)
     with app.app_context():
         db.create_all()
