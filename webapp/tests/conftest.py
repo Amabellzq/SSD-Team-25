@@ -10,16 +10,13 @@ def test_client():
     # Configure the app for testing
 
     app.config.from_object(TestConfig)
+    with app.app_context():
+        db.create_all()
 
-    # Create a test client using the Flask application configured in your `__init__.py`
     with app.test_client() as testing_client:
         with app.app_context():
-            # Create all tables
+            yield testing_client
 
-            db.create_all()
-            yield testing_client  # this is where the testing happens
-            # Drop all tables
-            # Teardown phase
     with app.app_context():
         db.drop_all()
         db.session.remove()
@@ -32,6 +29,5 @@ def init_database():
     with app.app_context():
         db.create_all()
         yield db  # this is where the testing happens
-
         db.drop_all()
         db.session.remove()
