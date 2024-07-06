@@ -84,7 +84,7 @@ pipeline {
                         // Run pytest and generate a JUnit XML report
                         sh """
                         . venv/bin/activate
-                        pytest -v --junitxml=report.xml
+                        pytest -v --tb=long --junitxml=report.xml
                         """
                     }
                 }
