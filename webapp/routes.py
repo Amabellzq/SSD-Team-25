@@ -43,6 +43,13 @@ def send_email(recipient_email, subject, body):
         print(f"SMTP Authentication Error: {auth_error}")
     except Exception as e:
         print(f"Error sending email: {e}")
+        
+def get_singapore_time():
+    # Get the current time in UTC
+    utc_time = datetime.utcnow()
+    # Add 8 hours to get Singapore time
+    singapore_time = utc_time + timedelta(hours=8)
+    return singapore_time
 
 def session_required(f):
     @wraps(f)
