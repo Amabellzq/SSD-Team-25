@@ -1,7 +1,8 @@
 import pytest
 from flask import Flask
 
-from webapp import app, db
+from webapp import app
+from sqlalchemy.testing import db
 from config import TestConfig
 
 
@@ -14,17 +15,14 @@ def test_client():
     if 'sqlalchemy' in app.extensions:
         del app.extensions['sqlalchemy']
     db.init_app(app)
-
-    with app.app_context():
-        db.create_all()
-
     with app.test_client() as testing_client:
         with app.app_context():
+            db.create_all()
             yield testing_client
 
-    with app.app_context():
-        db.drop_all()
-        db.session.remove()
+        # Teardown: drop all tables
+            db.session.remove()
+            db.drop_all()
 
 
 @pytest.fixture(scope='module')
@@ -34,5 +32,5 @@ def init_database():
     with app.app_context():
         db.create_all()
         yield db  # this is where the testing happens
-        db.drop_all()
         db.session.remove()
+        db.drop_all()

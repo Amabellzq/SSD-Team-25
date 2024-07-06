@@ -1,8 +1,15 @@
 import pytest
 from flask import url_for
+from sqlalchemy.testing import db
+
 from webapp.model import User
 
-
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # Setup before each test
+    yield
+    # Teardown after each test
+    db.session.remove()
 def test_register_success(test_client, init_database, mocker):
     mocker.patch('webapp.services.UserService.create', return_value=True)
     response = test_client.post('/register', data=dict(username='newuser', email='newuser@example.com', password='password'), follow_redirects=True)
