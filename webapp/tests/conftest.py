@@ -1,14 +1,14 @@
 import pytest
 from flask import Flask
 
-from webapp import db
+from webapp import app, db
 from config import TestConfig
 
 
 @pytest.fixture(scope='module')
 def test_client():
     # Configure the app for testing
-    app = Flask(__name__)
+
     app.config.from_object(TestConfig)
 
     # Create a test client using the Flask application configured in your `__init__.py`
@@ -25,7 +25,6 @@ def test_client():
 
 @pytest.fixture(scope='module')
 def init_database():
-    app = Flask(__name__)
     app.config.from_object(TestConfig)
     # Create the database and the database table(s)
     with app.app_context():
