@@ -28,6 +28,8 @@ def init_database():
     app = Flask(__name__)
     # Create the database and the database table(s)
     with app.app_context():
+        if not hasattr(db, 'app'):
+            db.init_app(app)
         db.create_all()
         yield db  # this is where the testing happens
         db.drop_all()
