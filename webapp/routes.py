@@ -445,8 +445,7 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-    if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
-        return redirect(url_for('main.home'))
+
     
     form = TOTPForm()
 
@@ -459,7 +458,15 @@ def totp():
             session['user_id'] = user.get_id()  # Store user ID in session
             user.active_session_token = session.sid  # Use Flask-Session's session ID
             db.session.commit()
+
+            if user.role == 'Merchant':
+                merchant = Merchant.query.filter_by(user_id=user.user_id).first()
+                if merchant:
+                    return redirect(url_for('main.sellerDashboard'))
+                else:
+                    return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))  # Redirect to home page
+        
         else:
             flash('Invalid TOTP code. Please try again.')
 
