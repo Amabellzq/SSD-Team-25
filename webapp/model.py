@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -19,6 +20,9 @@ class User(UserMixin, db.Model):
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
     totp_secret = db.Column(db.String(64), nullable=True)  # Added field for TOTP secret
+    is_verified = db.Column(db.Boolean, default=False)
+    otp = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
 
     def get_id(self):
         return str(self.user_id)
@@ -80,6 +84,7 @@ class Order(db.Model):
     __tablename__ = 'Order'
     order_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'))
+    # merchant_id = db.Column(db.Integer, db.ForeignKey('Merchant.merchant_id'))
     total_price = db.Column(db.Numeric(10, 2))
     collection_status = db.Column(db.Enum('Not Collected', 'Collected'))
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
