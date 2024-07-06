@@ -22,6 +22,8 @@ def test_register_success(test_client, mocker):
         password='testpassword',
         profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
+    # Print the response data for debugging
+    print(response.data)
 
     # Assert the response status code
     assert response.status_code == 200
