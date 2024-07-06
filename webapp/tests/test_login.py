@@ -14,10 +14,9 @@ def test_register_success(test_client, mocker):
     response = test_client.post('/register', data=dict(
         username='testuser',
         email='newuser@example.com',
+        role='Customer',
         password='testpassword',
         confirm_password='testpassword',  # Include confirm_password
-        role='Customer',
-        profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
 
     # Assert the response status code
