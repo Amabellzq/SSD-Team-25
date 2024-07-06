@@ -18,11 +18,17 @@ import smtplib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+limiter = Limiter(key_func=get_remote_address, default_limits=["1 per day", "1 per hour"])
+
+limiter.limit('1/hour')(main)
 
 def send_email(recipient_email, subject, body):
     load_dotenv()
@@ -373,6 +379,7 @@ def orderConfirmation(order_id):
     return render_template('order-confirmation.html', order=order)
 
 @main.route('/login', methods=['GET', 'POST'])
+@limiter.limit('1 per 10 hour')
 def login():
     form = LoginForm()
     if request.method == 'POST':

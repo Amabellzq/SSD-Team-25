@@ -30,6 +30,8 @@ RUN pip install Flask-WTF
 
 RUN pip install requests
 
+RUN pip install Flask-Limiter
+
 # Copy the rest of the application code into the image
 COPY . .
 

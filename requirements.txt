@@ -12,3 +12,4 @@ requests==2.26.0
 Flask-Mail==0.10.0
 pytz
 Flask-WTF == 1.2.1
+Flask-limiter
