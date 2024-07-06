@@ -13,11 +13,36 @@ import qrcode
 from io import BytesIO
 from PIL import Image
 from functools import wraps
+from random import randint
+import smtplib
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+
+def send_email(recipient_email, subject, body):
+    load_dotenv()
+    OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
+    OUTLOOK_PASSWORD= os.getenv('OUTLOOK_PASSWORD')
+    smtp_server = 'smtp.outlook.com'
+    smtp_port = 587
+    smtp_username = OUTLOOK_EMAIL
+    smtp_password = OUTLOOK_PASSWORD
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            message = f"Subject: {subject}\n\n{body}"
+            server.sendmail(smtp_username, recipient_email, message)
+
+    except smtplib.SMTPAuthenticationError as auth_error:
+        print(f"SMTP Authentication Error: {auth_error}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
 def session_required(f):
     @wraps(f)
@@ -360,6 +385,11 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
+            if not user.is_verified:
+                flash('Please verify your email before logging in.', 'danger')
+                return redirect(url_for('main.verify_otp', user_id=user.user_id))
+            
+            session['user_id'] = user.get_id()
             if not user.totp_secret:
                 return redirect(url_for('main.totp'))
             return redirect(url_for('main.verify_totp'))
@@ -489,23 +519,35 @@ def register():
         password = form.password.data
         profile_picture = form.profile_picture.data
 
-        # Check for duplicate username
-        existing_user = UserService.get_by_username(username)
+        existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already exists. Please choose a different username.', 'danger')
         else:
-            # Check for duplicate email
-            existing_email = UserService.get_by_email(email)
+            existing_email = User.query.filter_by(email=email).first()
             if existing_email:
                 flash('Email already exists.', 'danger')
             else:
                 hashed_password = generate_password_hash(password)
                 try:
-                    # Create the new user
-                    new_user = UserService.create(username=username, email=email, password=hashed_password, role=role)
-                    registration_successful = True
-                    flash('Registration Successful', 'success')
-                    return redirect(url_for('main.login'))
+                    new_user = User(username=username, email=email, password=hashed_password, role=role, is_verified=False)
+                    if profile_picture:
+                        new_user.profile_pic_url = profile_picture.read()
+
+                    otp = randint(100000, 999999)
+                    otp_expiry_minutes = 5
+                    new_user.otp_expiry = get_singapore_time() + timedelta(minutes=otp_expiry_minutes)
+                    new_user.otp = otp
+                    db.session.add(new_user)
+                    db.session.commit()
+
+                    # msg = Message('Email Verification', sender='shopppme2024@outlook.com', recipients=[email])
+                    # msg.body = f"Thank you {username} for registering. Your OTP is: {otp}"
+                    # mail.send(msg)
+                    send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
+                    print('successful')
+                    flash('Registration Successful. Please check your email for the OTP.', 'success')
+                    
+                    return redirect(url_for('main.verify_otp', user_id=new_user.user_id))
                 except Exception as e:
                     db.session.rollback()
                     current_app.logger.error(f'Error while registering user: {str(e)}')
@@ -519,6 +561,38 @@ def register():
                     flash(f'{field.label.text}: {error}', 'danger')
 
     return render_template('register.html', register_form=form, registration_successful=registration_successful)
+
+@main.route('/verify_otp/<int:user_id>', methods=['GET', 'POST'])
+def verify_otp(user_id):
+    user = UserService.get(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('main.register'))
+
+    if request.method == 'POST':
+        otp = request.form.get('otp')
+        if user.otp_expiry and get_singapore_time() > user.otp_expiry:
+            # OTP expired, generate a new one
+            new_otp = randint(100000, 999999)
+            user.otp = new_otp
+            user.otp_expiry = get_singapore_time() + timedelta(minutes=5)
+            db.session.commit()
+
+            # Send new OTP to user's email
+            send_email(user.email, "Your New OTP for Login", f"Your OTP has expired. Please use the following new One-Time Password: {new_otp}. It will expire in 5 minutes.")
+            flash('Your OTP has expired. A new OTP has been sent to your email.', 'warning')
+            
+        elif user.otp == otp and user.otp_expiry > get_singapore_time():
+            user.is_verified = True
+            user.otp = None
+            user.otp_expiry = None
+            db.session.commit()
+            flash('OTP verified successfully. You can now login.', 'success')
+            return redirect(url_for('main.login'))
+        else:
+            flash('Invalid OTP. Please try again.', 'danger')
+
+    return render_template('verify_otp.html', user_id=user_id)
 
 @main.route('/forgetPW', methods=['GET', 'POST'])
 def forgetPass():
