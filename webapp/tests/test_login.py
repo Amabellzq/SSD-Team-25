@@ -20,8 +20,10 @@ def test_register_success(test_client, mocker):
         email='newuser@example.com',
         role='Customer',
         password='testpassword',
+        confirm_password='testpassword',  # Ensure confirm_password matches
         profile_picture=(None, '')  # Mock profile picture as empty
     ), follow_redirects=True)
+
     # Print the response data for debugging
     print(response.data)
 
