@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 # is to to avoid circular imports
 from webapp import routes
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -23,3 +24,14 @@ class Config:
         f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class TestConfig():
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'  # Use an in-memory SQLite database for testing
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SERVER_NAME = 'localhost'  # Required for URL generation
+    WTF_CSRF_ENABLED = False  # Disable CSRF for testing purposes
+    APPLICATION_ROOT = '/'  # Optional
+    PREFERRED_URL_SCHEME = 'https'  # Optional
+

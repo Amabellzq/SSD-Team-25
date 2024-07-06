@@ -9,3 +9,10 @@ Flask-Session ~= 0.8.0
 pyotp
 qrcode[pil]
 requests==2.26.0
+pytest
+pytest-mock
+Flask-Testing
+Flask-Login
+Flask-WTF
+selenium
+webdriver-manager

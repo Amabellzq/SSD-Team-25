@@ -33,6 +33,7 @@ pipeline {
             }
         }
 
+
         stage('Load Credentials') {
             steps {
                 withCredentials([
@@ -46,7 +47,9 @@ pipeline {
                     string(credentialsId: 'MYSQL_USER_PASSWORD', variable: 'MYSQL_USER_PASSWORD'),
                     string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
                     string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
-                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST')
+                    string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST'),
+                    string(credentialsId: 'OUTLOOK_EMAIL', variable: 'OUTLOOK_EMAIL')
+                    string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD')
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
@@ -62,8 +65,32 @@ pipeline {
                         envContent += "MYSQL_READONLY_USER=${MYSQL_READONLY_USER}\n"
                         envContent += "MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}\n"
                         envContent += "MYSQL_HOST=${MYSQL_HOST}\n"
+                        envContent += "OUTLOOK_EMAIL=${OUTLOOK_EMAIL}\n"
+                        envContent += "OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}\n"
 
                         writeFile file: '.env', text: envContent
+                    }
+                }
+            }
+        }
+
+         stage('Pytest') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Create virtual environment and install dependencies
+                        sh """
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                        """
+
+                        // Run pytest and generate a JUnit XML report
+                        sh """
+                        . venv/bin/activate
+                        pytest -v --tb=long --junitxml=report.xml
+                        """
                     }
                 }
             }
@@ -136,6 +163,7 @@ pipeline {
     	    }
         }
 
+
         stage('Prepare SSL Certificates') {
             steps {
                 withCredentials([
@@ -158,8 +186,6 @@ pipeline {
                 }
             }
         }
-
-
         stage('Build and Deploy') {
             steps {
                 // Ensure a clean deployment by bringing down any existing containers
@@ -168,6 +194,9 @@ pipeline {
                 sh 'docker-compose up --build -d'
             }
         }
+
+
+
     }
 
 post {
@@ -190,5 +219,11 @@ post {
 
 
     }
+      success {
+            echo 'All stages completed successfully.'
+        }
+        failure {
+            echo 'One or more stages failed.'
+        }
     }
 }
