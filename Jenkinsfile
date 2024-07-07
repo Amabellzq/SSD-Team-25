@@ -11,16 +11,28 @@ pipeline {
     }
 
       stages {
-        stage('Checkout') {
+        stage('Clone or Update Repository') {
             steps {
                 withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
+                    // Use the GITHUB_PAT to configure credentials
+                    sh 'git config --global credential.helper store'
+                    sh 'echo "https://${GITHUB_PAT}:x-oauth-basic@github.com" > ~/.git-credentials'
+                    // Check if the directory exists
                     script {
-                        def repoUrl = "https://${GITHUB_PAT}@${GIT_REPO}"
-                        git url: repoUrl, branch: GIT_BRANCH
+                        if (fileExists(REPO_DIR)) {
+                            // If it exists, pull the latest changes
+                            dir(REPO_DIR) {
+                                sh 'git pull origin ${GIT_BRANCH}'
+                            }
+                        } else {
+                            // If it doesn't exist, clone the repository
+                            sh "git clone --branch ${GIT_BRANCH} ${GIT_REPO} ${REPO_DIR}"
+                        }
                     }
                 }
             }
         }
+
 
         stage('Load Credentials') {
             steps {
