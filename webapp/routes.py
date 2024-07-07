@@ -206,39 +206,39 @@ def order_history(order_id):
 
     return render_template('order-history.html', order=order)
 
-@main.route('/add_to_cart', methods=['POST'])
-@login_required
-@session_required
-def add_to_cart():
-    product_id = request.form.get('product_id')
-    quantity = int(request.form.get('quantity', 1))
-    user_id = current_user.user_id
+# @main.route('/add_to_cart', methods=['POST'])
+# @login_required
+# @session_required
+# def add_to_cart():
+#     product_id = request.form.get('product_id')
+#     quantity = int(request.form.get('quantity', 1))
+#     user_id = current_user.user_id
 
-    # Get the user's current shopping cart
-    cart = ShoppingCart.query.filter_by(user_id=user_id).first()
-    if not cart:
-        cart = ShoppingCart(user_id=user_id)
-        db.session.add(cart)
-        db.session.commit()
+#     # Get the user's current shopping cart
+#     cart = ShoppingCart.query.filter_by(user_id=user_id).first()
+#     if not cart:
+#         cart = ShoppingCart(user_id=user_id)
+#         db.session.add(cart)
+#         db.session.commit()
 
-    # Check if the product is already in the cart
-    cart_item = CartItem.query.filter_by(cart_id=cart.cart_id, product_id=product_id).first()
-    if cart_item:
-        # Update the quantity if the product is already in the cart
-        cart_item.quantity += quantity
-        cart_item.price = Product.query.get(product_id).price * cart_item.quantity
-    else:
-        # Add a new product to the cart
-        product = Product.query.get(product_id)
-        if not product:
-            abort(404, description="Product not found")
-        cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
-        db.session.add(cart_item)
+#     # Check if the product is already in the cart
+#     cart_item = CartItem.query.filter_by(cart_id=cart.cart_id, product_id=product_id).first()
+#     if cart_item:
+#         # Update the quantity if the product is already in the cart
+#         cart_item.quantity += quantity
+#         cart_item.price = Product.query.get(product_id).price * cart_item.quantity
+#     else:
+#         # Add a new product to the cart
+#         product = Product.query.get(product_id)
+#         if not product:
+#             abort(404, description="Product not found")
+#         cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
+#         db.session.add(cart_item)
 
-    cart.last_updated_date = datetime.utcnow() + timedelta(hours=8)
-    db.session.commit()
-    flash('Product added to cart successfully!', 'success')
-    return redirect(url_for('main.cart'))
+#     cart.last_updated_date = datetime.utcnow() + timedelta(hours=8)
+#     db.session.commit()
+#     flash('Product added to cart successfully!', 'success')
+#     return redirect(url_for('main.cart'))
 
 @main.route('/add_to_cart', methods=['POST'])
 @login_required
@@ -288,7 +288,7 @@ def cart():
 
     forms = {item.cart_item_id: UpdateCartForm(cart_item_id=item.cart_item_id, quantity=item.quantity) for item in cart_items}
 
-    return render_template('cart.html', cart_items=cart_items, total=total, forms=forms)
+    return render_template('cart.html', cart_items=cart_items, total=total, forms = forms)
 
 
 @main.route('/remove_from_cart/<int:cart_item_id>')
@@ -311,11 +311,12 @@ def remove_from_cart(cart_item_id):
 @login_required
 @session_required
 def update_cart(cart_item_id):
+
     form = UpdateCartForm()
     if form.validate_on_submit():
         try:
             # data = request.get_json()
-            # # new_quantity = int(request.form.get('quantity', 1))
+            # new_quantity = int(request.form.get('quantity', 1))
             cart_item = CartItem.query.get_or_404(cart_item_id)
             
             if cart_item.shoppingcart.user_id != current_user.user_id:
@@ -352,8 +353,6 @@ def update_cart(cart_item_id):
         'message': 'Invalid form submission.'
     }), 400
     # return redirect(url_for('main.cart'))
-
-
 
 @main.route('/checkout', methods=['GET', 'POST'])
 @login_required
