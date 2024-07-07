@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField
+from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
 import re
@@ -107,6 +107,16 @@ class CheckoutForm(FlaskForm):
     payment_method = SelectField('Payment Method', choices=[('Credit Card', 'Credit Card'), ('Debit Card', 'Debit Card')], validators=[DataRequired()])
     submit = SubmitField('Place order')
 
+class AddToCart(FlaskForm):
+    product_id = HiddenField('Product ID')
+    quantity = IntegerField('Quantity', validators=[DataRequired()])
+    submit = SubmitField('Add to cart')
+
+class UpdateCartForm(FlaskForm):
+    cart_item_id = HiddenField('Cart Item ID', validators=[DataRequired()])
+    quantity = IntegerField('Quantity', validators=[DataRequired()])
+    submit = SubmitField('Update Cart')
+    
 #############################
     # Account #
 #############################
