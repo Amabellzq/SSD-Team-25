@@ -509,7 +509,7 @@ def totp():
 
     user.totp_secret = pyotp.random_base32()  # Generate TOTP secret
     db.session.commit()
-    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="shopppme")
     img = qrcode.make(totp_uri, box_size=8, border=3)
     buf = BytesIO()
     img.save(buf, format='PNG')
