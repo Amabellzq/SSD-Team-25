@@ -206,6 +206,7 @@ post {
         failure {
             echo 'One or more stages failed.'
         }
+           cleanWs()
     }
-    cleanWs()
+
 }
