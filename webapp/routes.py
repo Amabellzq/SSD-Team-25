@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -251,7 +251,10 @@ def cart():
 
     cart_items = cart.cart_items
     total = sum(item.price for item in cart_items)
-    return render_template('cart.html', cart_items=cart_items, total=total)
+
+    forms = {item.cart_item_id: UpdateCartForm(cart_item_id=item.cart_item_id, quantity=item.quantity) for item in cart_items}
+
+    return render_template('cart.html', cart_items=cart_items, total=total, forms = forms)
 
 
 @main.route('/remove_from_cart/<int:cart_item_id>')
@@ -274,14 +277,18 @@ def remove_from_cart(cart_item_id):
 @login_required
 @session_required
 def update_cart(cart_item_id):
+
+    form = UpdateCartForm()
+
     try:
-        data = request.get_json()
-        new_quantity = int(request.form.get('quantity', 1))
+        # data = request.get_json()
+        # new_quantity = int(request.form.get('quantity', 1))
         cart_item = CartItem.query.get_or_404(cart_item_id)
         
         if cart_item.shoppingcart.user_id != current_user.user_id:
             abort(403)
-
+        
+        new_quantity = form.quantity.data
         product_price = cart_item.product.price
         cart_item.quantity = new_quantity
         cart_item.price = product_price * new_quantity
