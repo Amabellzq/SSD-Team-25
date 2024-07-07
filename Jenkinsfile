@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         GITHUB_PAT = credentials('GITHUB_PAT')
-        GIT_BRANCH = 'main' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
@@ -13,8 +12,7 @@ pipeline {
       stages {
         stage('Checkout') {
             steps {
-                // Checkout the source code from the repository
-                checkout scm
+                git url: ${GIT_REPO}, branch: 'main', credentialsId: 'GITHUB_ACC'
             }
         }
 
