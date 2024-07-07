@@ -384,6 +384,13 @@ def checkout():
             )
             db.session.add(order_item)
 
+            # Reduce the quantity of the product in the database
+            product.quantity -= item.quantity
+            if product.quantity < 0:
+                flash(f'Not enough stock for {product.name}', 'danger')
+                db.session.rollback()
+                return redirect(url_for('main.cart'))
+
         # Remove items from the cart
         for item in cart_items:
             db.session.delete(item)
