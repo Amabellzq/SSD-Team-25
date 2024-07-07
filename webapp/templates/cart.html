@@ -47,6 +47,8 @@
                                 <td class="cart__price">${{ item.product.price }}</td>
                                 <td class="cart__quantity">
                                     <form action="{{ url_for('main.update_cart', cart_item_id=item.cart_item_id) }}" method="POST">
+                                        {{ forms[item.cart_item_id].hidden_tag() }}
+                                        <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                                         <div class="pro-qty">
                                             <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
                                         </div>
