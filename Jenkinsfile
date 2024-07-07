@@ -185,7 +185,7 @@ post {
 
 
               sh 'rm -f .env'
-               cleanWs()
+
         }
     }
       success {
