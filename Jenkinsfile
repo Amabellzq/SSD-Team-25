@@ -52,29 +52,6 @@ pipeline {
                 }
             }
         }
-
-         stage('Pytest') {
-            steps {
-                dir(REPO_DIR) {
-                    script {
-                        // Create virtual environment and install dependencies
-                        sh """
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r requirements.txt
-                        """
-
-                        // Run pytest and generate a JUnit XML report
-                        sh """
-                        . venv/bin/activate
-                        pytest -v --tb=long --junitxml=report.xml
-                        """
-                    }
-                }
-            }
-        }
-
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 dependencyCheck additionalArguments: '''
@@ -157,6 +134,27 @@ pipeline {
                             // Ensure proper file permissions
                             sh 'chmod 600 nginx/fullchain.crt nginx/shoppp.me.key'
                         }
+                    }
+                }
+            }
+        }
+        stage('Pytest') {
+            steps {
+                dir(REPO_DIR) {
+                    script {
+                        // Create virtual environment and install dependencies
+                        sh """
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                        """
+
+                        // Run pytest and generate a JUnit XML report
+                        sh """
+                        . venv/bin/activate
+                        pytest -v --tb=long --junitxml=report.xml
+                        """
                     }
                 }
             }
