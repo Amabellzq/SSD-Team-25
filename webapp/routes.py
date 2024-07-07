@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -917,15 +917,24 @@ def update_business():
 
     return render_template('sellerDashboard.html', updateBusiness=update_business_form)
 
-@main.route('/sellerOrderDetails/<int:order_id>', methods=['GET'])
+@main.route('/sellerOrderDetails/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def sellerOrderDetails(order_id):
     order = Order.query.filter_by(order_id=order_id).first_or_404()
     order_items = OrderItem.query.filter_by(order_id=order_id).all()
+    form = MarkOrderCompletedForm()
+    
+
+    if form.validate_on_submit() and form.order_id.data == str(order_id):
+        order.collection_status = 'Completed'
+        db.session.commit()
+        flash('Order marked as completed.', 'success')
+        return redirect(url_for('main.sellerDashboard'))
+    
     for item in order_items:
         item.product = Product.query.get(item.product_id)  # Fetch product details for each order item
 
-    return render_template('sellerOrderDetails.html', order=order)
+    return render_template('sellerOrderDetails.html', order=order, order_items= order_items, form=form)
 
 @main.route('/mark-as-completed/<int:order_id>', methods=['POST'])
 @login_required

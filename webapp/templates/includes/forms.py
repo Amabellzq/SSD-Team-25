@@ -182,3 +182,7 @@ class UpdateProductForm(FlaskForm):
     productCreatedDate = DateTimeField('Created Date', validators=[Optional()], render_kw={'readonly': True})
     productLastUpdated = DateTimeField('Last Updated Date', validators=[Optional()], render_kw={'readonly': True})
     submit = SubmitField('Update Product')
+
+class MarkOrderCompletedForm(FlaskForm):
+    order_id = HiddenField('Order ID', validators=[DataRequired()])
+    submit = SubmitField('Mark as Completed')
