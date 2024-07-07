@@ -11,6 +11,8 @@ from flask_session import Session
 from datetime import timedelta
 import base64
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -52,6 +54,9 @@ csrf = CSRFProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'main.login'
+
+# Initialize flask limiter
+limiter = Limiter(app = app, key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
 
 @login_manager.user_loader
 def load_user(user_id):
