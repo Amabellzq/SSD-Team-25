@@ -28,7 +28,7 @@ pipeline {
                     string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
                     string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST'),
                     string(credentialsId: 'OUTLOOK_EMAIL', variable: 'OUTLOOK_EMAIL'),
-                    string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD')
+                    string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD'),
                     string(credentialsId: 'RECAPTCHA_PUBLIC_KEY', variable: 'RECAPTCHA_PUBLIC_KEY'),
                     string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY')
 
