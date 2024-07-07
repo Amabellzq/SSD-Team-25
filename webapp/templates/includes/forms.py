@@ -147,6 +147,10 @@ class CreateCategory(FlaskForm):
     categoryDescription = StringField('Category Description', validators=[DataRequired()])
     saveCategory = SubmitField('Save Category')
 
+class DeleteUserForm(FlaskForm):
+    user_id = HiddenField('User ID', validators=[DataRequired()])
+    submit = SubmitField('Delete')
+
 #############################
     # Merchant #
 #############################

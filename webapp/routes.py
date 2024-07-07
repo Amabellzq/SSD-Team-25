@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm, DeleteUserForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -21,7 +21,7 @@ import os
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from .templates.includes.forms import RegistrationForm, LoginForm
-
+from .utils import role_required
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -148,6 +148,10 @@ def shop():
 def contact():
     return render_template('contact.html')
 
+@main.route('/error404')
+def error404():
+    return render_template('Error404.html')
+
 @main.route('/productDetails/<int:product_id>', methods=['GET', 'POST'])
 def productDetails(product_id):
     product = ProductService.get(product_id)
@@ -174,6 +178,7 @@ def productDetails(product_id):
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
+@role_required('Customer')
 @session_required
 def myaccount():
     user_id = current_user.user_id
@@ -215,6 +220,7 @@ def myaccount():
 
 @main.route('/order-history/<int:order_id>')
 @login_required
+@role_required('Customer')
 @session_required
 def order_history(order_id):
     # Fetch the order details
@@ -227,6 +233,7 @@ def order_history(order_id):
 
 @main.route('/add_to_cart', methods=['POST'])
 @login_required
+@role_required('Customer')
 @session_required
 def add_to_cart():
     product_id = request.form.get('product_id')
@@ -261,6 +268,7 @@ def add_to_cart():
 
 @main.route('/cart')
 @login_required
+@role_required('Customer')
 @session_required
 def cart():
     user_id = current_user.user_id
@@ -277,6 +285,7 @@ def cart():
 
 @main.route('/remove_from_cart/<int:cart_item_id>')
 @login_required
+@role_required('Customer')
 @session_required
 def remove_from_cart(cart_item_id):
     try:
@@ -293,6 +302,7 @@ def remove_from_cart(cart_item_id):
 
 @main.route('/update_cart/<int:cart_item_id>', methods=['POST'])
 @login_required
+@role_required('Customer')
 @session_required
 def update_cart(cart_item_id):
     form = UpdateCartForm()
@@ -340,6 +350,7 @@ def update_cart(cart_item_id):
 
 @main.route('/checkout', methods=['GET', 'POST'])
 @login_required
+@role_required('Customer')
 @session_required
 def checkout():
     form = CheckoutForm()
@@ -396,6 +407,7 @@ def checkout():
 
 @main.route('/orderConfirmation/<int:order_id>')
 @login_required
+@role_required('Customer')
 @session_required
 def orderConfirmation(order_id):
     order = Order.query.get_or_404(order_id)
@@ -653,6 +665,7 @@ def verify_otp(user_id):
 #############################
 
 @main.route('/adminDashboard', methods=['GET', 'POST'])
+@role_required('Admin')
 @login_required
 def adminDashboard():
     user_id = current_user.user_id
@@ -662,22 +675,31 @@ def adminDashboard():
     accountDetails = AccountDetailsForm() 
     profile_pic_url = None
 
-    user = UserService.get(user_id)
-    if not user:
-        return redirect(url_for('main.adminDashboard'))
+    users_data = []
+    for user in users:
+        if user.profile_pic_url:
+            profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+        else:
+            profile_pic_url = None
 
-    accountDetails.username.data = user.username
-    accountDetails.role.data = user.role
-    accountDetails.email.data = user.email
-    accountDetails.account_status.data = user.account_status
-    if user.profile_pic_url:
-        profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+        users_data.append({
+            'user_id': user.user_id,
+            'username': user.username,
+            'role': user.role,
+            'email': user.email,
+            'account_status': user.account_status,
+            'profile_pic_url': profile_pic_url
+        })
+    
+    delete_user_form = DeleteUserForm()
 
-    return render_template('adminDashboard.html', users=users, categories=categories, merchants=merchants,
-                           profile_pic_url=profile_pic_url, user=user, accountDetails=accountDetails)
+
+    return render_template('adminDashboard.html', users=users_data, categories=categories, merchants=merchants,
+                           profile_pic_url=profile_pic_url, user=user, accountDetails=accountDetails, form=delete_user_form)
 
 @main.route('/updateAdmin_account', methods=['POST'])
 @login_required
+@role_required('Admin')
 def updateAdmin_account():
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
@@ -692,6 +714,7 @@ def updateAdmin_account():
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/registerAdmin', methods=['GET', 'POST'])
+@role_required('Admin')
 def registerAdmin():
     form = RegistrationForm()
     registration_successful = False
@@ -729,6 +752,7 @@ def registerAdmin():
     return render_template('adminRegister.html', register_form=form, registration_successful=registration_successful)
 
 @main.route('/editUser/<int:user_id>', methods=['GET', 'POST'])
+@role_required('Admin')
 @login_required
 def edit_user(user_id):
     form = EditUserForm()
@@ -755,12 +779,24 @@ def edit_user(user_id):
     return render_template('adminManageUser.html', form=form, profile_pic_url=profile_pic_url, user=user)
 
 @main.route('/deleteUser/<int:user_id>', methods=['POST'])
+@role_required('Admin')
 @login_required
 def delete_user(user_id):
-    UserService.delete(user_id)
+    form = DeleteUserForm()
+    if form.validate_on_submit():
+        # Validate that the form user_id matches the route user_id
+        if int(form.user_id.data) == user_id:
+            UserService.delete(user_id)
+            flash('User deleted successfully.', 'success')
+        else:
+            flash('User ID mismatch.', 'danger')
+    else:
+        flash('Form validation failed.', 'danger')
     return redirect(url_for('main.adminDashboard'))
 
+
 @main.route('/approve_merchant/<int:merchant_id>', methods=['POST'])
+@role_required('Admin')
 @login_required
 def approve_merchant(merchant_id):
     MerchantService.update(
@@ -771,6 +807,7 @@ def approve_merchant(merchant_id):
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/suspend_merchant/<int:merchant_id>', methods=['POST'])
+@role_required('Admin')
 def suspend_merchant(merchant_id):
     MerchantService.update(
         merchant_id,
@@ -780,6 +817,7 @@ def suspend_merchant(merchant_id):
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/createCategory', methods=['GET', 'POST'])
+@role_required('Admin')
 @login_required
 def adminCreateCategory():
     create_category = CreateCategory()
@@ -792,11 +830,13 @@ def adminCreateCategory():
     return render_template('adminCreateCategory.html', createNewCategory=create_category)
 
 @main.route('/delete_category/<int:category_id>', methods=['POST'])
+@role_required('Admin')
 def delete_category(category_id):
     CategoryService.delete(category_id)
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
+@role_required('Admin')
 @login_required
 def edit_category(category_id):
     form = CreateCategory()
@@ -826,6 +866,7 @@ def edit_category(category_id):
 #############################
 
 @main.route('/sellerDashboard', methods=['GET'])
+@role_required('Merchant')
 @login_required
 def sellerDashboard():
     user_id = current_user.user_id
@@ -861,6 +902,7 @@ def sellerDashboard():
 
 @main.route('/update_account', methods=['POST'])
 @login_required
+@role_required('Merchant')
 def update_account():
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
@@ -876,6 +918,7 @@ def update_account():
 
 @main.route('/register_business', methods=['GET', 'POST'])
 @login_required
+@role_required('Merchant')
 def register_business():
     user_id = current_user.user_id
     update_business_form = RegisterBusinessForm()
@@ -923,6 +966,7 @@ def register_business():
 
 @main.route('/update_business', methods=['POST'])
 @login_required
+@role_required('Merchant')
 def update_business():
     user_id = current_user.user_id
     update_business_form = RegisterBusinessForm()
@@ -951,6 +995,7 @@ def update_business():
 
 @main.route('/sellerOrderDetails/<int:order_id>', methods=['GET', 'POST'])
 @login_required
+@role_required('Merchant')
 def sellerOrderDetails(order_id):
     order = Order.query.filter_by(order_id=order_id).first_or_404()
     order_items = OrderItem.query.filter_by(order_id=order_id).all()
@@ -970,6 +1015,7 @@ def sellerOrderDetails(order_id):
 
 @main.route('/mark-as-completed/<int:order_id>', methods=['POST'])
 @login_required
+@role_required('Merchant')
 def mark_as_completed(order_id):
     order = Order.query.get_or_404(order_id)
     order.collection_status = 'Collected'  # Update the collection status
@@ -979,6 +1025,7 @@ def mark_as_completed(order_id):
 
 @main.route('/newProduct', methods=['GET', 'POST'])
 @login_required
+@role_required('Merchant')
 def newProduct():
     form = CreateProductForm()
     categories = CategoryService.get_all()
@@ -1016,6 +1063,7 @@ def newProduct():
 
 @main.route('/updateProduct/<int:product_id>', methods=['GET', 'POST'])
 @login_required
+@role_required('Merchant')
 def updateProduct(product_id):
     form = UpdateProductForm()
     product = ProductService.get(product_id)
@@ -1066,6 +1114,7 @@ def updateProduct(product_id):
 
 @main.route('/deleteProduct/<int:product_id>', methods=['POST'])
 @login_required
+@role_required('Merchant')
 def delete_product(product_id):
     ProductService.delete(product_id)
     flash('Product deleted successfully!', 'success')
