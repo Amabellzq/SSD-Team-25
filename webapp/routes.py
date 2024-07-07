@@ -464,6 +464,38 @@ def totp():
             user.active_session_token = session.sid  # Use Flask-Session's session ID
             db.session.commit()
 
+            # totp = pyotp.TOTP(user.totp_secret)
+            # if totp.verify(totp_code):
+            #     login_user(user)  # Log the user in if TOTP is verified
+            #     print(f'Login successful for user: {user.username}')  # Debug statement
+            #     session['user_id'] = user.get_id()  # Store user ID in session
+            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+            #     return redirect(url_for('main.home'))
+            # else:
+            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
+            #     print('Invalid TOTP code')  # Debug statement
+                
+            # # Redirect based on role
+            # if user.role == 'Admin':
+            #     print('Redirecting to admin dashboard')  # Debug statement
+            #     return redirect(url_for('main.adminDashboard'))
+            # elif user.role == 'Merchant':
+            #     print('Redirecting to seller dashboard')  # Debug statement
+            #     return redirect(url_for('main.sellerDashboard'))
+            # else:
+            #     print('Redirecting to home page')  # Debug statement
+            #     return redirect(url_for('main.home'))
+    #     else:
+    #         flash('Invalid username or password', 'danger')
+    #         print('Invalid username or password')  # Debug statement
+    # else:
+    #     if request.method == 'POST':
+    #         print('Form validation failed')  # Debug statement
+    #     else:
+    #         print('GET request')  # Debug statement
+
+    # return render_template('login.html', login_form=form)
+
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
