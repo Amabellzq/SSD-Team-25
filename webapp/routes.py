@@ -22,6 +22,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from .templates.includes.forms import RegistrationForm, LoginForm
 
+
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
@@ -72,6 +73,10 @@ def session_required(f):
 @login_manager.user_loader
 def load_user(user_id):
     return UserService.get(user_id)
+
+#############################
+# Main #
+#############################
 
 @main.route('/')
 def home():
@@ -143,7 +148,7 @@ def shop():
 def contact():
     return render_template('contact.html')
 
-@main.route('/productDetails/<int:product_id>')
+@main.route('/productDetails/<int:product_id>', methods=['GET', 'POST'])
 def productDetails(product_id):
     product = ProductService.get(product_id)
     if not product:
@@ -161,7 +166,11 @@ def productDetails(product_id):
     form.product_id.data = product_id  # Set the product_id in the form
     
 
-    return render_template('product-details.html', product=product, related_products=related_products, form = form)
+    return render_template('product-details.html', product=product, related_products=related_products, form=form)
+
+#############################
+# Customer #
+#############################
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
@@ -216,40 +225,6 @@ def order_history(order_id):
 
     return render_template('order-history.html', order=order)
 
-# @main.route('/add_to_cart', methods=['POST'])
-# @login_required
-# @session_required
-# def add_to_cart():
-#     product_id = request.form.get('product_id')
-#     quantity = int(request.form.get('quantity', 1))
-#     user_id = current_user.user_id
-
-#     # Get the user's current shopping cart
-#     cart = ShoppingCart.query.filter_by(user_id=user_id).first()
-#     if not cart:
-#         cart = ShoppingCart(user_id=user_id)
-#         db.session.add(cart)
-#         db.session.commit()
-
-#     # Check if the product is already in the cart
-#     cart_item = CartItem.query.filter_by(cart_id=cart.cart_id, product_id=product_id).first()
-#     if cart_item:
-#         # Update the quantity if the product is already in the cart
-#         cart_item.quantity += quantity
-#         cart_item.price = Product.query.get(product_id).price * cart_item.quantity
-#     else:
-#         # Add a new product to the cart
-#         product = Product.query.get(product_id)
-#         if not product:
-#             abort(404, description="Product not found")
-#         cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
-#         db.session.add(cart_item)
-
-#     cart.last_updated_date = datetime.utcnow() + timedelta(hours=8)
-#     db.session.commit()
-#     flash('Product added to cart successfully!', 'success')
-#     return redirect(url_for('main.cart'))
-
 @main.route('/add_to_cart', methods=['POST'])
 @login_required
 @session_required
@@ -298,8 +273,7 @@ def cart():
 
     forms = {item.cart_item_id: UpdateCartForm(cart_item_id=item.cart_item_id, quantity=item.quantity) for item in cart_items}
 
-    return render_template('cart.html', cart_items=cart_items, total=total, forms = forms)
-
+    return render_template('cart.html', cart_items=cart_items, total=total, forms=forms)
 
 @main.route('/remove_from_cart/<int:cart_item_id>')
 @login_required
@@ -321,12 +295,11 @@ def remove_from_cart(cart_item_id):
 @login_required
 @session_required
 def update_cart(cart_item_id):
-
     form = UpdateCartForm()
     if form.validate_on_submit():
         try:
             # data = request.get_json()
-            # new_quantity = int(request.form.get('quantity', 1))
+            # # new_quantity = int(request.form.get('quantity', 1))
             cart_item = CartItem.query.get_or_404(cart_item_id)
             
             if cart_item.shoppingcart.user_id != current_user.user_id:
@@ -363,6 +336,7 @@ def update_cart(cart_item_id):
         'message': 'Invalid form submission.'
     }), 400
     # return redirect(url_for('main.cart'))
+
 
 @main.route('/checkout', methods=['GET', 'POST'])
 @login_required
@@ -431,6 +405,10 @@ def orderConfirmation(order_id):
 
     return render_template('order-confirmation.html', order=order)
 
+#############################
+# Authentication #
+#############################
+
 @main.route('/login', methods=['GET', 'POST'])
 @limiter.limit('25 per 1 hour')
 def login():
@@ -463,7 +441,29 @@ def login():
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
-            
+    
+# Route to generate TOTP QR code and verify TOTP code
+@main.route('/totp', methods=['GET', 'POST'])
+def totp():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('main.login'))
+
+    user = UserService.get(user_id)
+
+    
+    form = TOTPForm()
+
+    if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
+        totp_code = form.totp.data
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(totp_code):
+            login_user(user)
+            session['user_id'] = user.get_id()  # Store user ID in session
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            db.session.commit()
+
             # totp = pyotp.TOTP(user.totp_secret)
             # if totp.verify(totp_code):
             #     login_user(user)  # Log the user in if TOTP is verified
@@ -495,28 +495,7 @@ def login():
     #         print('GET request')  # Debug statement
 
     # return render_template('login.html', login_form=form)
-    
-    
-# Route to generate TOTP QR code and verify TOTP code
-@main.route('/totp', methods=['GET', 'POST'])
-def totp():
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('main.login'))
 
-    user = UserService.get(user_id)
-
-    form = TOTPForm()
-
-    if request.method == 'POST' and form.validate_on_submit():
-        # totp_code = request.form['totp']
-        totp_code = form.totp.data
-        totp = pyotp.TOTP(user.totp_secret)
-        if totp.verify(totp_code):
-            login_user(user)
-            session['user_id'] = user.get_id()  # Store user ID in session
-            user.active_session_token = session.sid  # Use Flask-Session's session ID
-            db.session.commit()
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
                 if merchant:
@@ -524,6 +503,7 @@ def totp():
                 else:
                     return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))  # Redirect to home page
+        
         else:
             flash('Invalid TOTP code. Please try again.')
 
@@ -567,7 +547,6 @@ def verify_totp():
             flash('Invalid TOTP code', 'danger')
 
     return render_template('verify_totp.html', form=form)
-
 
 @main.route('/logout')
 def logout():
@@ -668,14 +647,6 @@ def verify_otp(user_id):
             flash('Invalid OTP. Please try again.', 'danger')
 
     return render_template('verify_otp.html', user_id=user_id, form=form)
-
-@main.route('/forgetPW', methods=['GET', 'POST'])
-def forgetPass():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        flash('Please check your email')
-        return redirect(url_for('main.login'))
-    return render_template('forgetPW.html', resetpass_form=form)
 
 #############################
 # Admin #
@@ -879,12 +850,6 @@ def sellerDashboard():
         update_business_form.business_name.data = merchant.business_name
         update_business_form.business_address.data = merchant.business_address
         update_business_form.user_id.data = user_id
-
-    # orders = OrderService.get_all()
-    # products = ProductService.get_by_merchant_id(merchant.merchant_id)
-    # for product in products:
-    #     if product.image_url:
-    #         product.image_url = base64.b64encode(product.image_url).decode('utf-8')
 
     orders = OrderService.get_by_merchant_id(merchant.merchant_id)
     products = ProductService.get_by_merchant_id(merchant.merchant_id)
@@ -1096,6 +1061,10 @@ def delete_product(product_id):
     ProductService.delete(product_id)
     flash('Product deleted successfully!', 'success')
     return redirect(url_for('main.sellerDashboard'))
+
+#############################
+# Session #
+#############################
 
 @main.route('/session-info')
 def session_info():
