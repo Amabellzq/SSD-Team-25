@@ -8,7 +8,7 @@ import time
 
 def test_shop_page(driver):
     # Open the shop page
-    driver.get(' https://shoppp.me/shop')
+    driver.get('https://shoppp.me/shop')
 
     # Verify the title
     assert "Shop Page - ShopMe" in driver.title
