@@ -398,7 +398,7 @@ def orderConfirmation(order_id):
     return render_template('order-confirmation.html', order=order)
 
 @main.route('/login', methods=['GET', 'POST'])
-# @limiter.limit('1 per 10 hour')
+@limiter.limit('1 per 10 hour')
 def login():
     form = LoginForm()
     if request.method == 'POST':
