@@ -1,13 +1,11 @@
 pipeline {
     agent any
-
     environment {
         GITHUB_PAT = credentials('GITHUB_PAT')
         GIT_BRANCH = 'main' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
-
     }
       stages {
        stage('Checkout') {
