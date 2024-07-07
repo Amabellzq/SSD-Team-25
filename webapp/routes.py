@@ -18,11 +18,16 @@ import smtplib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
+limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
+
+limiter.limit('25/hour')(main)
 
 def send_email(recipient_email, subject, body):
     load_dotenv()
@@ -373,6 +378,7 @@ def orderConfirmation(order_id):
     return render_template('order-confirmation.html', order=order)
 
 @main.route('/login', methods=['GET', 'POST'])
+@limiter.limit('25 per 1 hour')
 def login():
     form = LoginForm()
     if request.method == 'POST':
@@ -445,9 +451,7 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-    if user.totp_secret:  # If TOTP secret already exists, redirect to TOTP verification
-        return redirect(url_for('main.home'))
-    
+
     form = TOTPForm()
 
     if request.method == 'POST' and form.validate_on_submit():
@@ -516,6 +520,7 @@ def logout():
     return redirect(url_for('main.home'))
 
 @main.route('/register', methods=['GET', 'POST'])
+@limiter.limit('25 per 1 hour')
 def register():
     form = RegistrationForm()
     registration_successful = False
