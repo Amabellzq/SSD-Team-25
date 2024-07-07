@@ -82,7 +82,7 @@
                         <div class="product__item">
                             <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
                                 <ul class="product__hover">
-                                    <li><a href="data:image/png;base64,{{ product.image_url | b64encode }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                    <li><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
                                 </ul>
                             </div>
                             <div class="product__item__text">
