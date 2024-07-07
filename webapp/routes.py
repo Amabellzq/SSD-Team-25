@@ -151,7 +151,16 @@ def productDetails(product_id):
     
     related_products = ProductService.get_related_products(product.category_id, product_id)
 
-    return render_template('product-details.html', product=product, related_products=related_products)
+    form = AddToCart()
+    if form.validate_on_submit():
+        # Handle adding to cart
+        flash('Product added to cart!', 'success')
+        return redirect(url_for('main.cart'))
+
+    form.product_id.data = product_id  # Set the product_id in the form
+    
+
+    return render_template('product-details.html', product=product, related_products=related_products, form = form)
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
