@@ -196,6 +196,7 @@ post {
 
 
               sh 'rm -f .env'
+               cleanWs()
         }
 
 
@@ -206,7 +207,7 @@ post {
         failure {
             echo 'One or more stages failed.'
         }
-           cleanWs()
+
     }
 
 }
