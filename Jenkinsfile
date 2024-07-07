@@ -12,15 +12,9 @@ pipeline {
       stages {
        stage('Checkout') {
             steps {
-                withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
-                    script {
-                        def repoUrl = "https://${GITHUB_PAT}@${GIT_REPO}"
-                        git url: repoUrl, branch: GIT_BRANCH
-                    }
-                }
+                git url: "${GIT_REPO}", branch: "${GIT_BRANCH}", credentialsId: 'GITHUB_ACC'
             }
         }
-
         stage('Load Credentials') {
             steps {
                 withCredentials([
