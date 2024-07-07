@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 
-from webapp import app , db
+from webapp import app, db
 from config import TestConfig
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
