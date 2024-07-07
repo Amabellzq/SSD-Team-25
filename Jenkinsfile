@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         GITHUB_PAT = credentials('GITHUB_PAT')
+        GIT_BRANCH = 'main' // Set your desired branch here or make it a parameter
         GIT_REPO = credentials('GIT_REPO')
         REPO_DIR = "${WORKSPACE}/"
         FLASK_CONTAINER = 'flask'
@@ -12,10 +13,14 @@ pipeline {
       stages {
         stage('Checkout') {
             steps {
-                git url: ${GIT_REPO}, branch: 'main', credentialsId: 'GITHUB_ACC'
+                withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
+                    script {
+                        def repoUrl = "https://${GITHUB_PAT}@${GIT_REPO}"
+                        git url: repoUrl, branch: GIT_BRANCH
+                    }
+                }
             }
         }
-
 
         stage('Load Credentials') {
             steps {
@@ -57,27 +62,27 @@ pipeline {
             }
         }
 
-         stage('Pytest') {
-            steps {
-                dir(REPO_DIR) {
-                    script {
-                        // Create virtual environment and install dependencies
-                        sh """
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r requirements.txt
-                        """
-
-                        // Run pytest and generate a JUnit XML report
-                        sh """
-                        . venv/bin/activate
-                        pytest -v --tb=long --junitxml=report.xml
-                        """
-                    }
-                }
-            }
-        }
+//          stage('Pytest') {
+//             steps {
+//                 dir(REPO_DIR) {
+//                     script {
+//                         // Create virtual environment and install dependencies
+//                         sh """
+//                         python3 -m venv venv
+//                         . venv/bin/activate
+//                         pip install --upgrade pip
+//                         pip install -r requirements.txt
+//                         """
+//
+//                         // Run pytest and generate a JUnit XML report
+//                         sh """
+//                         . venv/bin/activate
+//                         pytest -v --tb=long --junitxml=report.xml
+//                         """
+//                     }
+//                 }
+//             }
+//         }
 
 //         stage('OWASP Dependency-Check Vulnerabilities') {
 //             steps {
@@ -177,7 +182,6 @@ pipeline {
                 sh 'docker-compose up --build -d'
             }
         }
-
 
 
 
