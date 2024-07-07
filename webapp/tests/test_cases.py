@@ -15,7 +15,7 @@ def test_register_success(test_client, mocker):
     assert response.status_code == 200
 
     # Simulate form submission via POST request
-    response = test_client.post('/register', data=dict(
+    response = test_client.post('https://shoppp.me/register', data=dict(
         username='testinguser',
         email='testinguser@gmail.com',
         role='Customer',
@@ -39,7 +39,7 @@ def test_register_invalid_email_format(test_client, mocker):
     mocker.patch('webapp.services.UserService.create', return_value=True)
 
     # Simulate form submission via POST request
-    response = test_client.post('/register', data=dict(
+    response = test_client.post('https://shoppp.me/register', data=dict(
         username='testuser',
         email='invalidemail',
         role='Customer',
@@ -61,7 +61,7 @@ def test_register_mismatched_passwords(test_client, mocker):
     mocker.patch('webapp.services.UserService.create', return_value=True)
 
     # Simulate form submission via POST request
-    response = test_client.post('/register', data=dict(
+    response = test_client.post('https://shoppp.me/register', data=dict(
         username='testuser',
         email='newuser@example.com',
         role='Customer',
@@ -80,7 +80,7 @@ def test_login_invalid_credentials(test_client, mocker):
     # Mock UserService.get_by_username to return None (user not found)
     mocker.patch('webapp.services.UserService.get_by_username', return_value=None)
 
-    response = test_client.post('/login', data=dict(username='testuser', password='wrongpassword'),
+    response = test_client.post('https://shoppp.me/login', data=dict(username='testuser', password='wrongpassword'),
                                 follow_redirects=True)
 
     assert response.status_code == 200
