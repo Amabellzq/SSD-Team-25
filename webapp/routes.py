@@ -74,6 +74,10 @@ def session_required(f):
 def load_user(user_id):
     return UserService.get(user_id)
 
+#############################
+# Main #
+#############################
+
 @main.route('/')
 def home():
     categories = CategoryService.get_all()
@@ -163,6 +167,10 @@ def productDetails(product_id):
     
 
     return render_template('product-details.html', product=product, related_products=related_products, form=form)
+
+#############################
+# Customer #
+#############################
 
 @main.route('/myprofile', methods=['GET', 'POST'])
 @login_required
@@ -266,7 +274,6 @@ def cart():
     forms = {item.cart_item_id: UpdateCartForm(cart_item_id=item.cart_item_id, quantity=item.quantity) for item in cart_items}
 
     return render_template('cart.html', cart_items=cart_items, total=total, forms=forms)
-
 
 @main.route('/remove_from_cart/<int:cart_item_id>')
 @login_required
@@ -398,6 +405,10 @@ def orderConfirmation(order_id):
 
     return render_template('order-confirmation.html', order=order)
 
+#############################
+# Authentication #
+#############################
+
 @main.route('/login', methods=['GET', 'POST'])
 @limiter.limit('25 per 1 hour')
 def login():
@@ -430,39 +441,6 @@ def login():
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
-            
-            # totp = pyotp.TOTP(user.totp_secret)
-            # if totp.verify(totp_code):
-            #     login_user(user)  # Log the user in if TOTP is verified
-            #     print(f'Login successful for user: {user.username}')  # Debug statement
-            #     session['user_id'] = user.get_id()  # Store user ID in session
-            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            #     return redirect(url_for('main.home'))
-            # else:
-            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
-            #     print('Invalid TOTP code')  # Debug statement
-                
-            # # Redirect based on role
-            # if user.role == 'Admin':
-            #     print('Redirecting to admin dashboard')  # Debug statement
-            #     return redirect(url_for('main.adminDashboard'))
-            # elif user.role == 'Merchant':
-            #     print('Redirecting to seller dashboard')  # Debug statement
-            #     return redirect(url_for('main.sellerDashboard'))
-            # else:
-            #     print('Redirecting to home page')  # Debug statement
-            #     return redirect(url_for('main.home'))
-    #     else:
-    #         flash('Invalid username or password', 'danger')
-    #         print('Invalid username or password')  # Debug statement
-    # else:
-    #     if request.method == 'POST':
-    #         print('Form validation failed')  # Debug statement
-    #     else:
-    #         print('GET request')  # Debug statement
-
-    # return render_template('login.html', login_form=form)
-    
     
 # Route to generate TOTP QR code and verify TOTP code
 @main.route('/totp', methods=['GET', 'POST'])
@@ -537,7 +515,6 @@ def verify_totp():
             flash('Invalid TOTP code', 'danger')
 
     return render_template('verify_totp.html', form=form)
-
 
 @main.route('/logout')
 def logout():
@@ -638,14 +615,6 @@ def verify_otp(user_id):
             flash('Invalid OTP. Please try again.', 'danger')
 
     return render_template('verify_otp.html', user_id=user_id, form=form)
-
-@main.route('/forgetPW', methods=['GET', 'POST'])
-def forgetPass():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        flash('Please check your email')
-        return redirect(url_for('main.login'))
-    return render_template('forgetPW.html', resetpass_form=form)
 
 #############################
 # Admin #
@@ -849,12 +818,6 @@ def sellerDashboard():
         update_business_form.business_name.data = merchant.business_name
         update_business_form.business_address.data = merchant.business_address
         update_business_form.user_id.data = user_id
-
-    # orders = OrderService.get_all()
-    # products = ProductService.get_by_merchant_id(merchant.merchant_id)
-    # for product in products:
-    #     if product.image_url:
-    #         product.image_url = base64.b64encode(product.image_url).decode('utf-8')
 
     orders = OrderService.get_by_merchant_id(merchant.merchant_id)
     products = ProductService.get_by_merchant_id(merchant.merchant_id)
@@ -1066,6 +1029,10 @@ def delete_product(product_id):
     ProductService.delete(product_id)
     flash('Product deleted successfully!', 'success')
     return redirect(url_for('main.sellerDashboard'))
+
+#############################
+# Session #
+#############################
 
 @main.route('/session-info')
 def session_info():
