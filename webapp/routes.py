@@ -279,41 +279,45 @@ def remove_from_cart(cart_item_id):
 def update_cart(cart_item_id):
 
     form = UpdateCartForm()
+    if form.validate_on_submit():
+        try:
+            # data = request.get_json()
+            # new_quantity = int(request.form.get('quantity', 1))
+            cart_item = CartItem.query.get_or_404(cart_item_id)
+            
+            if cart_item.shoppingcart.user_id != current_user.user_id:
+                abort(403)
+            
+            new_quantity = form.quantity.data
+            product_price = cart_item.product.price
+            cart_item.quantity = new_quantity
+            cart_item.price = product_price * new_quantity
+            
+            db.session.commit()
 
-    try:
-        # data = request.get_json()
-        # new_quantity = int(request.form.get('quantity', 1))
-        cart_item = CartItem.query.get_or_404(cart_item_id)
-        
-        if cart_item.shoppingcart.user_id != current_user.user_id:
-            abort(403)
-        
-        new_quantity = form.quantity.data
-        product_price = cart_item.product.price
-        cart_item.quantity = new_quantity
-        cart_item.price = product_price * new_quantity
-        
-        db.session.commit()
+            # Calculate new cart total
+            cart = ShoppingCart.query.filter_by(user_id=current_user.user_id).first()
+            cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
+            cart_total = sum(item.price for item in cart_items)
 
-        # Calculate new cart total
-        cart = ShoppingCart.query.filter_by(user_id=current_user.user_id).first()
-        cart_items = CartItem.query.filter_by(cart_id=cart.cart_id).all() if cart else []
-        cart_total = sum(item.price for item in cart_items)
+            return jsonify({
+                'success': True,
+                'item_total': float(cart_item.price),
+                'cart_total': float(cart_total)
+            })
 
-        return jsonify({
-            'success': True,
-            'item_total': float(cart_item.price),
-            'cart_total': float(cart_total)
-        })
-
-        flash('Cart updated successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'An error occurred: {e}', 'danger')
-        return jsonify({
-                'success': False,
-                'message': str(e)
-            }), 500
+            flash('Cart updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'An error occurred: {e}', 'danger')
+            return jsonify({
+                    'success': False,
+                    'message': str(e)
+                }), 500
+    return jsonify({
+        'success': False,
+        'message': 'Invalid form submission.'
+    }), 400
     # return redirect(url_for('main.cart'))
 
 
