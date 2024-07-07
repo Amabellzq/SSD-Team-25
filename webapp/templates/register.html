@@ -27,6 +27,11 @@
             .field {
                 margin-bottom: 10px; /* Ensure there is space between fields */
             }
+            .captcha {
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: center;
+            }
         </style>
         <script>
             // Function to hide flash messages after a few seconds
@@ -84,6 +89,9 @@
                     {% endfor %}
                 {% endif %}
                 <label>{{ register_form.confirm_password.label.text }}</label>
+            </div>
+            <div class="captcha">
+                {{ register_form.recaptcha }}
             </div>
             <!-- Flash Messages Section -->
             {% with messages = get_flashed_messages(with_categories=true) %}

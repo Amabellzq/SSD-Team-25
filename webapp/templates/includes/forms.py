@@ -1,4 +1,4 @@
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, EmailField, SubmitField, BooleanField, SelectField, FileField, DecimalField, ValidationError, IntegerField, DateTimeField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, NumberRange, Optional
 from flask_wtf.file import FileRequired, FileAllowed
@@ -69,6 +69,7 @@ class NISTPasswordPolicy:
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
+    recaptcha = RecaptchaField()
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
@@ -78,6 +79,7 @@ class RegistrationForm(FlaskForm):
     profile_picture = FileField('Set Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
     password = PasswordField('Password', validators=[DataRequired(), NISTPasswordPolicy()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Password must match")])
+    recaptcha = RecaptchaField()
     submit = SubmitField('Register')
 
 class ResetPasswordForm(FlaskForm):
