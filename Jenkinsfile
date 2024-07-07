@@ -9,7 +9,6 @@ pipeline {
         FLASK_CONTAINER = 'flask'
 
     }
-
       stages {
         stage('Clone or Update Repository') {
             steps {
