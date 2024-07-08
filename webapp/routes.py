@@ -24,7 +24,7 @@ from .templates.includes.forms import RegistrationForm, LoginForm
 from .utils import role_required
 from cryptography.fernet import Fernet
 
-# load_dotenv()
+load_dotenv()
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
