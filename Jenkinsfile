@@ -16,7 +16,7 @@ pipeline {
         stage('Load Credentials') {
             steps {
                 withCredentials([
-                    string(credentialsId: 'ENCRYPTION_KEY', variable: 'ENCRYPTION_KEY'),
+                    string(credentialsId: 'KEY', variable: 'KEY'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
                     string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
@@ -32,12 +32,9 @@ pipeline {
                     script {
                         // Create the .env file with the required environment variables
                         def envContent = ""
-                        envContent += "ENCRYPTION_KEY=${ENCRYPTION_KEY}\n"
-                        echo "ENCRYPTION_KEY: ${ENCRYPTION_KEY}"
+                        envContent += "KEY=${KEY}\n"
                         envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
-                        echo "ENCRYPTION_KEY: ${MYSQL_ROOT_PASSWORD}"
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
-                        echo "ENCRYPTION_KEY: ${MYSQL_DATABASE}"
                         envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
                         envContent += "MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}\n"
                         envContent += "MYSQL_HOST=${MYSQL_HOST}\n"

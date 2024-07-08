@@ -33,7 +33,7 @@ services:
     networks:
       - ecommerce_network
     environment:
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - KEY=${KEY}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
