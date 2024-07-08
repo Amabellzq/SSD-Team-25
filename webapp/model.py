@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
     orders = db.relationship('Order', backref='user')
     merchant = db.relationship('Merchant', backref='user', uselist=False)
     administrator = db.relationship('Administrator', backref='user', uselist=False)
-    totp_secret = db.Column(db.String(64), nullable=True)  # Added field for TOTP secret
+    totp_secret = db.Column(db.String(255), nullable=True)  # Added field for TOTP secret
     is_verified = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(6), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
