@@ -12,60 +12,17 @@ class Config:
     # SECRET_KEY = os.getenv('SECRET_KEY', 'ssdT25')
     MYSQL_HOST = os.getenv('MYSQL_HOST')
     MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
-    # Admin user configuration
-    MYSQL_ADMIN_USER = os.getenv('MYSQL_ADMIN_USER')
-    MYSQL_ADMIN_PASSWORD = os.getenv('MYSQL_ADMIN_PASSWORD')
-    MYSQL_ADMIN_USER_ENCODED = quote_plus(MYSQL_ADMIN_USER)
-    MYSQL_ADMIN_PASSWORD_ENCODED = quote_plus(MYSQL_ADMIN_PASSWORD)
-    SQLALCHEMY_ADMIN_DATABASE_URI = (
-        f"mysql+pymysql://{MYSQL_ADMIN_USER_ENCODED}:{MYSQL_ADMIN_PASSWORD_ENCODED}"
-        f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
-    )
-
-    # Merchant user configuration
-    MYSQL_MERCHANT_USER = os.getenv('MYSQL_MERCHANT_USER')
-    MYSQL_MERCHANT_PASSWORD = os.getenv('MYSQL_MERCHANT_PASSWORD')
-    MYSQL_MERCHANT_USER_ENCODED = quote_plus(MYSQL_MERCHANT_USER)
-    MYSQL_MERCHANT_PASSWORD_ENCODED = quote_plus(MYSQL_MERCHANT_PASSWORD)
-    SQLALCHEMY_MERCHANT_DATABASE_URI = (
-        f"mysql+pymysql://{MYSQL_MERCHANT_USER_ENCODED}:{MYSQL_MERCHANT_PASSWORD_ENCODED}"
-        f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
-    )
-
-    # Regular user configuration
     MYSQL_USER = os.getenv('MYSQL_USER')
     MYSQL_USER_PASSWORD = os.getenv('MYSQL_USER_PASSWORD')
+
+    # URL-encode the username and password
     MYSQL_USER_ENCODED = quote_plus(MYSQL_USER)
-    MYSQL_USER_PASSWORD_ENCODED = quote_plus(MYSQL_USER_PASSWORD)
-    SQLALCHEMY_USER_DATABASE_URI = (
+    MYSQL_USER_PASSWORD_ENCODED = quote_plus(MYSQL_USER)
+    SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{MYSQL_USER_ENCODED}:{MYSQL_USER_PASSWORD_ENCODED}"
         f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
     )
-
-    # Readonly user configuration
-    MYSQL_READONLY_USER = os.getenv('MYSQL_READONLY_USER')
-    MYSQL_READONLY_PASSWORD = os.getenv('MYSQL_READONLY_PASSWORD')
-    MYSQL_READONLY_USER_ENCODED = quote_plus(MYSQL_READONLY_USER)
-    MYSQL_READONLY_PASSWORD_ENCODED = quote_plus(MYSQL_READONLY_PASSWORD)
-    SQLALCHEMY_READONLY_DATABASE_URI = (
-        f"mysql+pymysql://{MYSQL_READONLY_USER_ENCODED}:{MYSQL_READONLY_PASSWORD_ENCODED}"
-        f"@{MYSQL_HOST}:3306/{MYSQL_DATABASE}"
-    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    @staticmethod
-    def get_db_uri(user_type=None):
-        if user_type == 'Admin':
-            return Config.SQLALCHEMY_ADMIN_DATABASE_URI
-        elif user_type == 'Merchant':
-            return Config.SQLALCHEMY_MERCHANT_DATABASE_URI
-        elif user_type == 'Customer':
-            return Config.SQLALCHEMY_USER_DATABASE_URI
-        else:
-            return Config.SQLALCHEMY_READONLY_DATABASE_URI
-
-    RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
-    RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
 
 
 class TestConfig():

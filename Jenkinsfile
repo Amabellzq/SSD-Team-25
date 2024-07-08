@@ -18,14 +18,8 @@ pipeline {
                 withCredentials([
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
-                    string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
-                    string(credentialsId: 'MYSQL_ADMIN_PASSWORD', variable: 'MYSQL_ADMIN_PASSWORD'),
-                    string(credentialsId: 'MYSQL_MERCHANT_USER', variable: 'MYSQL_MERCHANT_USER'),
-                    string(credentialsId: 'MYSQL_MERCHANT_PASSWORD', variable: 'MYSQL_MERCHANT_PASSWORD'),
                     string(credentialsId: 'MYSQL_USER', variable: 'MYSQL_USER'),
                     string(credentialsId: 'MYSQL_USER_PASSWORD', variable: 'MYSQL_USER_PASSWORD'),
-                    string(credentialsId: 'MYSQL_READONLY_USER', variable: 'MYSQL_READONLY_USER'),
-                    string(credentialsId: 'MYSQL_READONLY_PASSWORD', variable: 'MYSQL_READONLY_PASSWORD'),
                     string(credentialsId: 'MYSQL_HOST', variable: 'MYSQL_HOST'),
                     string(credentialsId: 'OUTLOOK_EMAIL', variable: 'OUTLOOK_EMAIL'),
                     string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD'),
@@ -38,14 +32,8 @@ pipeline {
                         def envContent = ""
                         envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
-                        envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
-                        envContent += "MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}\n"
-                        envContent += "MYSQL_MERCHANT_USER=${MYSQL_MERCHANT_USER}\n"
-                        envContent += "MYSQL_MERCHANT_PASSWORD=${MYSQL_MERCHANT_PASSWORD}\n"
                         envContent += "MYSQL_USER=${MYSQL_USER}\n"
                         envContent += "MYSQL_USER_PASSWORD=${MYSQL_USER_PASSWORD}\n"
-                        envContent += "MYSQL_READONLY_USER=${MYSQL_READONLY_USER}\n"
-                        envContent += "MYSQL_READONLY_PASSWORD=${MYSQL_READONLY_PASSWORD}\n"
                         envContent += "MYSQL_HOST=${MYSQL_HOST}\n"
                         envContent += "OUTLOOK_EMAIL=${OUTLOOK_EMAIL}\n"
                         envContent += "OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}\n"
