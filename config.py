@@ -53,6 +53,17 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    @staticmethod
+    def get_db_uri(user_type=None):
+        if user_type == 'Admin':
+            return Config.SQLALCHEMY_ADMIN_DATABASE_URI
+        elif user_type == 'Merchant':
+            return Config.SQLALCHEMY_MERCHANT_DATABASE_URI
+        elif user_type == 'Customer':
+            return Config.SQLALCHEMY_USER_DATABASE_URI
+        else:
+            return Config.SQLALCHEMY_READONLY_DATABASE_URI
+
     RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
     RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
 
