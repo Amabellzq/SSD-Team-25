@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Shop Me | Browse All Products{% endblock %}
+  
+{% block content %}
+    <!-- Breadcrumb Begin -->
+    <div class="breadcrumb-option">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb__links">
+                        <a href="/"><i class="fa fa-home"></i> Home</a>
+                        <a href="/shop"><i class="fa fa-store"></i> Shop</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Breadcrumb End -->
+
+    <!-- Shop Section Begin -->
+    <section class="shop spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-3">
+                    <div class="shop__sidebar">
+                        <div class="sidebar__categories">
+                            <div class="section-title">
+                                <h4>Categories</h4>
+                            </div> 
+                            <div class="categories__accordion">
+                                <div class="accordion" id="accordionExample">
+                                    <div class="card">
+                                        <div class="card-heading active">
+                                            <a href="{{ url_for('main.shop', category='all') }}">All</a>
+                                        </div>
+                                    </div>
+                                    {% for category in categories %}
+                                    <div class="card">
+                                        <div class="card-heading {% if selected_category == category.name %}active{% endif %}">
+                                            <a href="{{ url_for('main.shop', category=category.name) }}">{{ category.name }}</a>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9 col-md-9">
+                    <div class="row property__gallery">
+                        {% for category_name, products in categorized_products.items() %}
+                            {% for product in products %}
+                                <div class="col-lg-4 col-md-6 mix {{ category_name | lower | replace(' ', '-') }}">
+                                    <div class="product__item">
+                                        <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
+                                            {% if product.quantity == 0 %}
+                                                <span class="badge badge-danger">Out of Stock</span>
+                                            {% endif %}
+                                            <ul class="product__hover">
+                                                <li><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="product__item__text">
+                                            <h6><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}">{{ product.name }}</a></h6>
+                                            <div class="product__price">${{ product.price }}</div>
+                                            {% if product.quantity == 0 %}
+                                                <button class="btn btn-secondary" disabled>Out of Stock</button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <div class="pagination__option">
+                                {% for page_num in pagination.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num == pagination.page %}
+                                            <span>{{ page_num }}</span>
+                                        {% else %}
+                                            <a href="{{ url_for('main.shop', page=page_num, category=selected_category) }}">{{ page_num }}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Shop Section End -->
+{% endblock %}
