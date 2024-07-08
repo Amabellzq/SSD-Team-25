@@ -34,7 +34,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "2
 
 limiter.limit('25/hour')(main)
 def send_email(recipient_email, subject, body):
-
+    load_dotenv()
     OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
     OUTLOOK_PASSWORD= os.getenv('OUTLOOK_PASSWORD')
     smtp_server = 'smtp.outlook.com'
