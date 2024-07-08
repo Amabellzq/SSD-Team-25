@@ -54,7 +54,7 @@ def send_email(recipient_email, subject, body):
         print(f"Error sending email: {e}")
 
 
-KEY = os.getenv('ENCRYPTION_KEY')
+KEY = os.getenv('KEY')
 if not KEY:
     raise ValueError("No ENCRYPTION_KEY found in environment variables")
 
