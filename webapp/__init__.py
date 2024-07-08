@@ -86,11 +86,13 @@ def load_user(user_id):
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
+        with app.app_context():
+
         # Assuming 'role' is an attribute of your User model that defines the user type
-        user_role = current_user.role
-        app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri(user_role)
-        db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
-        db.init_app(app)
+            user_role = current_user.role
+            app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri(user_role)
+            db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
+            db.init_app(app)
 
 
 # Register Blueprint
