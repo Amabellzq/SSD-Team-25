@@ -33,6 +33,7 @@ pipeline {
                         // Create the .env file with the required environment variables
                         def envContent = ""
                         envContent += "ENCRYPTION_KEY=${ENCRYPTION_KEY}\n"
+                        echo "ENCRYPTION_KEY: ${ENCRYPTION_KEY}"
                         envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
                         envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
