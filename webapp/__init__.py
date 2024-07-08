@@ -38,8 +38,6 @@ def wait_for_db(host, port):
 # Wait for the database to be ready
 wait_for_db('db', 3306)  # 'db' is the service name defined in docker-compose.yml
 # Initialize SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.get_db_uri(None)  # Set to readonly as default
-
 db.init_app(app)
 
 # Configure session settings
@@ -57,13 +55,11 @@ login_manager.init_app(app)
 login_manager.login_view = 'main.login'
 
 # Initialize flask limiter
-limiter = Limiter(app = app, key_func=get_remote_address, default_limits=["100 per day", "25 per hour"]) # Set to readonly as default
-
+limiter = Limiter(app = app, key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
+app.config['SQLALCHEMY_DATABASE_URI'] = Config.get_db_uri(None)  # Set to readonly as default
 @login_manager.user_loader
 def load_user(user_id):
     return UserService.get(user_id)
-
-
 
 # Register Blueprint
 app.register_blueprint(main)

@@ -1,6 +1,9 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+
+from config import Config
+from . import app
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm, DeleteUserForm, ApproveForm, SuspendForm, DeleteCategoryForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -31,6 +34,15 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "2
 
 limiter.limit('25/hour')(main)
 
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        # Assuming 'role' is an attribute of your User model that defines the user type
+        user_role = current_user.role
+        print(user_role)
+        db_uri = Config.get_db_uri(user_role)
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+        db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
 def send_email(recipient_email, subject, body):
     load_dotenv()
     OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
