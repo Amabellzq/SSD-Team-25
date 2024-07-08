@@ -2,8 +2,7 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 import os
 from cryptography.fernet import Fernet
-# is to to avoid circular imports
-from webapp import routes
+
 
 # Load environment variables from .env file
 load_dotenv()
