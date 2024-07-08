@@ -2,7 +2,6 @@ import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 
-from config import Config
 from . import app
 from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm, DeleteUserForm, ApproveForm, SuspendForm, DeleteCategoryForm
 from werkzeug.utils import secure_filename
