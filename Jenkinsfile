@@ -46,13 +46,13 @@ pipeline {
                 }
             }
         }
-        stage('Build and Deploy') {
+                stage('Build and Deploy') {
             steps {
                 sh 'docker-compose down --remove-orphans'
                 sh 'docker-compose up --build -d'
             }
         }
-    }
+    
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 dependencyCheck additionalArguments: '''
