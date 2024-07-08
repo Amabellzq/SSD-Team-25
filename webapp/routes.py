@@ -22,6 +22,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from .templates.includes.forms import RegistrationForm, LoginForm
 from .utils import role_required
+from cryptography.fernet import Fernet
+
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -50,6 +52,19 @@ def send_email(recipient_email, subject, body):
         print(f"SMTP Authentication Error: {auth_error}")
     except Exception as e:
         print(f"Error sending email: {e}")
+
+
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
+if not ENCRYPTION_KEY:
+    raise ValueError("No ENCRYPTION_KEY found in environment variables")
+
+fernet = Fernet(ENCRYPTION_KEY)
+
+def encrypt_data(data):
+    return fernet.encrypt(data.encode()).decode()
+
+def decrypt_data(data):
+    return fernet.decrypt(data.encode()).decode()
         
 def get_singapore_time():
     # Get the current time in UTC
@@ -478,51 +493,17 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
-
-    
     form = TOTPForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        # totp_code = request.form['totp']
         totp_code = form.totp.data
-        totp = pyotp.TOTP(user.totp_secret)
+        totp_secret = decrypt_data(user.totp_secret)  # Decrypt the TOTP secret
+        totp = pyotp.TOTP(totp_secret)
         if totp.verify(totp_code):
             login_user(user)
-            session['user_id'] = user.get_id()  # Store user ID in session
-            user.active_session_token = session.sid  # Use Flask-Session's session ID
+            session['user_id'] = user.get_id()
+            user.active_session_token = session.sid
             db.session.commit()
-
-            # totp = pyotp.TOTP(user.totp_secret)
-            # if totp.verify(totp_code):
-            #     login_user(user)  # Log the user in if TOTP is verified
-            #     print(f'Login successful for user: {user.username}')  # Debug statement
-            #     session['user_id'] = user.get_id()  # Store user ID in session
-            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
-            #     return redirect(url_for('main.home'))
-            # else:
-            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
-            #     print('Invalid TOTP code')  # Debug statement
-                
-            # # Redirect based on role
-            # if user.role == 'Admin':
-            #     print('Redirecting to admin dashboard')  # Debug statement
-            #     return redirect(url_for('main.adminDashboard'))
-            # elif user.role == 'Merchant':
-            #     print('Redirecting to seller dashboard')  # Debug statement
-            #     return redirect(url_for('main.sellerDashboard'))
-            # else:
-            #     print('Redirecting to home page')  # Debug statement
-            #     return redirect(url_for('main.home'))
-    #     else:
-    #         flash('Invalid username or password', 'danger')
-    #         print('Invalid username or password')  # Debug statement
-    # else:
-    #     if request.method == 'POST':
-    #         print('Form validation failed')  # Debug statement
-    #     else:
-    #         print('GET request')  # Debug statement
-
-    # return render_template('login.html', login_form=form)
 
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
@@ -531,13 +512,13 @@ def totp():
                 else:
                     return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))  # Redirect to home page
-        
+
         else:
             flash('Invalid TOTP code. Please try again.')
 
-    user.totp_secret = pyotp.random_base32()  # Generate TOTP secret
+    user.totp_secret = encrypt_data(pyotp.random_base32())  # Encrypt the TOTP secret
     db.session.commit()
-    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
+    totp_uri = pyotp.TOTP(decrypt_data(user.totp_secret)).provisioning_uri(user.email, issuer_name="shopppme")
     img = qrcode.make(totp_uri, box_size=8, border=3)
     buf = BytesIO()
     img.save(buf, format='PNG')
