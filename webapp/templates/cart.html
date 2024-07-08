@@ -39,7 +39,7 @@
                             {% for item in cart_items %}
                             <tr>
                                 <td class="cart__product__item">
-                                    <img src="data:image/png;base64,{{ item.product.image_url | b64encode }}" alt="{{ item.product.name }}">
+                                    <img src="data:image/png;base64,{{ item.product.image_url | b64encode }}" alt="{{ item.product.name }}" style="max-width: 150px; max-height: 150px;">
                                     <div class="cart__product__item__title">
                                         <h6>{{ item.product.name }}</h6>
                                     </div>
