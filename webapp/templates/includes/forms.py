@@ -148,7 +148,17 @@ class CreateCategory(FlaskForm):
     saveCategory = SubmitField('Save Category')
 
 class DeleteUserForm(FlaskForm):
-    user_id = HiddenField('User ID', validators=[DataRequired()])
+    user_id = HiddenField('user_id', validators=[DataRequired()])
+    submit = SubmitField('Delete')
+
+class ApproveForm(FlaskForm):
+    submit = SubmitField('Approve')
+
+class SuspendForm(FlaskForm):
+    submit = SubmitField('Suspend')
+
+
+class DeleteCategoryForm(FlaskForm):
     submit = SubmitField('Delete')
 
 #############################
