@@ -74,7 +74,6 @@ def before_request():
         app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
         print(db_uri)
         db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
-        db.init_app(app)
 
 # Register Blueprint
 app.register_blueprint(main)
