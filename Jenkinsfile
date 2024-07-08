@@ -30,7 +30,6 @@ pipeline {
 
                 ]) {
                     script {
-                        // Create the .env file with the required environment variables
                         def envContent = ""
                         envContent += "KEY=${KEY}\n"
                         envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
@@ -42,12 +41,18 @@ pipeline {
                         envContent += "OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}\n"
                         envContent += "RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC_KEY}\n"
                         envContent += "RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE_KEY}\n"
-
                         writeFile file: '.env', text: envContent
                     }
                 }
             }
         }
+        stage('Build and Deploy') {
+            steps {
+                sh 'docker-compose down --remove-orphans'
+                sh 'docker-compose up --build -d'
+            }
+        }
+    }
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 dependencyCheck additionalArguments: '''
@@ -70,7 +75,6 @@ pipeline {
             steps {
                 dir(REPO_DIR) {
                     script {
-                        // Run pylint using pipx and capture the exit status
                         def pylintStatus = sh(script: 'pipx run pylint -f parseable --reports=no *.py > pylint_report.log', returnStatus: true)
                         if (pylintStatus != 0) {
                             echo "pylint found issues. Check the report at pylint_report.log"
@@ -85,7 +89,6 @@ pipeline {
             steps {
                 dir(REPO_DIR) {
                     script {
-                        // Run bandit and capture the exit status
                         def banditStatus = sh(script: 'pipx run bandit -r . -f json -o bandit_report.json', returnStatus: true)
                         if (banditStatus != 0) {
                             echo "bandit found issues. Check the report at bandit_report.json"
@@ -120,14 +123,9 @@ pipeline {
                 ]) {
                     script {
                         dir(REPO_DIR) {
-                            // Ensure the nginx directory exists
                             sh 'mkdir -p nginx'
-
-                            // Copy the secret files to the nginx directory
                             sh "cp ${CRT_FILE} nginx/fullchain.crt"
                             sh "cp ${KEY_FILE} nginx/shoppp.me.key"
-
-                            // Ensure proper file permissions
                             sh 'chmod 600 nginx/fullchain.crt nginx/shoppp.me.key'
                         }
                     }
@@ -138,15 +136,12 @@ pipeline {
             steps {
                 dir(REPO_DIR) {
                     script {
-                        // Create virtual environment and install dependencies
                         sh """
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
                         """
-
-                        // Run pytest and generate a JUnit XML report
                         sh """
                         . venv/bin/activate
                         pytest -v --tb=long --junitxml=report.xml
@@ -155,31 +150,17 @@ pipeline {
                 }
             }
         }
-        stage('Build and Deploy') {
-            steps {
-                // Ensure a clean deployment by bringing down any existing containers
-                sh 'docker-compose down --remove-orphans'
-                // Use Docker Compose to build and start the services, using the .env file for configuration
-                sh 'docker-compose up --build -d'
-            }
-        }
-    }
+
 
 post {
     always {
         script {
-
-                    // Record Flake8 issues
                     recordIssues tools: [flake8(pattern: "flake8_report.txt")]
                     recordIssues (
                     enabledForFailure: true,
                     aggregatingResults: true,
                     tools: [pyLint(name: 'Pylint', pattern: 'pylint_report.log')]
                     )
-                     //recordIssues tools: [bandit(pattern: 'bandit_report.json')]
-                     //recordIssues enabledForFailure: true, tool: sonarQube()
-
-
               sh 'rm -f .env'
                cleanWs()
         }
@@ -190,7 +171,5 @@ post {
         failure {
             echo 'One or more stages failed.'
         }
-
     }
-
 }

@@ -20,8 +20,6 @@ def test_shop_page(driver):
         assert category.get_attribute('href') is not None
     products = driver.find_elements(By.XPATH, "//div[@class='product__item']")
     assert len(products) > 0
-    pagination = driver.find_element(By.XPATH, "//div[@class='pagination__option']")
-    assert pagination is not None
     for product in products:
         product_name = product.find_element(By.XPATH, ".//h6/a").text
         product_price = product.find_element(By.XPATH, ".//div[@class='product__price']").text

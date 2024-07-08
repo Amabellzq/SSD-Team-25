@@ -26,7 +26,6 @@ from cryptography.fernet import Fernet
 
 load_dotenv()
 KEY = os.getenv('KEY')
-print(KEY)
 if not KEY:
     raise ValueError("No ENCRYPTION_KEY found in environment variables")
 fernet = Fernet(KEY)
