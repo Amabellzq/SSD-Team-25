@@ -54,13 +54,19 @@
                                 <div class="col-lg-4 col-md-6 mix {{ category_name | lower | replace(' ', '-') }}">
                                     <div class="product__item">
                                         <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ product.image_url | b64encode }}">
+                                            {% if product.quantity == 0 %}
+                                                <span class="badge badge-danger">Out of Stock</span>
+                                            {% endif %}
                                             <ul class="product__hover">
                                                 <li><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
                                             </ul>
                                         </div>
                                         <div class="product__item__text">
-                                            <h6><a href="#">{{ product.name }}</a></h6>
+                                            <h6><a href="{{ url_for('main.productDetails', product_id=product.product_id) }}">{{ product.name }}</a></h6>
                                             <div class="product__price">${{ product.price }}</div>
+                                            {% if product.quantity == 0 %}
+                                                <button class="btn btn-secondary" disabled>Out of Stock</button>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
