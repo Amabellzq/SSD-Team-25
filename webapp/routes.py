@@ -22,9 +22,6 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from .templates.includes.forms import RegistrationForm, LoginForm
 from .utils import role_required
-from cryptography.fernet import Fernet
-
-load_dotenv()
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -33,6 +30,7 @@ login_manager.login_view = 'main.login'
 limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
 
 limiter.limit('25/hour')(main)
+
 def send_email(recipient_email, subject, body):
     load_dotenv()
     OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
@@ -52,19 +50,6 @@ def send_email(recipient_email, subject, body):
         print(f"SMTP Authentication Error: {auth_error}")
     except Exception as e:
         print(f"Error sending email: {e}")
-
-
-KEY = os.getenv('KEY')
-print(KEY)
-if not KEY:
-    raise ValueError("No ENCRYPTION_KEY found in environment variables")
-fernet = Fernet(KEY)
-
-def encrypt_data(data):
-    return fernet.encrypt(data.encode()).decode()
-
-def decrypt_data(data):
-    return fernet.decrypt(data.encode()).decode()
         
 def get_singapore_time():
     # Get the current time in UTC
@@ -178,12 +163,16 @@ def productDetails(product_id):
 
     form = AddToCart()
     if form.validate_on_submit():
+        quantity = form.quantity.data
+        if product.quantity < quantity:
+            flash(f'Only {product.quantity} units available in stock', 'danger')
+            return redirect(url_for('main.productDetails', product_id=product_id))
+
         # Handle adding to cart
         flash('Product added to cart!', 'success')
         return redirect(url_for('main.cart'))
 
     form.product_id.data = product_id  # Set the product_id in the form
-    
 
     return render_template('product-details.html', product=product, related_products=related_products, form=form)
 
@@ -255,6 +244,12 @@ def add_to_cart():
     quantity = int(request.form.get('quantity', 1))
     user_id = current_user.user_id
 
+    # Fetch the product
+    product = Product.query.get(product_id)
+    if not product or product.quantity < quantity:
+        flash('This product is currently out of stock or not enough quantity available.', 'danger')
+        return redirect(url_for('main.productDetails', product_id=product_id))
+
     # Get the user's current shopping cart
     cart = ShoppingCart.query.filter_by(user_id=user_id).first()
     if not cart:
@@ -267,12 +262,9 @@ def add_to_cart():
     if cart_item:
         # Update the quantity if the product is already in the cart
         cart_item.quantity += quantity
-        cart_item.price = Product.query.get(product_id).price * cart_item.quantity
+        cart_item.price = product.price * cart_item.quantity
     else:
         # Add a new product to the cart
-        product = Product.query.get(product_id)
-        if not product:
-            abort(404, description="Product not found")
         cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
         db.session.add(cart_item)
 
@@ -405,6 +397,8 @@ def checkout():
                 flash(f'Not enough stock for {product.name}', 'danger')
                 db.session.rollback()
                 return redirect(url_for('main.cart'))
+            elif product.quantity == 0:
+                product.availability = 'Out of Stock'
 
         # Remove items from the cart
         for item in cart_items:
@@ -484,17 +478,51 @@ def totp():
         return redirect(url_for('main.login'))
 
     user = UserService.get(user_id)
+
+    
     form = TOTPForm()
 
     if request.method == 'POST' and form.validate_on_submit():
+        # totp_code = request.form['totp']
         totp_code = form.totp.data
-        totp_secret = decrypt_data(user.totp_secret)  # Decrypt the TOTP secret
-        totp = pyotp.TOTP(totp_secret)
+        totp = pyotp.TOTP(user.totp_secret)
         if totp.verify(totp_code):
             login_user(user)
-            session['user_id'] = user.get_id()
-            user.active_session_token = session.sid
+            session['user_id'] = user.get_id()  # Store user ID in session
+            user.active_session_token = session.sid  # Use Flask-Session's session ID
             db.session.commit()
+
+            # totp = pyotp.TOTP(user.totp_secret)
+            # if totp.verify(totp_code):
+            #     login_user(user)  # Log the user in if TOTP is verified
+            #     print(f'Login successful for user: {user.username}')  # Debug statement
+            #     session['user_id'] = user.get_id()  # Store user ID in session
+            #     print(f"Session started with user_id: {session.get('user_id')}")  # Debug statement
+            #     return redirect(url_for('main.home'))
+            # else:
+            #     flash('Invalid TOTP code', 'danger')  # Show error if TOTP code is invalid
+            #     print('Invalid TOTP code')  # Debug statement
+                
+            # # Redirect based on role
+            # if user.role == 'Admin':
+            #     print('Redirecting to admin dashboard')  # Debug statement
+            #     return redirect(url_for('main.adminDashboard'))
+            # elif user.role == 'Merchant':
+            #     print('Redirecting to seller dashboard')  # Debug statement
+            #     return redirect(url_for('main.sellerDashboard'))
+            # else:
+            #     print('Redirecting to home page')  # Debug statement
+            #     return redirect(url_for('main.home'))
+    #     else:
+    #         flash('Invalid username or password', 'danger')
+    #         print('Invalid username or password')  # Debug statement
+    # else:
+    #     if request.method == 'POST':
+    #         print('Form validation failed')  # Debug statement
+    #     else:
+    #         print('GET request')  # Debug statement
+
+    # return render_template('login.html', login_form=form)
 
             if user.role == 'Merchant':
                 merchant = Merchant.query.filter_by(user_id=user.user_id).first()
@@ -503,13 +531,13 @@ def totp():
                 else:
                     return redirect(url_for('main.register_business'))
             return redirect(url_for('main.home'))  # Redirect to home page
-
+        
         else:
             flash('Invalid TOTP code. Please try again.')
 
-    user.totp_secret = encrypt_data(pyotp.random_base32())  # Encrypt the TOTP secret
+    user.totp_secret = pyotp.random_base32()  # Generate TOTP secret
     db.session.commit()
-    totp_uri = pyotp.TOTP(decrypt_data(user.totp_secret)).provisioning_uri(user.email, issuer_name="shopppme")
+    totp_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(user.email, issuer_name="YourAppName")
     img = qrcode.make(totp_uri, box_size=8, border=3)
     buf = BytesIO()
     img.save(buf, format='PNG')
@@ -590,7 +618,10 @@ def register():
                     new_user.otp = otp
                     db.session.add(new_user)
                     db.session.commit()
-                    
+
+                    # msg = Message('Email Verification', sender='shopppme2024@outlook.com', recipients=[email])
+                    # msg.body = f"Thank you {username} for registering. Your OTP is: {otp}"
+                    # mail.send(msg)
                     send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
                     print('successful')
                     flash('Registration Successful. Please check your email for the OTP.', 'success')

@@ -4,84 +4,88 @@
   
 {% block content %}
 
-    <div class="breadcrumb-option">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="breadcrumb__links">
-                        <a href="/"><i class="fa fa-home"></i> Home</a>
-                        <a href="/shop"><i class="fa fa-store"></i> Shop</a>
-                        <span>{{ product.name }}</span>
-                    </div>
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="/"><i class="fa fa-home"></i> Home</a>
+                    <a href="/shop"><i class="fa fa-store"></i> Shop</a>
+                    <span>{{ product.name }}</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Product Details Section -->
-    <section class="product-details spad">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6">
-                    <img src="data:image/png;base64,{{ product.image_url | b64encode }}" alt="{{ product.name }}" class="img-fluid">
-                </div>
-                <div class="col-lg-6">
-                    <div class="product__details__text">
-                        <h3>{{ product.name }}</h3>
-                        <div class="product__details__price">${{ product.price }}</div>
-                        <p>{{ product.description }}</p>
-                        <div class="product__details__button">
-                            <form action="{{ url_for('main.add_to_cart') }}" method="POST">
-                                {{ form.hidden_tag() }}
-                                <input type="hidden" name="product_id" value="{{ product.product_id }}">
-                                <div class="quantity">
-                                    <span>Quantity:</span>
-                                    <div class="pro-qty">
-                                        <input type="number" name="quantity" value="1" min="1">
-                                    </div>
+<!-- Product Details Section -->
+<section class="product-details spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <img src="data:image/png;base64,{{ product.image_url | b64encode }}" alt="{{ product.name }}" class="img-fluid">
+            </div>
+            <div class="col-lg-6">
+                <div class="product__details__text">
+                    <h3>{{ product.name }}</h3>
+                    <div class="product__details__price">${{ product.price }}</div>
+                    <p>{{ product.description }}</p>
+                    <div class="product__details__button">
+                        <form action="{{ url_for('main.add_to_cart') }}" method="POST">
+                            {{ form.hidden_tag() }}
+                            <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                            <div class="quantity">
+                                <span>Quantity:</span>
+                                <div class="pro-qty">
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}">
                                 </div>
+                            </div>
+                            {% if product.quantity > 0 %}
                                 <button type="submit" class="cart-btn"><span class="icon_bag_alt"></span> Add to cart</button>
-                            </form>
-                        </div>
-                        <div class="product__details__widget">
-                            <ul>
-                                <li>
-                                    <span>Availability:</span>
-                                    <p>{{ product.availability }}</p>
-                                </li>
-                                <li>
-                                    <span>Promotions:</span>
-                                    <p>Free shipping</p>
-                                </li>
-                            </ul>
-                        </div>
+                            {% else %}
+                                <button type="button" class="cart-btn" disabled>Out of Stock</button>
+                            {% endif %}
+                        </form>
                     </div>
-                </div>
-                <div class="col-lg-12 text-center">
-                    <div class="product__details__tab">
-                        <div class="related__title">
-                            <h5>RELATED PRODUCTS</h5>
-                        </div>
+                    <div class="product__details__widget">
+                        <ul>
+                            <li>
+                                <span>Availability:</span>
+                                <p>{{ 'In Stock' if product.quantity > 0 else 'Out of Stock' }}</p>
+                            </li>
+                            <li>
+                                <span>Promotions:</span>
+                                <p>Free shipping</p>
+                            </li>
+                        </ul>
                     </div>
-                    {% for related_product in related_products %}
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <div class="product__item">
-                            <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ related_product.image_url | b64encode }}">
-                                <ul class="product__hover">
-                                    <li><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
-                                </ul>
-                            </div>
-                            <div class="product__item__text">
-                                <h6><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}">{{ related_product.name }}</a></h6>
-                                <div class="product__price">${{ related_product.price }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
+            <div class="col-lg-12 text-center">
+                <div class="product__details__tab">
+                    <div class="related__title">
+                        <h5>RELATED PRODUCTS</h5>
+                    </div>
+                </div>
+                {% for related_product in related_products %}
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="product__item">
+                        <div class="product__item__pic set-bg" data-setbg="data:image/png;base64,{{ related_product.image_url | b64encode }}">
+                            <ul class="product__hover">
+                                <li><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}" class="image-popup"><span class="arrow_expand"></span></a></li>
+                            </ul>
+                        </div>
+                        <div class="product__item__text">
+                            <h6><a href="{{ url_for('main.productDetails', product_id=related_product.product_id) }}">{{ related_product.name }}</a></h6>
+                            <div class="product__price">${{ related_product.price }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-    </section>
-    <!-- Product Details Section End -->
+    </div>
+</section>
+<!-- Product Details Section End -->
 
-    {% endblock %}
+{% endblock %}
