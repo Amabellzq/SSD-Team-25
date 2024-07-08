@@ -24,7 +24,7 @@ from .templates.includes.forms import RegistrationForm, LoginForm
 from .utils import role_required
 from cryptography.fernet import Fernet
 
-load_dotenv()
+# load_dotenv()
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -590,10 +590,7 @@ def register():
                     new_user.otp = otp
                     db.session.add(new_user)
                     db.session.commit()
-
-                    # msg = Message('Email Verification', sender='shopppme2024@outlook.com', recipients=[email])
-                    # msg.body = f"Thank you {username} for registering. Your OTP is: {otp}"
-                    # mail.send(msg)
+                    
                     send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
                     print('successful')
                     flash('Registration Successful. Please check your email for the OTP.', 'success')
