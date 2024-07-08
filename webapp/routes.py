@@ -679,15 +679,21 @@ def adminDashboard():
     users = UserService.get_all()
     merchants = MerchantService.get_all()
     categories = CategoryService.get_all()
-    accountDetails = AccountDetailsForm() 
+    
+    # Populate the account details form with the current user's details
+    current_user_data = UserService.get(user_id)
+    accountDetails = AccountDetailsForm(obj=current_user_data)
+    
     profile_pic_url = None
+    if current_user_data.profile_pic_url:
+        profile_pic_url = base64.b64encode(current_user_data.profile_pic_url).decode('utf-8')
 
     users_data = []
     for user in users:
         if user.profile_pic_url:
-            profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
+            user_profile_pic_url = base64.b64encode(user.profile_pic_url).decode('utf-8')
         else:
-            profile_pic_url = None
+            user_profile_pic_url = None
 
         users_data.append({
             'user_id': user.user_id,
@@ -695,14 +701,14 @@ def adminDashboard():
             'role': user.role,
             'email': user.email,
             'account_status': user.account_status,
-            'profile_pic_url': profile_pic_url
+            'profile_pic_url': user_profile_pic_url
         })
     
     delete_user_form = DeleteUserForm()
 
-
     return render_template('adminDashboard.html', users=users_data, categories=categories, merchants=merchants,
-                           profile_pic_url=profile_pic_url, user=user, accountDetails=accountDetails, form=delete_user_form)
+                           profile_pic_url=profile_pic_url, user=current_user_data, accountDetails=accountDetails, form=delete_user_form)
+
 
 @main.route('/updateAdmin_account', methods=['POST'])
 @login_required
@@ -710,15 +716,29 @@ def adminDashboard():
 def updateAdmin_account():
     user_id = current_user.user_id
     account_details_form = AccountDetailsForm()
+    
     if account_details_form.validate_on_submit():
-        UserService.update(
-            user_id,
-            username=account_details_form.username.data,
-            email=account_details_form.email.data,
-            password=generate_password_hash(account_details_form.password.data) if account_details_form.password.data else None,
-            profile_pic_url=account_details_form.profile_picture.data.read() if account_details_form.profile_picture.data else None
-        )
+        # Read profile picture data if it exists
+        profile_pic_data = None
+        if account_details_form.profile_picture.data:
+            profile_pic_data = account_details_form.profile_picture.data.read()
+
+        # Prepare data to update
+        update_data = {
+            'username': account_details_form.username.data,
+            'email': account_details_form.email.data,
+            'password': generate_password_hash(account_details_form.password.data) if account_details_form.password.data else None,
+            'profile_pic_url': profile_pic_data
+        }
+
+        UserService.update(user_id, **update_data)
+        flash('Account details updated successfully.', 'success')
+    else:
+        flash('Error updating account details. Please check the form and try again.', 'danger')
+        current_app.logger.debug(f"Form errors: {account_details_form.errors}")
+
     return redirect(url_for('main.adminDashboard'))
+
 
 @main.route('/registerAdmin', methods=['GET', 'POST'])
 @role_required('Admin')

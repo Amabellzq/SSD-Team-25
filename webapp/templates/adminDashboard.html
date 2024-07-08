@@ -30,7 +30,6 @@
                     <button class="btn btn-primary" onclick="location.href='/registerAdmin';"
                     style="background-color: #09054a; border-color: #09054a;">Register New Admins</button>
                 </div>
-            
                 <form method="POST" action="{{ url_for('main.updateAdmin_account') }}" enctype="multipart/form-data">
                     {{ accountDetails.hidden_tag() }}
                     <div class="form-group text-center">
@@ -51,7 +50,7 @@
                     </div>
                     <div class="form-group">
                         {{ accountDetails.username.label(class="form-label") }}
-                        {{ accountDetails.username(class="form-control", value=accountDetails.username.data) }}
+                        {{ accountDetails.username(class="form-control") }}
                         {% if accountDetails.username.errors %}
                             {% for error in accountDetails.username.errors %}
                                 <div class="alert alert-danger">{{ error }}</div>
@@ -69,11 +68,11 @@
                     </div>
                     <div class="form-group">
                         {{ accountDetails.role.label(class="form-label") }}
-                        {{ accountDetails.role(class="form-control", value=accountDetails.role.data, readonly=True) }}
+                        {{ accountDetails.role(class="form-control", readonly=True) }}
                     </div>
                     <div class="form-group">
                         {{ accountDetails.account_status.label(class="form-label") }}
-                        {{ accountDetails.account_status(class="form-control", value=accountDetails.account_status.data, readonly=True) }}
+                        {{ accountDetails.account_status(class="form-control", readonly=True) }}
                     </div>
                     <div class="form-group">
                         {{ accountDetails.password.label(class="form-label") }}
@@ -91,6 +90,7 @@
                     </div>
                 </form>
             </div>
+            
 
             <div class="col-lg-12 mix users" style="display: none;"> <!-- Ensure this is initially hidden -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" >
