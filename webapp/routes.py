@@ -54,11 +54,11 @@ def send_email(recipient_email, subject, body):
         print(f"Error sending email: {e}")
 
 
-ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
-if not ENCRYPTION_KEY:
+KEY = os.getenv('ENCRYPTION_KEY')
+if not KEY:
     raise ValueError("No ENCRYPTION_KEY found in environment variables")
 
-fernet = Fernet(ENCRYPTION_KEY)
+fernet = Fernet(KEY)
 
 def encrypt_data(data):
     return fernet.encrypt(data.encode()).decode()
