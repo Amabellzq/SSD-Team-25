@@ -16,6 +16,7 @@ pipeline {
         stage('Load Credentials') {
             steps {
                 withCredentials([
+                    string(credentialsId: 'ENCRYPTION_KEY', variable: 'ENCRYPTION_KEY'),
                     string(credentialsId: 'MYSQL_ROOT_PASSWORD', variable: 'MYSQL_ROOT_PASSWORD'),
                     string(credentialsId: 'MYSQL_DATABASE', variable: 'MYSQL_DATABASE'),
                     string(credentialsId: 'MYSQL_ADMIN_USER', variable: 'MYSQL_ADMIN_USER'),
@@ -24,13 +25,14 @@ pipeline {
                     string(credentialsId: 'OUTLOOK_EMAIL', variable: 'OUTLOOK_EMAIL'),
                     string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD'),
                     string(credentialsId: 'RECAPTCHA_PUBLIC_KEY', variable: 'RECAPTCHA_PUBLIC_KEY'),
-                    string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY'),
-                    string(credentialsId: 'ENCRYPTION_KEY', variable: 'ENCRYPTION_KEY')
+                    string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY')
+
 
                 ]) {
                     script {
                         // Create the .env file with the required environment variables
                         def envContent = ""
+                        envContent += "ENCRYPTION_KEY=${ENCRYPTION_KEY}\n"
                         envContent += "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}\n"
                         envContent += "MYSQL_DATABASE=${MYSQL_DATABASE}\n"
                         envContent += "MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}\n"
@@ -40,7 +42,6 @@ pipeline {
                         envContent += "OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}\n"
                         envContent += "RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC_KEY}\n"
                         envContent += "RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE_KEY}\n"
-                        envContent += "ENCRYPTION_KEY=${ENCRYPTION_KEY}\n"
 
                         writeFile file: '.env', text: envContent
                     }

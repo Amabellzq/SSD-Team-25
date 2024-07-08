@@ -33,6 +33,7 @@ services:
     networks:
       - ecommerce_network
     environment:
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
@@ -42,7 +43,6 @@ services:
       - OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}
       - RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC_KEY}
       - RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE_KEY}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     volumes:
       - mysql-data:/var/lib/mysql
 
