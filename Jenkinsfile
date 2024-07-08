@@ -125,12 +125,6 @@ pipeline {
                 }
             }
         }
-        stage('Build and Deploy') {
-            steps {
-                sh 'docker-compose down --remove-orphans'
-                sh 'docker-compose up --build -d'
-            }
-        }
         stage('Pytest') {
             steps {
                 dir(REPO_DIR) {
@@ -147,6 +141,12 @@ pipeline {
                         """
                     }
                 }
+            }
+        }
+        stage('Build and Deploy') {
+            steps {
+                sh 'docker-compose down --remove-orphans'
+                sh 'docker-compose up --build -d'
             }
         }
 
