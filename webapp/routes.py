@@ -163,12 +163,16 @@ def productDetails(product_id):
 
     form = AddToCart()
     if form.validate_on_submit():
+        quantity = form.quantity.data
+        if product.quantity < quantity:
+            flash(f'Only {product.quantity} units available in stock', 'danger')
+            return redirect(url_for('main.productDetails', product_id=product_id))
+
         # Handle adding to cart
         flash('Product added to cart!', 'success')
         return redirect(url_for('main.cart'))
 
     form.product_id.data = product_id  # Set the product_id in the form
-    
 
     return render_template('product-details.html', product=product, related_products=related_products, form=form)
 
@@ -240,6 +244,12 @@ def add_to_cart():
     quantity = int(request.form.get('quantity', 1))
     user_id = current_user.user_id
 
+    # Fetch the product
+    product = Product.query.get(product_id)
+    if not product or product.quantity < quantity:
+        flash('This product is currently out of stock or not enough quantity available.', 'danger')
+        return redirect(url_for('main.productDetails', product_id=product_id))
+
     # Get the user's current shopping cart
     cart = ShoppingCart.query.filter_by(user_id=user_id).first()
     if not cart:
@@ -252,12 +262,9 @@ def add_to_cart():
     if cart_item:
         # Update the quantity if the product is already in the cart
         cart_item.quantity += quantity
-        cart_item.price = Product.query.get(product_id).price * cart_item.quantity
+        cart_item.price = product.price * cart_item.quantity
     else:
         # Add a new product to the cart
-        product = Product.query.get(product_id)
-        if not product:
-            abort(404, description="Product not found")
         cart_item = CartItem(cart_id=cart.cart_id, product_id=product_id, quantity=quantity, price=product.price * quantity)
         db.session.add(cart_item)
 
@@ -390,6 +397,8 @@ def checkout():
                 flash(f'Not enough stock for {product.name}', 'danger')
                 db.session.rollback()
                 return redirect(url_for('main.cart'))
+            elif product.quantity == 0:
+                product.availability = 'Out of Stock'
 
         # Remove items from the cart
         for item in cart_items:
