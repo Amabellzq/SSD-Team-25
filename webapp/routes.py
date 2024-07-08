@@ -25,17 +25,6 @@ from .utils import role_required
 from cryptography.fernet import Fernet
 
 load_dotenv()
-KEY = os.getenv('KEY')
-print(KEY)
-if not KEY:
-    raise ValueError("No ENCRYPTION_KEY found in environment variables")
-fernet = Fernet(KEY)
-
-def encrypt_data(data):
-    return fernet.encrypt(data.encode()).decode()
-
-def decrypt_data(data):
-    return fernet.decrypt(data.encode()).decode()
 
 main = Blueprint('main', __name__)
 login_manager = LoginManager()
@@ -63,6 +52,19 @@ def send_email(recipient_email, subject, body):
         print(f"SMTP Authentication Error: {auth_error}")
     except Exception as e:
         print(f"Error sending email: {e}")
+
+
+KEY = os.getenv('KEY')
+print(KEY)
+if not KEY:
+    raise ValueError("No ENCRYPTION_KEY found in environment variables")
+fernet = Fernet(KEY)
+
+def encrypt_data(data):
+    return fernet.encrypt(data.encode()).decode()
+
+def decrypt_data(data):
+    return fernet.decrypt(data.encode()).decode()
         
 def get_singapore_time():
     # Get the current time in UTC
