@@ -70,10 +70,9 @@ def before_request():
         # Assuming 'role' is an attribute of your User model that defines the user type
         user_role = current_user.role
         db_uri = Config.get_db_uri(user_role)
-        if db_uri != app.config['SQLALCHEMY_DATABASE_URI']:
-            app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-            db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
-            db.init_app(app)
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+        db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
+        db.init_app(app)
 
 # Register Blueprint
 app.register_blueprint(main)
