@@ -24,7 +24,7 @@ pipeline {
                     string(credentialsId: 'OUTLOOK_EMAIL', variable: 'OUTLOOK_EMAIL'),
                     string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD'),
                     string(credentialsId: 'RECAPTCHA_PUBLIC_KEY', variable: 'RECAPTCHA_PUBLIC_KEY'),
-                    string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY')
+                    string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY'),
                     string(credentialsId: 'ENCRYPTION_KEY', variable: 'ENCRYPTION_KEY')
 
                 ]) {
