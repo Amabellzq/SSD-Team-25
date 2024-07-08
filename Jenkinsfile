@@ -52,7 +52,6 @@ pipeline {
                 sh 'docker-compose up --build -d'
             }
         }
-    
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 dependencyCheck additionalArguments: '''
@@ -151,6 +150,7 @@ pipeline {
             }
         }
 
+    }
 
 post {
     always {
