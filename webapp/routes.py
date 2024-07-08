@@ -27,7 +27,6 @@ from cryptography.fernet import Fernet
 ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 if not ENCRYPTION_KEY:
     raise ValueError("No ENCRYPTION_KEY found in environment variables")
-
 fernet = Fernet(ENCRYPTION_KEY)
 
 def encrypt_data(data):
