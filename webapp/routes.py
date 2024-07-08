@@ -30,7 +30,6 @@ login_manager.login_view = 'main.login'
 limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
 
 limiter.limit('25/hour')(main)
-
 def send_email(recipient_email, subject, body):
     load_dotenv()
     OUTLOOK_EMAIL= os.getenv('OUTLOOK_EMAIL')
