@@ -69,8 +69,10 @@ def before_request():
     if current_user.is_authenticated:
         # Assuming 'role' is an attribute of your User model that defines the user type
         user_role = current_user.role
+        print(user_role)
         db_uri = Config.get_db_uri(user_role)
         app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+        print(db_uri)
         db.engine.dispose()  # Dispose the current engine to reset the connection with the new URI
         db.init_app(app)
 
