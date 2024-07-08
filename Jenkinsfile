@@ -25,6 +25,7 @@ pipeline {
                     string(credentialsId: 'OUTLOOK_PASSWORD', variable: 'OUTLOOK_PASSWORD'),
                     string(credentialsId: 'RECAPTCHA_PUBLIC_KEY', variable: 'RECAPTCHA_PUBLIC_KEY'),
                     string(credentialsId: 'RECAPTCHA_PRIVATE_KEY', variable: 'RECAPTCHA_PRIVATE_KEY')
+                    string(credentialsId: 'ENCRYPTION_KEY', variable: 'ENCRYPTION_KEY')
 
                 ]) {
                     script {
@@ -39,6 +40,7 @@ pipeline {
                         envContent += "OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}\n"
                         envContent += "RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC_KEY}\n"
                         envContent += "RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE_KEY}\n"
+                        envContent += "ENCRYPTION_KEY=${ENCRYPTION_KEY}\n"
 
                         writeFile file: '.env', text: envContent
                     }
