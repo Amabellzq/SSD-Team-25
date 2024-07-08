@@ -1,7 +1,7 @@
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 import os
-from cryptography.fernet import Fernet
+
 
 
 # Load environment variables from .env file
@@ -26,9 +26,7 @@ class Config:
 
     RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
     RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
-    ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')  # Retrieve your key from environment variable
-    fernet = Fernet(ENCRYPTION_KEY)
-
+    
 
 
 class TestConfig():
