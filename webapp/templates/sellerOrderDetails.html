@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Order Details - ShopMe{% endblock %}
+{% block title %}Shop Me | Merchant Order Details{% endblock %}
   
 {% block content %} 
 <!-- Breadcrumb Begin -->
@@ -21,6 +21,8 @@
 <div class="container">
     <h3>Order Details</h3>
     <form id="editOrderForm" action="{{ url_for('main.mark_as_completed', order_id=order.order_id) }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.order_id(value=order.order_id) }}
         <div class="form-group">
             <label for="orderId">Order ID</label>
             <input type="text" class="form-control" id="orderId" value="{{ order.order_id }}" readonly>

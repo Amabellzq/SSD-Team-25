@@ -1,7 +1,7 @@
 import secrets
 from flask import Blueprint, current_app, render_template, jsonify, redirect, url_for, flash, request, session, abort
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm, DeleteUserForm
+from .templates.includes.forms import LoginForm, RegistrationForm, CheckoutForm, AccountDetailsForm, CreateCategory, EditUserForm, UpdateProductForm, RegisterBusinessForm, CreateProductForm, TOTPForm, OTPForm, AddToCart, UpdateCartForm, MarkOrderCompletedForm, DeleteUserForm, ApproveForm, SuspendForm, DeleteCategoryForm
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
@@ -793,12 +793,15 @@ def delete_user(user_id):
     if form.validate_on_submit():
         # Validate that the form user_id matches the route user_id
         if int(form.user_id.data) == user_id:
-            UserService.delete(user_id)
-            flash('User deleted successfully.', 'success')
+            if UserService.delete(user_id):
+                flash('User deleted successfully.', 'success')
+            else:
+                flash('User deletion failed.', 'danger')
         else:
             flash('User ID mismatch.', 'danger')
     else:
         flash('Form validation failed.', 'danger')
+        current_app.logger.debug(f"Form errors: {form.errors}")
     return redirect(url_for('main.adminDashboard'))
 
 
@@ -806,21 +809,25 @@ def delete_user(user_id):
 @role_required('Admin')
 @login_required
 def approve_merchant(merchant_id):
-    MerchantService.update(
-        merchant_id,
-        account_status='Active',
-        approved_date=datetime.utcnow() + timedelta(hours=8)
-    )
+    form = ApproveForm()
+    if form.validate_on_submit():
+        MerchantService.update(
+            merchant_id,
+            account_status='Active',
+            approved_date=datetime.utcnow() + timedelta(hours=8)
+        )
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/suspend_merchant/<int:merchant_id>', methods=['POST'])
 @role_required('Admin')
 def suspend_merchant(merchant_id):
-    MerchantService.update(
-        merchant_id,
-        account_status='Inactive',
-        approved_date=datetime.utcnow() + timedelta(hours=8)
-    )
+    form = SuspendForm()
+    if form.validate_on_submit():
+        MerchantService.update(
+            merchant_id,
+            account_status='Inactive',
+            approved_date=datetime.utcnow() + timedelta(hours=8)
+        )
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/createCategory', methods=['GET', 'POST'])
@@ -839,7 +846,10 @@ def adminCreateCategory():
 @main.route('/delete_category/<int:category_id>', methods=['POST'])
 @role_required('Admin')
 def delete_category(category_id):
-    CategoryService.delete(category_id)
+    form = DeleteCategoryForm()
+    if form.validate_on_submit():
+        CategoryService.delete(category_id)
+        return redirect(url_for('main.adminDashboard'))
     return redirect(url_for('main.adminDashboard'))
 
 @main.route('/editCategory/<int:category_id>', methods=['GET', 'POST'])
