@@ -22,10 +22,15 @@
                 border-color: #28a752; /* Green border for success messages */
             }
             .alert-container {
-            margin-top: 10px; /* Add margin to separate from the Confirm Password field */
+                margin-top: 10px; /* Add margin to separate from the Confirm Password field */
             }
             .field {
                 margin-bottom: 10px; /* Ensure there is space between fields */
+            }
+            .captcha {
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: center;
             }
         </style>
         <script>
@@ -68,11 +73,11 @@
             </div>
             <div class="field">
                 {{ register_form.password(class="form-control", required=True) }}
-                {% if register_form.password.errors %}
+                <!-- {% if register_form.password.errors %}
                     {% for error in register_form.password.errors %}
                         <div class="error">{{ error }}</div>
                     {% endfor %}
-                {% endif %}
+                {% endif %} -->
                 <label>{{ register_form.password.label.text }}</label>
                 <!-- {{ register_form.password.label(class="form-label") }} -->
             </div>
@@ -84,6 +89,9 @@
                     {% endfor %}
                 {% endif %}
                 <label>{{ register_form.confirm_password.label.text }}</label>
+            </div>
+            <div class="captcha">
+                {{ register_form.recaptcha }}
             </div>
             <!-- Flash Messages Section -->
             {% with messages = get_flashed_messages(with_categories=true) %}

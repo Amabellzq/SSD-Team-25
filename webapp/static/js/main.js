@@ -136,8 +136,16 @@ Created: Colorib
     /*------------------
 		Magnific
     --------------------*/
-    $('.image-popup').magnificPopup({
-        type: 'image'
+    // $('.image-popup').magnificPopup({
+    //     type: 'image'
+    // });
+    $(document).ready(function() {
+        $('.image-popup').magnificPopup({
+            type: 'image',
+            gallery: {
+                enabled: true
+            }
+        });
     });
 
 
