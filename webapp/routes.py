@@ -18,8 +18,6 @@ import smtplib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from .templates.includes.forms import RegistrationForm, LoginForm
 from .utils import role_required
 from cryptography.fernet import Fernet
@@ -29,9 +27,7 @@ main = Blueprint('main', __name__)
 login_manager = LoginManager()
 login_manager.init_app(main)
 login_manager.login_view = 'main.login'
-limiter = Limiter(key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
 
-limiter.limit('25/hour')(main)
 
 def send_email(recipient_email, subject, body):
     load_dotenv()
@@ -54,17 +50,17 @@ def send_email(recipient_email, subject, body):
         print(f"Error sending email: {e}")
 
 
-KEY = os.getenv('KEY')
-if not KEY:
-    raise ValueError("No ENCRYPTION_KEY found in environment variables")
+##KEY = os.getenv('KEY')
+##if not KEY:
+##    raise ValueError("No ENCRYPTION_KEY found in environment variables")
 
-fernet = Fernet(KEY)
+##fernet = Fernet(KEY)
 
-def encrypt_data(data):
-    return fernet.encrypt(data.encode()).decode()
+##def encrypt_data(data):
+##    return fernet.encrypt(data.encode()).decode()
 
-def decrypt_data(data):
-    return fernet.decrypt(data.encode()).decode()
+##def decrypt_data(data):
+##    return fernet.decrypt(data.encode()).decode()
         
 def get_singapore_time():
     # Get the current time in UTC
@@ -453,7 +449,6 @@ def orderConfirmation(order_id):
 #############################
 
 @main.route('/login', methods=['GET', 'POST'])
-@limiter.limit('25 per 1 hour')
 def login():
     form = LoginForm()
     if request.method == 'POST':
@@ -465,7 +460,7 @@ def login():
         print(f'Attempting to log in user: {username}')  # Debug statement
 
         user = UserService.get_by_username(username)
-        
+
         if user:
             print(f'User found: {user.username}')  # Debug statement
         else:
@@ -473,14 +468,19 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.get_id()
-            if not user.is_verified:
-                flash('Please verify your email before logging in.', 'danger')
-                return redirect(url_for('main.verify_otp', user_id=user.user_id))
-            
+            login_user(user)
             session['user_id'] = user.get_id()
-            if not user.totp_secret:
-                return redirect(url_for('main.totp'))
-            return redirect(url_for('main.verify_totp'))
+
+            user.active_session_token = session.sid
+            db.session.commit()
+
+            if user.role == 'Merchant':
+                merchant = Merchant.query.filter_by(user_id=user.user_id).first()
+                if merchant:
+                    return redirect(url_for('main.sellerDashboard'))
+                else:
+                    return redirect(url_for('main.register_business'))
+            return redirect(url_for('main.home'))  # Redirect to home page
         else:
             flash('Invalid username or password', 'danger')
     return render_template('login.html', form=form)
@@ -497,8 +497,8 @@ def totp():
 
     if request.method == 'POST' and form.validate_on_submit():
         totp_code = form.totp.data
-        totp_secret = decrypt_data(user.totp_secret)  # Decrypt the TOTP secret
-        totp = pyotp.TOTP(totp_secret)
+        ##totp_secret = decrypt_data(user.totp_secret)  # Decrypt the TOTP secret
+        ##totp = pyotp.TOTP(totp_secret)
         if totp.verify(totp_code):
             login_user(user)
             session['user_id'] = user.get_id()
@@ -516,12 +516,12 @@ def totp():
         else:
             flash('Invalid TOTP code. Please try again.')
 
-    user.totp_secret = encrypt_data(pyotp.random_base32())  # Encrypt the TOTP secret
+    ##user.totp_secret = encrypt_data(pyotp.random_base32())  # Encrypt the TOTP secret
     db.session.commit()
-    totp_uri = pyotp.TOTP(decrypt_data(user.totp_secret)).provisioning_uri(user.email, issuer_name="shopppme")
-    img = qrcode.make(totp_uri, box_size=8, border=3)
+    ##totp_uri = pyotp.TOTP(decrypt_data(user.totp_secret)).provisioning_uri(user.email, issuer_name="shopppme")
+    ## = qrcode.make(totp_uri, box_size=8, border=3)
     buf = BytesIO()
-    img.save(buf, format='PNG')
+    ##img.save(buf, format='PNG')
     img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
     return render_template('totp.html', img_b64=img_b64, form=form)
@@ -568,7 +568,6 @@ def logout():
     return redirect(url_for('main.home'))
 
 @main.route('/register', methods=['GET', 'POST'])
-@limiter.limit('25 per 1 hour')
 def register():
     form = RegistrationForm()
     registration_successful = False
@@ -603,11 +602,11 @@ def register():
                     # msg = Message('Email Verification', sender='shopppme2024@outlook.com', recipients=[email])
                     # msg.body = f"Thank you {username} for registering. Your OTP is: {otp}"
                     # mail.send(msg)
-                    send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
+                    #send_email(email, "Your OTP for Login", f"We've received a request to login to your account. Please use the following One-Time Password: {new_user.otp}, expire in 5 minute")
                     print('successful')
                     flash('Registration Successful. Please check your email for the OTP.', 'success')
                     
-                    return redirect(url_for('main.verify_otp', user_id=new_user.user_id))
+                    return redirect(url_for('main.login', user_id=new_user.user_id))
                 except Exception as e:
                     db.session.rollback()
                     current_app.logger.error(f'Error while registering user: {str(e)}')

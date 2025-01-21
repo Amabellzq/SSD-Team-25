@@ -7,10 +7,13 @@ services:
     depends_on:
       - db
     working_dir: /webapp
+    environment:
+      - DB_HOST=host.docker.internal  # Ensures flask connects to localhost db
+      - DB_PORT=3306
 
   nginx:
     image: nginx:latest
-    build : ./nginx
+    build: ./nginx
     container_name: nginx
     ports:
       - "80:80"
@@ -20,31 +23,28 @@ services:
     networks:
       - ecommerce_network
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf.d/:ro
-      - ${WORKSPACE}/flask/static:/usr/share/nginx/html/static:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
 
   db:
-    image: mysql:5.7
+    image: mysql:8.4
     container_name: db
     env_file:
       - .env
     ports:
       - "3306:3306"
-    networks:
-      - ecommerce_network
     environment:
-      - KEY=${KEY}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - DB_HOST=host.docker.internal  # Connects to local MySQL
+      - DB_PORT=3306
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}  # Required for MySQL initialization
       - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
-      - MYSQL_ADMIN_PASSWORD=${MYSQL_ADMIN_PASSWORD}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - OUTLOOK_EMAIL=${OUTLOOK_EMAIL}
-      - OUTLOOK_PASSWORD=${OUTLOOK_PASSWORD}
-      - RECAPTCHA_PUBLIC_KEY=${RECAPTCHA_PUBLIC_KEY}
-      - RECAPTCHA_PRIVATE_KEY=${RECAPTCHA_PRIVATE_KEY}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    command: ["mysqld", "--mysql-native-password=ON"]
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - ecommerce_network
 
 networks:
   ecommerce_network:

@@ -21,3 +21,4 @@ pytz
 Flask-Mail==0.10.0
 Flask-Limiter
 cryptography
+Flask-Migrate

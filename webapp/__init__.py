@@ -17,26 +17,8 @@ from flask_limiter.util import get_remote_address
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key-if-none-found')
-app.config['DEBUG'] = True  # Enable debug mode
+app.config['DEBUG'] = True  # Enable debug mode for local development
 
-def wait_for_db(host, port):
-    retries = 5
-    while retries > 0:
-        try:
-            # Attempt to create a socket connection to the database
-            sock = socket.create_connection((host, port), timeout=5)
-            sock.close()
-            print("Database is up and running.")
-            break
-        except (socket.timeout, socket.error) as e:
-            print(f"Database not ready yet. Retrying... ({retries} attempts left)")
-            retries -= 1
-            time.sleep(5)
-    if retries == 0:
-        raise Exception("Database is not reachable. Exiting.")
-
-# Wait for the database to be ready
-wait_for_db('db', 3306)  # 'db' is the service name defined in docker-compose.yml
 
 # Initialize SQLAlchemy
 db.init_app(app)
@@ -51,12 +33,13 @@ Session(app)
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'main.login'
 
-# Initialize flask limiter
-limiter = Limiter(app = app, key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
+# Initialize Flask-Limiter for rate limiting
+limiter = Limiter(app=app, key_func=get_remote_address, default_limits=["100 per day", "25 per hour"])
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -67,13 +50,13 @@ app.register_blueprint(main)
 
 # Define the base64 encode filter
 def b64encode(value):
-    return base64.b64encode(value).decode('utf-8')
+    return base64.b64encode(value.encode()).decode('utf-8')
 
-# Register the filter
+# Register the filter for Jinja templates
 app.jinja_env.filters['b64encode'] = b64encode
 
 # To ensure no circular import issues
 from .routes import main
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
